@@ -54,7 +54,7 @@ class Provider(AbsBaseClass):
 
 def get_provider():
     if PROVIDER == AWS:
-        from halo_flask.providers.cloud.aws.aws import AwsProvider
+        from halo_aws.providers.cloud.aws.aws import AwsProvider
         return AwsProvider()
 
 ################## ssm ###########################

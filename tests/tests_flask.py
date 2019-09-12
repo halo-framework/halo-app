@@ -15,7 +15,7 @@ from halo_flask.flask.viewsx import TestLinkX
 from halo_flask.exceptions import ApiError
 from halo_flask.logs import log_json
 from halo_flask import saga
-from halo_flask.providers.cloud.aws.models import AbsModel
+from halo_aws.providers.cloud.aws.models import AbsModel
 from halo_flask.apis import ApiTest,GoogleApi
 import unittest
 
