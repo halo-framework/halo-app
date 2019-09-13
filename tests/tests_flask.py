@@ -15,7 +15,6 @@ from halo_flask.flask.viewsx import TestLinkX
 from halo_flask.exceptions import ApiError
 from halo_flask.logs import log_json
 from halo_flask import saga
-from halo_aws.providers.cloud.aws.models import AbsModel
 from halo_flask.apis import ApiTest,GoogleApi
 import unittest
 
@@ -171,76 +170,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             response = self.t1.process_get(request, {})
             eq_(response.code, status.HTTP_200_OK)
 
-    def test_model_get_pre(self):
-        from pynamodb.attributes import UTCDateTimeAttribute, UnicodeAttribute
-        class TestModel(AbsModel):
-            class Meta:
-                table_name = 'tbl-upc-53-loc'
-                host = "http://localhost:8600"
 
-            created_on = UTCDateTimeAttribute(null=False)
-            pkey = UnicodeAttribute(hash_key=True)
-
-        m = TestModel()
-        a, b = m.get_pre()
-        eq_(a, "pkey")
-
-    def test_model_get_pre_val(self):
-        from pynamodb.attributes import UTCDateTimeAttribute, UnicodeAttribute
-        class TestModel(AbsModel):
-            class Meta:
-                table_name = 'tbl-upc-53-loc'
-                host = "http://localhost:8600"
-
-            created_on = UTCDateTimeAttribute(null=False)
-            pkey = UnicodeAttribute(hash_key=True)
-
-        m = TestModel()
-        m.pkey = "123"
-        a, b = m.get_pre_val()
-        eq_(a, "123")
-
-    def test_model_idem_id(self):
-        from pynamodb.attributes import UTCDateTimeAttribute, UnicodeAttribute
-        class TestModel(AbsModel):
-            class Meta:
-                table_name = 'tbl-upc-53-loc'
-                host = "http://localhost:8600"
-
-            created_on = UTCDateTimeAttribute(null=False)
-            pkey = UnicodeAttribute(hash_key=True)
-
-        m = TestModel()
-        m.pkey = "456"
-        ret = m.get_idempotent_id("123")
-        eq_(ret, "8b077e79d995ac82ea9217c7b34c8b57")
-
-    def test_model_idem_db(self):
-        from pynamodb.attributes import UTCDateTimeAttribute, UnicodeAttribute
-        from pynamodb.exceptions import PutError
-        import datetime
-        import uuid
-        class TestModel(AbsModel):
-            class Meta:
-                table_name = 'tbl-upc-53-tst'
-                host = "http://localhost:8600"
-
-            created_on = UTCDateTimeAttribute(null=False)
-            pkey = UnicodeAttribute(hash_key=True)
-
-        if not TestModel.exists():
-            TestModel.create_table(read_capacity_units=1, write_capacity_units=1)
-        m = TestModel()
-        m.pkey = str(uuid.uuid4())
-        m.created_on = datetime.datetime.utcnow()
-        request_id = str(uuid.uuid4())
-        ret = m.save(request_id)
-        try:
-            ret1 = m.save(request_id)
-        except PutError as e:
-            print(str(e))
-            ret1 = ret
-        eq_(ret, ret1)
 
     def test_load_saga(self):
         with open("saga.json") as f:
