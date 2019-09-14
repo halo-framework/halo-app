@@ -8,6 +8,10 @@
       "url": "tst_saga.json",
       "type": "saga"
     },
+    "PUT" : {
+      "url": "saga_rlbk.json",
+      "type": "saga"
+    },
     "PATCH" : {
       "url": "base_seq.json",
       "type": "seq"

@@ -290,7 +290,6 @@ class AbsBaseApi(AbsBaseClass):
             data = request.data
         return self.process(verb, self.url, Util.get_timeout(request), data=data, headers=headers,auth=auth)
 
-API_LIST = {"Google": 'GoogleApi', "Cnn": "ApiTest"}
 class ApiMngr(AbsBaseClass):
 
     def __init__(self, req_context):
@@ -372,3 +371,5 @@ class GoogleApi(AbsBaseApi):
 
 class TstApi(AbsBaseApi):
     name = 'Tst'
+
+API_LIST = {"Google": 'GoogleApi', "Cnn": "ApiTest","Tst":"TstApi"}

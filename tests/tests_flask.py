@@ -229,9 +229,12 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_rollback_saga(self):
-        with app.test_request_context(method='POST', path="/"):
-            response = self.t2.process_post(request, {})
-            eq_(response.code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        with app.test_request_context(method='PUT', path="/"):
+            try:
+                response = self.t2.process_put(request, {})
+                assert False
+            except Exception as e:
+                eq_(e.__class__.__name__, "SagaError")
 
     def test_ssm_aws(self):  # @TODO
         header = {'HTTP_HOST': '127.0.0.2'}
