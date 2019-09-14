@@ -269,7 +269,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             # 2. Code to access the BANK API  to retrieve data - url + vars dict
             getattr(self, 'validate_pre_%s' % behavior_qualifier)(halo_request)
             # 3. processing engine
-            dict = self.processing_engine(halo_request, behavior_qualifier)
+            dict = self.processing_engine(halo_request)
             # 4. Build the payload target response structure which is Compliant
             payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(halo_request, dict)
             logger.debug("payload=" + str(payload))
@@ -460,18 +460,18 @@ class AbsApiMixinX(AbsBaseMixinX):
         if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
                 if halo_request.behavior_qualifier:
-                    return self.do_operation_3_bq(halo_request, halo_request.behavior_qualifier)
+                    return self.do_operation_3_bq(halo_request, halo_request.behavior_qualifier.lower())
                 return self.do_operation_3(halo_request)
             if self.business_event.get_business_event_type() == SEQ:
                 if self.business_event.keys():
                     if halo_request.behavior_qualifier:
-                        return self.do_operation_2_bq(halo_request, halo_request.behavior_qualifier)
+                        return self.do_operation_2_bq(halo_request, halo_request.behavior_qualifier.lower())
                     return self.do_operation_2(halo_request)
                 else:
                     raise BusinessEventMissingSeqException(self.service_operation)
         else:
             if halo_request.behavior_qualifier:
-                return self.do_operation_1_bq(halo_request, halo_request.behavior_qualifier)
+                return self.do_operation_1_bq(halo_request, halo_request.behavior_qualifier.lower())
             return self.do_operation_1(halo_request)
 
     def set_businss_event(self, request, event_category):
