@@ -363,9 +363,12 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
 ##################################### test #########################
 from halo_flask.apis import AbsBaseApi
 
-class ApiTest(AbsBaseApi):
+class CnnApi(AbsBaseApi):
     name = 'Cnn'
 
 
 class GoogleApi(AbsBaseApi):
     name = 'Google'
+
+class TstApi(AbsBaseApi):
+    name = 'Tst'

@@ -307,6 +307,10 @@ ERR_MSG_CLASS = 'halo_flask.mixin_err_msg'
 SSM_TYPE = env.str('SSM_TYPE',default='NONE')
 print('SSM_TYPE='+SSM_TYPE)
 
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir, 'halo_flask','schema',"saga_schema.json")
+SAGA_SCHEMA_PATH = file_path
+
 #######################################################################################3
 
 
@@ -314,16 +318,36 @@ API_CONFIG = None
 API_SETTINGS = ENV_NAME + '_api_settings.json'
 
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, API_SETTINGS)
+file_path = os.path.join(file_dir, 'env',API_SETTINGS)
 with open(file_path, 'r') as fi:
     API_CONFIG = json.load(fi)
     print("api_config:" + str(API_CONFIG))
 
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, 'loc_settings.json')
+file_path = os.path.join(file_dir, 'env','loc_settings.json')
 with open(file_path, 'r') as fi:
     LOC_TABLE = json.load(fi)
     print("loc_settings:" + str(LOC_TABLE))
 
+
+BUSINESS_EVENT_MAP = None
+EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir,'env', EVENT_SETTINGS)
+with open(file_path, 'r') as fi:
+    map = json.load(fi)
+    BUSINESS_EVENT_MAP = {}
+    for key in map:
+        val = map[key]
+        print("val:"+key+" "+str(val))
+        dict = {}
+        for action in val:
+            item = val[action]
+            file_path_data = os.path.join(file_dir,'env', item['url'])
+            print(file_path_data)
+            with open(file_path_data, 'r') as fx:
+                 data = json.load(fx)
+                 dict[action] = { item['type'] : data }
+        BUSINESS_EVENT_MAP[key] = dict
 
 print('The settings file has been loaded.')

@@ -15,7 +15,7 @@ from halo_flask.flask.viewsx import TestLinkX
 from halo_flask.exceptions import ApiError
 from halo_flask.logs import log_json
 from halo_flask import saga
-from halo_flask.apis import ApiTest,GoogleApi
+from halo_flask.apis import CnnApi,GoogleApi,TstApi
 import unittest
 
 
@@ -24,17 +24,18 @@ fake = Faker()
 app = Flask(__name__)
 api = Api(app)
 
+from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 class T1(AbsBaseMixinX):
     def process_get(self, request, vars):
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = {'data': {'test2': 'good'}}
         ret.code = 200
         ret.headers = []
         return ret
 
     def process_delete(self, request, vars):
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = {'data': {'test2': 'good'}}
         ret.code = 500
         ret.headers = []
@@ -50,6 +51,10 @@ from halo_flask.flask.viewsx import PerfLinkX as PerfLink
 class S1(PerfLink):
     pass
 
+from halo_flask.apis import AbsBaseApi
+
+class TstApi(AbsBaseApi):
+    name = 'Tst'
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -77,33 +82,58 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.code, status.HTTP_200_OK)
             eq_(response.payload, {'data': {'test2': 'good'}})
 
-    def test_api_request_returns_a_given_string(self):
+    def test_api_request_returns_a_CircuitBreakerError(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = ApiTest(Util.get_req_context(request))
+            api = CnnApi(Util.get_req_context(request))
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
+                assert False
             except ApiError as e:
                 #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
                 eq_(e.__class__.__name__,"CircuitBreakerError")
 
-    def test_api_request_returns_a_given_string1(self):
+    def test_api_request_returns_a_given_CircuitBreakerError1(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             api = GoogleApi(Util.get_req_context(request))
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
+                assert False
+            except ApiError as e:
+                #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
+                eq_(e.__class__.__name__,"CircuitBreakerError")
+
+    def test_api_request_returns_a_given_CircuitBreakerError2(self):
+        with app.test_request_context(method='GET', path='/?a=b'):
+            api = TstApi(Util.get_req_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                response = api.get(timeout)
+                assert False
+            except ApiError as e:
+                #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
+                eq_(e.__class__.__name__,"CircuitBreakerError")
+
+    def test_api_request_returns_a_given_missing_api(self):
+        with app.test_request_context(method='GET', path='/?a=b'):
+            api = TstApi(Util.get_req_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                response = api.get(timeout)
+                assert False
             except ApiError as e:
                 #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
                 eq_(e.__class__.__name__,"CircuitBreakerError")
 
     def test_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = ApiTest(Util.get_req_context(request))
+            api = CnnApi(Util.get_req_context(request))
             api.url = api.url + "/lgkmlgkhm??l,mhb&&,g,hj "
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
+                assert False
             except ApiError as e:
                 eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
@@ -170,20 +200,33 @@ class TestUserDetailTestCase(unittest.TestCase):
             response = self.t1.process_get(request, {})
             eq_(response.code, status.HTTP_200_OK)
 
+    def test_pref_mixin1(self):
+        with app.test_request_context(method='GET', path='/perf/tst'):
+            response = self.t1.process_get(request, {})
+            eq_(response.code, status.HTTP_200_OK)
 
+    def test_run_simple_put(self):
+        with app.test_request_context(method='PUT', path="/start"):
+            response = self.t2.process_put(request, {})
+            eq_(response.code, status.HTTP_201_CREATED)
+
+    def test_run_seq_get(self):
+        with app.test_request_context(method='GET', path="/"):
+            response = self.t2.process_get(request, {})
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_load_saga(self):
-        with open("saga.json") as f:
+        with open("../env/saga.json") as f:
             jsonx = json.load(f)
-        with open("schema.json") as f1:
+        with open(app.config['SAGA_SCHEMA_PATH']) as f1:
             schema = json.load(f1)
         sagax = saga.load_saga("test", jsonx, schema)
         eq_(len(sagax.actions), 6)
 
     def test_run_saga(self):
-        with app.test_request_context(method='PUT', path="/"):
+        with app.test_request_context(method='POST', path="/"):
             response = self.t2.process_put(request, {})
-            eq_(response.code, status.HTTP_200_OK)
+            eq_(response.code, status.HTTP_201_CREATED)
 
     def test_rollback_saga(self):
         with app.test_request_context(method='POST', path="/"):

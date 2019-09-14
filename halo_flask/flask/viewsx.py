@@ -18,6 +18,7 @@ from ..exceptions import BadRequestError
 from .utilx import Util
 from ..const import HTTPChoice
 from ..logs import log_json
+from ..request import HaloRequest
 from ..response import HaloResponse
 from ..settingsx import settingsx
 
@@ -156,7 +157,7 @@ class AbsBaseLinkX(MethodView):
 
         return HttpResponse('this is a ' + str(typer) )
 
-    def process_get(self, args):
+    def process_get(self,request, args):
         """
 
         :param request:
@@ -164,13 +165,13 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         # return HttpResponse('this is process get on ' + self.get_view_name())
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process get on '  # + self.get_view_name()
         ret.code = 200
         ret.headers = []
         return ret
 
-    def process_post(self, args):
+    def process_post(self,request, args):
         """
 
         :param request:
@@ -178,13 +179,13 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         # return HttpResponse('this is process post on ' + self.get_view_name())
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process post on '  # + self.get_view_name()
         ret.code = 201
         ret.headers = []
         return ret
 
-    def process_put(self, args):
+    def process_put(self,request, args):
         """
 
         :param request:
@@ -192,13 +193,13 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         # return HttpResponse('this is process put on ' + self.get_view_name())
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process put on '  # + self.get_view_name()
         ret.code = 200
         ret.headers = []
         return ret
 
-    def process_patch(self, args):
+    def process_patch(self,request, args):
         """
 
         :param request:
@@ -206,13 +207,13 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         # return HttpResponse('this is process patch on ' + self.get_view_name())
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process patch on '  # + self.get_view_name()
         ret.code = 200
         ret.headers = []
         return ret
 
-    def process_delete(self, args):
+    def process_delete(self,request, args):
         """
 
         :param request:
@@ -220,7 +221,7 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         # return HttpResponse('this is process delete on ' + self.get_view_name())
-        ret = HaloResponse()
+        ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process delete on '  # + self.get_view_name()
         ret.code = 200
         ret.headers = []

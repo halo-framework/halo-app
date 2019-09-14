@@ -90,3 +90,11 @@ class NoLocalSSMClass(HaloError):
 
 class NoLocalSSMModule(HaloError):
     pass
+
+class BusinessEventMissingSeqException(HaloException):
+    pass
+
+class HaloMethodNotImplementedException(HaloException):
+    pass
+class IllegalBQException(HaloException):
+    pass

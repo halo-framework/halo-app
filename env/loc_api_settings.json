@@ -50,5 +50,13 @@
   "Cnn": {
     "url": "http://www.cnn.com",
     "type": "api"
+  },
+  "Tst1": {
+    "url": "http://www.cnddmfgkkn.com",
+    "type": "api"
+  },
+  "Tst": {
+    "url": "http://127.0.0.1",
+    "type": "api"
   }
 }
