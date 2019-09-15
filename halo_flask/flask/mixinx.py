@@ -426,9 +426,7 @@ class AbsApiMixinX(AbsBaseMixinX):
     def do_operation_3(self, halo_request):  # high maturity - saga transactions
         logger.debug("do_operation_3")
         from halo_flask.saga import Saga, SagaRollBack, load_saga
-        with open(settings.SAGA_SCHEMA_PATH
-                #"C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json"
-        ) as f1:
+        with open(settings.SAGA_SCHEMA_PATH) as f1:
             schema = json.load(f1)
         sagax = load_saga("test", self.business_event.saga, schema)
         payloads = {}
@@ -442,10 +440,6 @@ class AbsApiMixinX(AbsBaseMixinX):
                 apis[state] = self.do_saga_work
                 counter = counter + 1
 
-        # payloads = {"BookHotel": {"abc": "def"}, "BookFlight": {"abc": "def"}, "BookRental": {"abc": "def"},
-        #            "CancelHotel": {"abc": "def"}, "CancelFlight": {"abc": "def"}, "CancelRental": {"abc": "def"}}
-        # apis = {"BookHotel": self.create_api1, "BookFlight": self.create_api2, "BookRental": self.create_api3,
-        #        "CancelHotel": self.create_api4, "CancelFlight": self.create_api5, "CancelRental": self.create_api6}
         try:
             ret = sagax.execute(Util.get_req_context(halo_request.request), payloads, apis)
             return ret
@@ -489,8 +483,9 @@ class AbsApiMixinX(AbsBaseMixinX):
                         if SAGA in service_map:
                             saga = service_map[SAGA]
                             self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
-                    else:
-                        raise BusinessEventMissingSeqException(request.method)
+                    #else:
+                    #   if no entry use simple operation
+                    #    raise BusinessEventMissingSeqException(request.method+":"+str(request.path))
        return self.business_event
 
 class PerfMixinX(AbsBaseMixinX):
