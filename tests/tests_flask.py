@@ -69,7 +69,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['DEBUG'] = False
         #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +  os.path.join(app.config['BASEDIR'], TEST_DB)
         #self.app = app#.test_client()
-        app.config.from_pyfile('../settings.py')
+        #app.config.from_pyfile('../settings.py')
+        app.config.from_object('settings')
         self.t1 = T1()
         self.t2 = T2()
         self.t3 = T3()
