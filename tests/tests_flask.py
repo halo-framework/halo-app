@@ -217,7 +217,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.code, status.HTTP_200_OK)
 
     def test_load_saga(self):
-        with open("../env/saga.json") as f:
+        with open("../env/config/saga.json") as f:
             jsonx = json.load(f)
         with open(app.config['SAGA_SCHEMA_PATH']) as f1:
             schema = json.load(f1)
