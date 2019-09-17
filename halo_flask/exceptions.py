@@ -102,3 +102,9 @@ class IllegalBQException(HaloException):
 
 class NoApiDefinition(HaloException):
     pass
+
+class ApiClassErrorException(HaloException):
+    pass
+
+class NoApiClassException(HaloException):
+    pass

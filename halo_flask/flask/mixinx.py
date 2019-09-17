@@ -188,10 +188,10 @@ class AbsApiMixinX(AbsBaseMixinX):
             module = importlib.import_module(module_name)
             class_ = getattr(module, class_name)
             if not issubclass(class_, AbsBaseApi):
-                raise HaloException("class error:" + class_name)
+                raise ApiClassErrorException(class_name)
             instance = class_(Util.get_req_context(halo_request.request))
             return instance
-        raise HaloException("No api defined")
+        raise NoApiClassException()
 
     @staticmethod
     def set_api_headers(halo_request, seq=None, dict=None):

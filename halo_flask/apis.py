@@ -10,7 +10,7 @@ from abc import ABCMeta
 import requests
 
 from .classes import AbsBaseClass
-from .exceptions import MaxTryHttpException, ApiError
+from .exceptions import MaxTryHttpException, ApiError,NoApiDefinition
 from .logs import log_json
 from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
