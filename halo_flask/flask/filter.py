@@ -68,7 +68,7 @@ class Filter(AbsBaseClass):
 
 class RequestFilter(Filter):
 
-    def do_filter(self,halo_request,  halo_response,  chain=None):
+    def do_filter(self,halo_request,  halo_response):
         logger.debug("do_filter")
         #raise IOException, ServletException
         try:
@@ -79,17 +79,14 @@ class RequestFilter(Filter):
             event.time = datetime.datetime.now()
             event.method = halo_request.request.method
             #event.userId = "user_" + (Random().nextInt(1000) + 1)
-            event = self.augment_event_with_headers(event, halo_request)
+            event = self.augment_event_with_headers_and_data(event, halo_request,halo_response)
             inserted = store_util.put(event)
             if (not inserted):
                 logger.debug("Event queue is full! inserted: " + str(inserted) + ", queue size: " + str(StoreUtil.eventQueue.qsize()))
         except StoreException as e:
-            logger.debug("do_filter")
-        if chain:
-            chain.do_filter(halo_request, halo_response)
+            logger.debug("error:"+str(e))
 
-
-    def augment_event_with_headers(self,event, halo_request):
+    def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         #event.country = halo_request.request.headers["X-AppEngine-Country"]
         #event.city = halo_request.request.headers["X-AppEngine-City"]
         #event.region = halo_request.request.headers["X-AppEngine-Region"]
@@ -102,6 +99,10 @@ class StoreUtil(AbsBaseClass):
     @staticmethod
     def put(event):
         print("StoreUtil:"+str(event.name))
-        __class__.eventQueue.put(event)
+        try:
+            __class__.eventQueue.put(event)
+            return True
+        except Exception as e:
+            raise StoreException(e)
 
 store_util = StoreUtil()
