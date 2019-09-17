@@ -101,7 +101,7 @@ class StoreUtil(AbsBaseClass):
 
     @staticmethod
     def put(event):
-        logger.info("StoreUtil:"+str(event))
+        print("StoreUtil:"+str(event.name))
         __class__.eventQueue.put(event)
 
 store_util = StoreUtil()
