@@ -191,7 +191,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 raise ApiClassErrorException(class_name)
             instance = class_(Util.get_req_context(halo_request.request))
             return instance
-        raise NoApiClassException()
+        raise NoApiClassException("api class not defined")
 
     @staticmethod
     def set_api_headers(halo_request, seq=None, dict=None):
