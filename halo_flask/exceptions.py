@@ -96,5 +96,9 @@ class BusinessEventMissingSeqException(HaloException):
 
 class HaloMethodNotImplementedException(HaloException):
     pass
+
 class IllegalBQException(HaloException):
+    pass
+
+class NoApiDefinition(HaloException):
     pass

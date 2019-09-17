@@ -116,7 +116,9 @@ class AbsBaseApi(AbsBaseClass):
         """
         api_config = settings.API_CONFIG
         logger.debug("api_config: " + str(api_config), extra=log_json(self.req_context))
-        return api_config[self.name]["url"], api_config[self.name]["type"]
+        if api_config and self.name in api_config:
+            return api_config[self.name]["url"], api_config[self.name]["type"]
+        raise NoApiDefinition(self.name)
 
     def set_api_url(self, key, val):
         """
