@@ -108,3 +108,6 @@ class ApiClassErrorException(HaloException):
 
 class NoApiClassException(HaloException):
     pass
+
+class StoreException(HaloException):
+    pass

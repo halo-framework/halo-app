@@ -21,6 +21,7 @@ from ..logs import log_json
 from ..classes import AbsBaseClass
 from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
 from ..apis import AbsBaseApi
+from .filter import RequestFilter,FilterEvent
 
 
 settings = settingsx()
@@ -198,7 +199,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("in set_api_headers ")
         if halo_request:
             return []
-        raise HaloException()
+        raise HaloException("no headers")
 
     @staticmethod
     def set_api_vars(halo_request, seq=None, dict=None):
@@ -207,7 +208,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             ret = {}
             ret["bq"] = halo_request.behavior_qualifier
             return ret
-        raise HaloException()
+        raise HaloException("no var")
 
     @staticmethod
     def set_api_auth(halo_request, seq=None, dict=None):
@@ -254,7 +255,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("in set_resp_headers " + str(headers))
         if headers:
             return []
-        raise HaloException()
+        raise HaloException("no headers")
 
     def validate_post(self, halo_request, halo_response):
         return
@@ -357,8 +358,17 @@ class AbsApiMixinX(AbsBaseMixinX):
         halo_response = self.create_response(halo_request, payload, headers)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
-        # 8. return json response
+        # 8. do filter
+        self.do_filter(halo_request,halo_response)
+        # 9. return json response
         return halo_response
+
+    def do_filter(self, halo_request,halo_response):  #
+        logger.debug("do_filter")
+        # @todo fix filter config
+        request_filter = RequestFilter(None)
+        request_filter.do_filter(halo_request,halo_response)
+
 
     def do_operation_1(self, halo_request):  # basic maturity - single request
         logger.debug("do_operation_1")
