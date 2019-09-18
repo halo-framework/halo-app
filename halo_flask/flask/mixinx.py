@@ -366,9 +366,11 @@ class AbsApiMixinX(AbsBaseMixinX):
     def do_filter(self, halo_request,halo_response):  #
         logger.debug("do_filter")
         # @todo fix filter config
-        request_filter = RequestFilter(None)
+        request_filter = self.get_request_filter()
         request_filter.do_filter(halo_request,halo_response)
 
+    def get_request_filter(self):
+        return RequestFilter(None)
 
     def do_operation_1(self, halo_request):  # basic maturity - single request
         logger.debug("do_operation_1")
