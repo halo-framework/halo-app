@@ -355,7 +355,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         return dict
 
     def do_operation_3_bq(self, halo_request):  # high maturity - saga transactions
-        logger.debug("do_operation_3")
+        logger.debug("do_operation_3_bq")
         with open(settings.SAGA_SCHEMA_PATH) as f1:
             schema = json.load(f1)
         sagax = load_saga("test", self.business_event.saga, schema)
@@ -508,15 +508,19 @@ class AbsApiMixinX(AbsBaseMixinX):
                 return self.do_operation_1_bq(halo_request, halo_request.behavior_qualifier.lower())
             return self.do_operation_1(halo_request)
 
-    def set_businss_event(self, request, event_category):
-       self.service_operation = request.path
+    def set_businss_event(self, halo_request, event_category):
+       self.service_operation = self.__class__.__name__#request.endpoint
        if not self.business_event:
             if settings.BUSINESS_EVENT_MAP:
                 if self.service_operation in settings.BUSINESS_EVENT_MAP:
-                    service_list = settings.BUSINESS_EVENT_MAP[self.service_operation]
+                    bq = "base"
+                    if halo_request.behavior_qualifier:
+                        bq = halo_request.behavior_qualifier
+                    bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
+                    service_list = bqs[bq]
                     #@todo add schema to all event config files
-                    if request.method in service_list:
-                        service_map = service_list[request.method]
+                    if halo_request.request.method in service_list:
+                        service_map = service_list[halo_request.request.method]
                         if SEQ in service_map:
                             dict = service_map[SEQ]
                             self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
@@ -689,7 +693,7 @@ class TestMixinX(AbsApiMixinX):
 
     def process_get(self, request, vars):
         halo_request = HaloRequest(request)
-        self.set_businss_event(request, "x")
+        self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         if ret.code == status.HTTP_200_OK:
             print(str(ret.payload))
@@ -697,7 +701,7 @@ class TestMixinX(AbsApiMixinX):
 
     def process_get1(self, request, vars):
         halo_request = HaloRequest(request)
-        self.set_businss_event(request, "x")
+        self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         if ret.code == status.HTTP_200_OK:
             print(str(ret.payload))
@@ -705,7 +709,7 @@ class TestMixinX(AbsApiMixinX):
 
     def process_put(self, request, vars):
         halo_request = HaloRequest(request)
-        self.set_businss_event(request, "x")
+        self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         if ret.code == status.HTTP_200_OK:
             print(str(ret.payload))

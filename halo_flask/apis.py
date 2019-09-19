@@ -222,7 +222,7 @@ class AbsBaseApi(AbsBaseClass):
     def run(self,timeout, headers=None, auth=None,data=None):
         if headers is None:
             headers = headers
-        return self.process(self.op.__str__(), self.url, timeout, headers=headers,auth=auth,data=data)
+        return self.process(self.op, self.url, timeout, headers=headers,auth=auth,data=data)
 
     def get(self, timeout, headers=None,auth=None):
         """

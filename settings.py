@@ -337,17 +337,21 @@ file_path = os.path.join(file_dir,'env','config', EVENT_SETTINGS)
 with open(file_path, 'r') as fi:
     map = json.load(fi)
     BUSINESS_EVENT_MAP = {}
-    for key in map:
-        val = map[key]
-        print("val:"+key+" "+str(val))
-        dict = {}
-        for action in val:
-            item = val[action]
-            file_path_data = os.path.join(file_dir,'env','config', item['url'])
-            print(file_path_data)
-            with open(file_path_data, 'r') as fx:
-                 data = json.load(fx)
-                 dict[action] = { item['type'] : data }
-        BUSINESS_EVENT_MAP[key] = dict
+    for clazz in map:
+        bqs = map[clazz]
+        dictx = {}
+        for bq in bqs:
+            BUSINESS_EVENT_MAP[clazz] = bq
+            val = bqs[bq]
+            dict = {}
+            for action in val:
+                item = val[action]
+                file_path_data = os.path.join(file_dir,'env','config', item['url'])
+                print(file_path_data)
+                with open(file_path_data, 'r') as fx:
+                     data = json.load(fx)
+                     dict[action] = { item['type'] : data }
+            dictx[bq] = dict
+        BUSINESS_EVENT_MAP[clazz] = dictx
 
 print('The settings file has been loaded.')
