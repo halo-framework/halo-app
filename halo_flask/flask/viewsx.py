@@ -22,6 +22,14 @@ from ..request import HaloRequest
 from ..response import HaloResponse
 from ..settingsx import settingsx
 
+
+import flask_restful as restful
+from ..flask.mixinx import PerfMixinX
+from flask import request
+
+from halo_flask.const import HTTPChoice
+from halo_flask.flask.mixinx import TestMixinX
+
 settings = settingsx()
 # aws
 # other
@@ -79,8 +87,9 @@ class AbsBaseLinkX(MethodView):
         if HALO_HOST is None and 'HOST' in request.headers:
             HALO_HOST = request.headers['HOST']
             logger.debug("request.headers['HOST']:"+str(request.headers['HOST']))
-            from halo_flask.ssm import set_app_param_config
-            set_app_param_config(settings.SSM_TYPE,HALO_HOST)
+            if settings.SSM_TYPE and settings.SSM_TYPE != 'NONE':
+                from halo_flask.ssm import set_app_param_config
+                set_app_param_config(settings.SSM_TYPE,HALO_HOST)
 
 
         try:
@@ -269,14 +278,12 @@ class AbsBaseLinkX(MethodView):
         return '&jwt=' + self.get_jwt(request).decode()
 
 
-import flask_restful as restful
+
 
 
 class Resource(restful.Resource):
     pass
 
-from ..flask.mixinx import PerfMixinX
-from flask import request
 
 class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
     def get(self):
@@ -295,10 +302,6 @@ class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
         ret = self.do_process( HTTPChoice.delete)
         return Util.json_data_response(ret.payload, ret.code, ret.headers)
 
-
-from halo_flask.flask.viewsx import AbsBaseLinkX,Resource
-from halo_flask.const import HTTPChoice
-from halo_flask.flask.mixinx import TestMixinX
 
 class TestLinkX(Resource, TestMixinX, AbsBaseLinkX):
 

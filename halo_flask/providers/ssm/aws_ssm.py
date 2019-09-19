@@ -7,7 +7,6 @@ import logging
 import os
 import time
 from environs import Env
-import boto3
 from botocore.exceptions import ClientError
 
 from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError
@@ -35,6 +34,7 @@ def get_client(region_name):
     logger.debug("get_client")
     global client
     if not client:
+        import boto3
         client = boto3.client('ssm', region_name=region_name)
     return client
 
@@ -118,6 +118,7 @@ def load_config(region_name, ssm_parameter_path):
     :param ssm_parameter_path: Path to app config in SSM Parameter Store
     :return: ConfigParser holding loaded config
     """
+
     configuration = configparser.ConfigParser()
     logger.debug("ssm_parameter_path=" + str(ssm_parameter_path))
     try:

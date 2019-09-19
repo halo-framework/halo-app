@@ -22,7 +22,7 @@ from ..classes import AbsBaseClass
 from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
 from ..apis import AbsBaseApi
 from .filter import RequestFilter,FilterEvent
-
+from halo_flask.saga import Saga, SagaRollBack, load_saga
 
 settings = settingsx()
 
@@ -164,7 +164,7 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def create_response(self,halo_request, payload, headers):
         code = status.HTTP_200_OK
-        if halo_request.request.method == 'POST' or halo_request.request.method == 'PUT':
+        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
             code = status.HTTP_201_CREATED
         return HaloResponse(halo_request, payload, code, headers)
 
@@ -183,14 +183,17 @@ class AbsApiMixinX(AbsBaseMixinX):
     def set_back_api(halo_request, foi=None):
         logger.debug("in set_back_api " + str(foi))
         if foi:
-            k = foi.rfind(".")
-            module_name = foi[:k]
-            class_name = foi[k + 1:]
+            foi_name = foi["name"]
+            foi_op = foi["op"]
+            k = foi_name.rfind(".")
+            module_name = foi_name[:k]
+            class_name = foi_name[k + 1:]
             module = importlib.import_module(module_name)
             class_ = getattr(module, class_name)
             if not issubclass(class_, AbsBaseApi):
                 raise ApiClassErrorException(class_name)
             instance = class_(Util.get_req_context(halo_request.request))
+            instance.op = foi_op
             return instance
         raise NoApiClassException("api class not defined")
 
@@ -224,10 +227,10 @@ class AbsApiMixinX(AbsBaseMixinX):
         if back_api:
             timeout = Util.get_timeout(halo_request.request)
             try:
-                ret = back_api.get(timeout)
                 seq_msg = ""
                 if seq:
                     seq_msg = "seq = " + seq + "."
+                ret = back_api.run(timeout, headers=back_headers,auth=back_auth, data=back_data)
                 msg = "in execute_api. " + seq_msg + " code= " + str(ret.status_code)
                 logger.info(msg)
                 return ret
@@ -259,6 +262,15 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def validate_post(self, halo_request, halo_response):
         return
+
+    def do_filter(self, halo_request, halo_response):  #
+        logger.debug("do_filter")
+        # @todo fix filter config
+        request_filter = self.get_request_filter()
+        request_filter.do_filter(halo_request, halo_response)
+
+    def get_request_filter(self):
+        return RequestFilter(None)
 
     def do_operation_bq(self, halo_request):
         if halo_request.behavior_qualifier is None:
@@ -300,7 +312,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 4. Sset request auth
         back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(halo_request)
         # 5. Sset request data
-        if halo_request.request.method == 'POST' or halo_request.request.method == 'PUT':
+        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
             back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(halo_request)
         else:
             back_data = None
@@ -328,7 +340,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             # 5. auth
             back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(halo_request, seq, dict)
             # 6. set request data
-            if halo_request.request.method == 'POST' or halo_request.request.method == 'PUT':
+            if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
                 back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(halo_request, seq, dict)
             else:
                 back_data = None
@@ -341,6 +353,32 @@ class AbsApiMixinX(AbsBaseMixinX):
             # 9. store in dict
             dict[seq] = back_json
         return dict
+
+    def do_operation_3_bq(self, halo_request):  # high maturity - saga transactions
+        logger.debug("do_operation_3")
+        with open(settings.SAGA_SCHEMA_PATH) as f1:
+            schema = json.load(f1)
+        sagax = load_saga("test", self.business_event.saga, schema)
+        payloads = {}
+        apis = {}
+        counter = 1
+        for state in self.business_event.saga["States"]:
+            if 'Resource' in self.business_event.saga["States"][state]:
+                api_name = self.business_event.saga["States"][state]['Resource']
+                print(api_name)
+                payloads[state] = {"request": halo_request, 'seq': str(counter)}
+                apis[state] = self.do_saga_work
+                counter = counter + 1
+
+        try:
+            ret = sagax.execute(Util.get_req_context(halo_request.request), payloads, apis)
+            return ret
+        except SagaRollBack as e:
+            ret = HaloResponse(halo_request)
+            ret.payload = {"test": "bad"}
+            ret.code = 500
+            ret.headers = []
+            return ret
 
     def do_operation(self, halo_request):
         # 1. validate input params
@@ -363,15 +401,6 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 9. return json response
         return halo_response
 
-    def do_filter(self, halo_request,halo_response):  #
-        logger.debug("do_filter")
-        # @todo fix filter config
-        request_filter = self.get_request_filter()
-        request_filter.do_filter(halo_request,halo_response)
-
-    def get_request_filter(self):
-        return RequestFilter(None)
-
     def do_operation_1(self, halo_request):  # basic maturity - single request
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
@@ -383,7 +412,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 4. Sset request auth
         back_auth = self.__class__.set_api_auth(halo_request)
         # 5. Sset request data
-        if halo_request.request.method == 'POST' or halo_request.request.method == 'PUT':
+        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
             back_data = self.__class__.set_api_data(halo_request)
         else:
             back_data = None
@@ -419,7 +448,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 5. auth
         back_auth = __class__.set_api_auth(halo_request, seq, dict)
         # 6. set request data
-        if halo_request.request.method == 'POST' or halo_request.request.method == 'PUT':
+        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
             back_data = __class__.set_api_data(halo_request, seq, dict)
         else:
             back_data = None
@@ -437,7 +466,6 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_3(self, halo_request):  # high maturity - saga transactions
         logger.debug("do_operation_3")
-        from halo_flask.saga import Saga, SagaRollBack, load_saga
         with open(settings.SAGA_SCHEMA_PATH) as f1:
             schema = json.load(f1)
         sagax = load_saga("test", self.business_event.saga, schema)
@@ -667,6 +695,14 @@ class TestMixinX(AbsApiMixinX):
             print(str(ret.payload))
         return ret
 
+    def process_get1(self, request, vars):
+        halo_request = HaloRequest(request)
+        self.set_businss_event(request, "x")
+        ret = self.do_operation(halo_request)
+        if ret.code == status.HTTP_200_OK:
+            print(str(ret.payload))
+        return ret
+
     def process_put(self, request, vars):
         halo_request = HaloRequest(request)
         self.set_businss_event(request, "x")
@@ -675,6 +711,7 @@ class TestMixinX(AbsApiMixinX):
             print(str(ret.payload))
         return ret
 
+"""
 class TestMixinX1(AbsAuthMixinX):
 
     def process_api(self, ctx, typer, request, vars):
@@ -789,5 +826,5 @@ class TestMixinX1(AbsAuthMixinX):
         else:
             timeout = 100
         return api.get(timeout)
-
+"""
 

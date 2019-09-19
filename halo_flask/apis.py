@@ -15,6 +15,7 @@ from .logs import log_json
 from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
 from .flask.utilx import Util
+from .const import HTTPChoice
 
 settings = settingsx()
 
@@ -51,6 +52,7 @@ class AbsBaseApi(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     name = None
+    op = HTTPChoice.get.value
     url = None
     api_type = None
     req_context = None
@@ -217,6 +219,11 @@ class AbsBaseApi(AbsBaseClass):
             logger.debug("error: " + msg, extra=log_json(self.req_context))
             raise e
 
+    def run(self,timeout, headers=None, auth=None,data=None):
+        if headers is None:
+            headers = headers
+        return self.process(self.op.__str__(), self.url, timeout, headers=headers,auth=auth,data=data)
+
     def get(self, timeout, headers=None,auth=None):
         """
 
@@ -226,7 +233,7 @@ class AbsBaseApi(AbsBaseClass):
         """
         if headers is None:
             headers = headers
-        return self.process('GET', self.url, timeout, headers=headers,auth=auth)
+        return self.process(HTTPChoice.get.value, self.url, timeout, headers=headers,auth=auth)
 
     def post(self, data, timeout, headers=None,auth=None):
         """
@@ -239,7 +246,7 @@ class AbsBaseApi(AbsBaseClass):
         logger.debug("payload=" + str(data))
         if headers is None:
             headers = headers
-        return self.process('POST', self.url, timeout, data=data, headers=headers,auth=auth)
+        return self.process(HTTPChoice.post.value, self.url, timeout, data=data, headers=headers,auth=auth)
 
     def put(self, data, timeout, headers=None,auth=None):
         """
@@ -251,7 +258,7 @@ class AbsBaseApi(AbsBaseClass):
         """
         if headers is None:
             headers = headers
-        return self.process('PUT', self.url, timeout, data=data, headers=headers,auth=auth)
+        return self.process(HTTPChoice.put.__str__(), self.url, timeout, data=data, headers=headers,auth=auth)
 
     def patch(self, data, timeout, headers=None,auth=None):
         """
@@ -263,7 +270,7 @@ class AbsBaseApi(AbsBaseClass):
         """
         if headers is None:
             headers = headers
-        return self.process('PATCH', self.url, timeout, data=data, headers=headers,auth=auth)
+        return self.process(HTTPChoice.patch.value, self.url, timeout, data=data, headers=headers,auth=auth)
 
     def delete(self, timeout, headers=None,auth=None):
         """
@@ -274,7 +281,7 @@ class AbsBaseApi(AbsBaseClass):
         """
         if headers is None:
             headers = headers
-        return self.process('DELETE', self.url, timeout, headers=headers,auth=auth)
+        return self.process(HTTPChoice.delete.value, self.url, timeout, headers=headers,auth=auth)
 
     def fwd_process(self, typer, request, vars, headers,auth=None):
         """
@@ -286,7 +293,7 @@ class AbsBaseApi(AbsBaseClass):
         :return:
         """
         verb = typer.value
-        if verb == 'GET' or 'DELETE':
+        if verb == HTTPChoice.get.value or HTTPChoice.delete.value:
             data = None
         else:
             data = request.data

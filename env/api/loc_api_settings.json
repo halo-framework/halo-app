@@ -44,10 +44,14 @@
     "type": "service"
   },
   "Google": {
-    "url": "http://www.google.com",
+    "url": "http://www.yahoo.com",
     "type": "api"
   },
   "Cnn": {
+    "url": "http://www.cnn.com",
+    "type": "api"
+  },
+  "Cnn1": {
     "url": "http://www.cnn.com",
     "type": "api"
   },

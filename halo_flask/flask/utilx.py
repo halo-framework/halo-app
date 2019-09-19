@@ -10,6 +10,7 @@ from flask import Response
 from ..base_util import BaseUtil
 from ..settingsx import settingsx
 from halo_flask.classes import AbsBaseClass
+from halo_flask.const import HTTPChoice
 
 class status(AbsBaseClass):
 
@@ -294,8 +295,8 @@ class Util(BaseUtil):
         :return:
         """
         qd = {}
-        if request.method == 'GET':
+        if request.method == HTTPChoice.get.value:
             qd = request.args
-        elif request.method == 'POST':
+        elif request.method == HTTPChoice.post.value:
             qd = request.args
         return qd
