@@ -179,8 +179,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             return True
         raise HaloException("Fail pre validation for Halo Request")
 
-    @staticmethod
-    def set_back_api(halo_request, foi=None):
+    def set_back_api(self,halo_request, foi=None):
         logger.debug("in set_back_api " + str(foi))
         if foi:
             foi_name = foi["name"]
@@ -197,15 +196,13 @@ class AbsApiMixinX(AbsBaseMixinX):
             return instance
         raise NoApiClassException("api class not defined")
 
-    @staticmethod
-    def set_api_headers(halo_request, seq=None, dict=None):
+    def set_api_headers(self,halo_request, seq=None, dict=None):
         logger.debug("in set_api_headers ")
         if halo_request:
             return []
         raise HaloException("no headers")
 
-    @staticmethod
-    def set_api_vars(halo_request, seq=None, dict=None):
+    def set_api_vars(self,halo_request, seq=None, dict=None):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
@@ -213,16 +210,13 @@ class AbsApiMixinX(AbsBaseMixinX):
             return ret
         raise HaloException("no var")
 
-    @staticmethod
-    def set_api_auth(halo_request, seq=None, dict=None):
+    def set_api_auth(self,halo_request, seq=None, dict=None):
         return None
 
-    @staticmethod
-    def set_api_data(halo_request, seq=None, dict=None):
+    def set_api_data(self,halo_request, seq=None, dict=None):
         return halo_request.request.data
 
-    @staticmethod
-    def execute_api(halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
+    def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         logger.debug("in execute_api "+back_api.name)
         if back_api:
             timeout = Util.get_timeout(halo_request.request)
@@ -238,8 +232,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 raise HaloException(e)
         return None
 
-    @staticmethod
-    def extract_json(halo_request, back_response, seq=None):
+    def extract_json(self,halo_request, back_response, seq=None):
         logger.debug("in extract_json ")
         if back_response:
             try:
@@ -404,23 +397,24 @@ class AbsApiMixinX(AbsBaseMixinX):
     def do_operation_1(self, halo_request):  # basic maturity - single request
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = self.__class__.set_back_api(halo_request)
+        back_api = self.set_back_api(halo_request)
         # 2. array to store the headers required for the API Access
-        back_headers = self.__class__.set_api_headers(halo_request)
+        back_headers = self.set_api_headers(halo_request)
         # 3. set request params
-        back_vars = self.__class__.set_api_vars(halo_request)
+        back_vars = self.set_api_vars(halo_request)
         # 4. Sset request auth
-        back_auth = self.__class__.set_api_auth(halo_request)
-        # 5. Sset request data
+        back_auth = self.set_api_auth(halo_request)
+        # 5. Set request data
+        #@todo add patch
         if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = self.__class__.set_api_data(halo_request)
+            back_data = self.set_api_data(halo_request)
         else:
             back_data = None
         # 6. Sending the request to the BANK API with params
-        back_response = self.__class__.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
+        back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
                                                    back_data)
         # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = self.__class__.extract_json(halo_request, back_response)
+        back_json = self.extract_json(halo_request, back_response)
         dict = {1: back_json}
         # 8. return json response
         return dict
@@ -432,37 +426,54 @@ class AbsApiMixinX(AbsBaseMixinX):
             # 1. get get first order interaction
             foi = self.business_event.get(seq)
             # 2. get api definition to access the BANK API  - url + vars dict
-            back_api = __class__.set_back_api(halo_request, foi)
+            back_api = self.set_back_api(halo_request, foi)
             # 2. do api work
-            back_json = self.__class__.do_api_work(halo_request, back_api, seq)
+            back_json = self.do_api_work(halo_request, back_api, seq)
             # 3. store in dict
             dict[seq] = back_json
         return dict
 
-    @staticmethod
-    def do_api_work(halo_request, back_api, seq):
+    def do_api_work(self,halo_request, back_api, seq):
         # 3. array to store the headers required for the API Access
-        back_headers = __class__.set_api_headers(halo_request, seq, dict)
+        back_headers = self.set_api_headers(halo_request, seq, dict)
         # 4. set vars
-        back_vars = __class__.set_api_vars(halo_request, seq, dict)
+        back_vars = self.set_api_vars(halo_request, seq, dict)
         # 5. auth
-        back_auth = __class__.set_api_auth(halo_request, seq, dict)
+        back_auth = self.set_api_auth(halo_request, seq, dict)
         # 6. set request data
         if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = __class__.set_api_data(halo_request, seq, dict)
+            back_data = self.set_api_data(halo_request, seq, dict)
         else:
             back_data = None
         # 7. Sending the request to the BANK API with params
-        back_response = __class__.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
+        back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
                                               back_data, seq, dict)
         # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = __class__.extract_json(halo_request, back_response, seq)
+        back_json = self.extract_json(halo_request, back_response, seq)
         # return
         return back_json
 
+    def set_api_op(self, api, payload):
+        req = payload['request']
+        #if not req.behavior_qualifier:# base option
+            #if req.request.method == HTTPChoice.put.value:
+                #if payload['state'] == 'BookHotel':
+                #    api.op = HTTPChoice.post.value
+                # if payload['state'] == 'BookCancel':
+                #    api.op = HTTPChoice.delete.value
+        #else:
+            #if req.behavior_qualifier == "deposit":
+                # if req.request.method == HTTPChoice.put.value:
+                    # if payload['state'] == 'BookHotel':
+                    #    api.op = HTTPChoice.post.value
+                    # if payload['state'] == 'BookCancel':
+                    #    api.op = HTTPChoice.delete.value
+        return api
+
     def do_saga_work(self, api, results, payload):
         print("do_saga_work=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
-        return __class__.do_api_work(payload['request'], api, payload['seq'])
+        set_api = self.set_api_op(api,payload)
+        return self.do_api_work(payload['request'], set_api, payload['seq'])
 
     def do_operation_3(self, halo_request):  # high maturity - saga transactions
         logger.debug("do_operation_3")
@@ -476,7 +487,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             if 'Resource' in self.business_event.saga["States"][state]:
                 api_name = self.business_event.saga["States"][state]['Resource']
                 print(api_name)
-                payloads[state] = {"request": halo_request, 'seq': str(counter)}
+                payloads[state] = {"request": halo_request, 'seq': str(counter),"state":state}
                 apis[state] = self.do_saga_work
                 counter = counter + 1
 
@@ -531,6 +542,47 @@ class AbsApiMixinX(AbsBaseMixinX):
                     #   if no entry use simple operation
                     #    raise BusinessEventMissingSeqException(request.method+":"+str(request.path))
        return self.business_event
+
+    def process_get(self, request, vars):
+        halo_request = HaloRequest(request)
+        self.set_businss_event(halo_request, "x")
+        ret = self.do_operation(halo_request)
+        if ret.code == status.HTTP_200_OK:
+            print(str(ret.payload))
+        return ret
+
+    def process_post(self, request, vars):
+        halo_request = HaloRequest(request)
+        self.set_businss_event(halo_request, "x")
+        ret = self.do_operation(halo_request)
+        if ret.code == status.HTTP_201_CREATED:
+            print(str(ret.payload))
+        return ret
+
+    def process_put(self, request, vars):
+        halo_request = HaloRequest(request)
+        self.set_businss_event(halo_request, "x")
+        ret = self.do_operation(halo_request)
+        if ret.code == status.HTTP_200_OK or ret.code == status.HTTP_201_CREATED:
+            print(str(ret.payload))
+        return ret
+
+    def process_patch(self, request, vars):
+        halo_request = HaloRequest(request)
+        self.set_businss_event(halo_request, "x")
+        ret = self.do_operation(halo_request)
+        if ret.code == status.HTTP_200_OK:
+            print(str(ret.payload))
+        return ret
+
+    def process_delete(self, request, vars):
+        halo_request = HaloRequest(request)
+        self.set_businss_event(halo_request, "x")
+        ret = self.do_operation(halo_request)
+        if ret.code == status.HTTP_200_OK:
+            print(str(ret.payload))
+        return ret
+
 
 class PerfMixinX(AbsBaseMixinX):
     now = None
@@ -681,15 +733,9 @@ from halo_flask.saga import load_saga, SagaRollBack
 from halo_flask.flask.mixinx import AbsApiMixinX
 from halo_flask.response import HaloResponse
 from halo_flask.request import HaloRequest
-from halo_flask.apis import CnnApi
 
 
 class TestMixinX(AbsApiMixinX):
-
-    def set_back_api(halo_request):
-        req_context = Util.get_req_context(halo_request.request)
-        api = CnnApi(req_context)
-        return api
 
     def process_get(self, request, vars):
         halo_request = HaloRequest(request)

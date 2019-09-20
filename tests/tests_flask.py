@@ -10,11 +10,12 @@ from nose.tools import eq_
 
 
 from halo_flask.flask.utilx import Util, status
-from halo_flask.flask.mixinx import AbsBaseMixinX,TestMixinX
+from halo_flask.flask.mixinx import AbsApiMixinX,TestMixinX,PerfMixinX
 from halo_flask.flask.viewsx import TestLinkX
 from halo_flask.exceptions import ApiError
 from halo_flask.logs import log_json
 from halo_flask import saga
+from halo_flask.const import HTTPChoice
 from halo_flask.apis import CnnApi,GoogleApi,TstApi
 import unittest
 
@@ -26,20 +27,45 @@ api = Api(app)
 
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
-class T1(AbsBaseMixinX):
-    def process_get(self, request, vars):
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = {'data': {'test2': 'good'}}
-        ret.code = 200
-        ret.headers = []
-        return ret
 
-    def process_delete(self, request, vars):
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = {'data': {'test2': 'good'}}
-        ret.code = 500
-        ret.headers = []
-        return ret
+
+class A1(AbsApiMixinX):
+    def set_back_api(self,halo_request, foi=None):
+        if halo_request.request.method == HTTPChoice.delete.value:
+            return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.delete.value)
+        return super(A1,self).set_back_api(halo_request,foi)
+
+    def extract_json(self,halo_request, back_response, seq=None):
+        if seq == None:#no event
+            if not halo_request.behavior_qualifier:  # base scenario
+                if halo_request.request.method == HTTPChoice.get.value:#method type
+                    return {"tst_get":"good"}
+                if halo_request.request.method == HTTPChoice.delete.value:#method type
+                    return {"tst_delete":"good"}
+            else:#with behavior_qualifier
+                if halo_request.behavior_qualifier == 'deposit':
+                    return {}
+        else:#in event
+            if not halo_request.behavior_qualifier:#base scenario
+                if halo_request.request.method == HTTPChoice.put.value:#method type
+                    if seq == '1':
+                        return {"tst_put":"good1"}
+                    if seq == '2':
+                        return {"tst_put":"good2"}
+                if halo_request.request.method == HTTPChoice.post.value:#method type
+                    if seq == '1':
+                        return {"tst_post":"good1"}
+                    if seq == '2':
+                        return {"tst_post":"good2"}
+                if halo_request.request.method == HTTPChoice.patch.value:#method type
+                    return {"tst_patch":"good"}
+            else:#bq scenario
+                return {"bq":"good"}
+
+
+
+class P1(PerfMixinX):
+    pass
 
 class T2(TestMixinX):
     pass
@@ -51,10 +77,8 @@ from halo_flask.flask.viewsx import PerfLinkX as PerfLink
 class S1(PerfLink):
     pass
 
-from halo_flask.apis import AbsBaseApi
 
-class TstApi(AbsBaseApi):
-    name = 'Tst'
+
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -71,19 +95,44 @@ class TestUserDetailTestCase(unittest.TestCase):
         #self.app = app#.test_client()
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
-        self.t1 = T1()
+        self.a1 = A1()
         self.t2 = T2()
         self.t3 = T3()
 
 
-    def test_get_request_returns_a_given_string(self):
+    def test_1_get_request_returns_exception(self):
         with app.test_request_context(method='GET', path='/?abc=def'):
-            response = self.t1.process_get(request, {})
+            try:
+                response = self.a1.process_get(request, {})
+                raise False
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_2_delete_request_returns_dict(self):
+        with app.test_request_context(method='DELETE', path='/?abc=def'):
+            response = self.a1.process_delete(request, {})
+            eq_(response.payload, {1: {"tst_delete":"good"}})
+
+    def test_3_put_request_returns_dict(self):
+        with app.test_request_context(method='PUT', path='/?abc=def'):
+            response = self.a1.process_put(request, {})
+            eq_(response.payload, {'1': {'tst_put': 'good1'}, '2': {'tst_put': 'good2'}})
+
+    def test_4_post_request_returns_a_given_string(self):
+        with app.test_request_context(method='POST', path='/?abc=def'):
+            response = self.a1.process_post(request, {})
+            print("response=" + str(response.payload))
+            eq_(response.code, status.HTTP_201_CREATED)
+            eq_(response.payload, {'$.BookHotelResult': {'tst_post': 'good1'}, '$.BookFlightResult': {'tst_post': 'good2'}, '$.BookRentalResult': None})
+
+    def test_5_patch_request_returns_a_given_string(self):
+        with app.test_request_context(method='PATCH', path='/?abc=def'):
+            response = self.a1.process_patch(request, {})
             print("response=" + str(response.payload))
             eq_(response.code, status.HTTP_200_OK)
-            eq_(response.payload, {'data': {'test2': 'good'}})
+            eq_(response.payload, {'$.BookHotelResult': {'tst_patch': 'good'}, '$.BookFlightResult': {'tst_patch': 'good'}, '$.BookRentalResult': {'tst_patch': 'good'}})
 
-    def test_api_request_returns_a_CircuitBreakerError(self):
+    def test_6_api_request_returns_a_CircuitBreakerError(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             api = CnnApi(Util.get_req_context(request))
             timeout = Util.get_timeout(request)
@@ -94,18 +143,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
                 eq_(e.__class__.__name__,"CircuitBreakerError")
 
-    def test_api_request_returns_a_given_CircuitBreakerError1(self):
-        with app.test_request_context(method='GET', path='/?a=b'):
-            api = GoogleApi(Util.get_req_context(request))
-            timeout = Util.get_timeout(request)
-            try:
-                response = api.get(timeout)
-                assert False
-            except ApiError as e:
-                #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
-                eq_(e.__class__.__name__,"CircuitBreakerError")
 
-    def test_api_request_returns_a_given_CircuitBreakerError2(self):
+    def test_7_api_request_returns_a_given_CircuitBreakerError2(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             api = TstApi(Util.get_req_context(request))
             timeout = Util.get_timeout(request)
@@ -116,18 +155,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
                 eq_(e.__class__.__name__,"CircuitBreakerError")
 
-    def test_api_request_returns_a_given_missing_api(self):
-        with app.test_request_context(method='GET', path='/?a=b'):
-            api = TstApi(Util.get_req_context(request))
-            timeout = Util.get_timeout(request)
-            try:
-                response = api.get(timeout)
-                assert False
-            except ApiError as e:
-                #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
-                eq_(e.__class__.__name__,"CircuitBreakerError")
-
-    def test_api_request_returns_a_fail(self):
+    def test_8_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             api = CnnApi(Util.get_req_context(request))
             api.url = api.url + "/lgkmlgkhm??l,mhb&&,g,hj "

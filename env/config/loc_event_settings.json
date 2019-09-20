@@ -1,4 +1,20 @@
 {
+  "A1": {
+    "base": {
+      "PUT": {
+        "url": "base_seq.json",
+        "type": "seq"
+      },
+      "POST": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      },
+      "PATCH": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      }
+    }
+  },
   "T2": {
     "base": {
       "GET": {

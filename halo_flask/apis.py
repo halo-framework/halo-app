@@ -58,8 +58,10 @@ class AbsBaseApi(AbsBaseClass):
     req_context = None
     cb = MyCircuitBreaker()
 
-    def __init__(self, req_context):
+    def __init__(self, req_context,method=None):
         self.req_context = req_context
+        if method:
+            self.op = method
         self.url, self.api_type = self.get_url_str()
         self.cb._name = self.name
 
@@ -300,10 +302,23 @@ class AbsBaseApi(AbsBaseClass):
         return self.process(verb, self.url, Util.get_timeout(request), data=data, headers=headers,auth=auth)
 
 class ApiMngr(AbsBaseClass):
+    API_LIST = []
+
 
     def __init__(self, req_context):
         logger.debug("ApiMngr=" + str(req_context))
         self.req_context = req_context
+
+    @staticmethod
+    def set_api_list(list):
+        """
+
+        :param name:
+        :return:
+        """
+        logger.debug("set_api_list")
+        if list:
+            ApiMngr.API_LIST = list
 
     @staticmethod
     def get_api(name):
@@ -313,8 +328,8 @@ class ApiMngr(AbsBaseClass):
         :return:
         """
         logger.debug("get_api=" + name)
-        if name in API_LIST:
-            return API_LIST[name]
+        if name in ApiMngr.API_LIST:
+            return ApiMngr.API_LIST[name]
         return None
 
     def get_api_instance(self, class_name, **kwargs):
@@ -324,7 +339,7 @@ class ApiMngr(AbsBaseClass):
         :param kwargs:
         :return:
         """
-        logger.debug("get_api_insance=" + class_name)
+        logger.debug("get_api_instance=" + class_name)
         module = importlib.import_module(__name__)
         class_ = getattr(module, class_name)
         instance = class_(self.req_context)
@@ -368,8 +383,11 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
                         API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
         print(str(API_CONFIG))
 
+
+
+
+
 ##################################### test #########################
-from halo_flask.apis import AbsBaseApi
 
 class CnnApi(AbsBaseApi):
     name = 'Cnn'
@@ -382,3 +400,5 @@ class TstApi(AbsBaseApi):
     name = 'Tst'
 
 API_LIST = {"Google": 'GoogleApi', "Cnn": "ApiTest","Tst":"TstApi"}
+
+ApiMngr.set_api_list(API_LIST)
