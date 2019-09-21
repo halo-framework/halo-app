@@ -533,25 +533,21 @@ class AbsApiMixinX(AbsBaseMixinX):
                     bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
                     if bq in bqs:
                         service_list = bqs[bq]
-                    else:
-                        raise HaloException("behavior qualifier not in event mapping:"+bq)
-                    #@todo add schema to all event config files
-                    if halo_request.request.method in service_list:
-                        service_map = service_list[halo_request.request.method]
-                        if SEQ in service_map:
-                            dict = service_map[SEQ]
-                            self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
-                        if SAGA in service_map:
-                            saga = service_map[SAGA]
-                            self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
-                    #else:
+                        #@todo add schema to all event config files
+                        if halo_request.request.method in service_list:
+                            service_map = service_list[halo_request.request.method]
+                            if SEQ in service_map:
+                                dict = service_map[SEQ]
+                                self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
+                            if SAGA in service_map:
+                                saga = service_map[SAGA]
+                                self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
                     #   if no entry use simple operation
-                    #    raise BusinessEventMissingSeqException(request.method+":"+str(request.path))
        return self.business_event
 
     def get_bq(self,vars):
         if vars and "behavior_qualifier" in vars:
-            return self.validate_bq(vars["behavior_qualifier"])
+            return self.validate_bq(vars["behavior_qualifier"]).lower()
         return None
 
     def validate_bq(self,bq):
