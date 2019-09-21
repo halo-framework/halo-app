@@ -6,12 +6,12 @@ from setuptools import setup
 # python setup.py sdist bdist_wheel
 # twine upload dist/halo_flask-0.13.8.tar.gz -r pypitest
 
-with open("README.md", "r") as fh:
+with open("README.md", "r") as h:
     long_description = fh.read()
 
 setup(
     name='halo_flask',
-    version='0.15.32',
+    version='0.15.33',
     packages=['halo_flask', 'halo_flask.flask', 'halo_flask.schema','halo_flask.providers', 'halo_flask.providers.cloud', 'halo_flask.providers.cloud.aws', 'halo_flask.providers.onprem', 'halo_flask.providers.ssm'],
     data_files=[('schema', ['halo_flask/schema/saga_schema.json'])],
     package_data={'schema': ['halo_flask/schema/saga_schema.json']},
