@@ -309,7 +309,8 @@ print('SSM_TYPE='+SSM_TYPE)
 
 file_dir = os.path.dirname(__file__)
 file_path = os.path.join(file_dir, 'halo_flask','schema',"saga_schema.json")
-SAGA_SCHEMA_PATH = file_path
+with open(file_path) as f1:
+    SAGA_SCHEMA = json.load(f1)
 
 #######################################################################################3
 

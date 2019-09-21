@@ -15,7 +15,7 @@
       }
     }
   },
-  "T2": {
+  "A2": {
     "base": {
       "GET": {
         "url": "base_seq.json",
@@ -30,14 +30,18 @@
         "type": "saga"
       },
       "PATCH": {
-        "url": "base_seq.json",
-        "type": "seq"
+        "url": "saga_rlbk_brk.json",
+        "type": "saga"
       }
     },
     "deposit": {
       "GET": {
         "url": "base_seq.json",
         "type": "seq"
+      },
+      "POST": {
+        "url": "tst_saga.json",
+        "type": "saga"
       }
     }
   },

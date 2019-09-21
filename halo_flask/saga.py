@@ -6,6 +6,8 @@ from .exceptions import ApiError
 from .exceptions import HaloException, HaloError
 from .logs import log_json
 from  .classes import AbsBaseClass
+from .flask.utilx import status
+
 logger = logging.getLogger(__name__)
 
 """
@@ -188,11 +190,20 @@ class Saga(AbsBaseClass):
                     tname = self.__get_action(tname).compensate(e.status_code)
                 else:
                     raise SagaError(rollback, [e])
+            except AttributeError as e:
+                self.slog.log(req_context, SagaLog.failTx, tname)
+                self.slog.log(req_context, SagaLog.abortSaga, self.name)
+                logger.debug("AttributeError=" + str(e))
+                raise SagaError("AttributeError", [e])
             except BaseException as e:
                 self.slog.log(req_context, SagaLog.failTx, tname)
-                logger.debug("e=" + str(e))
                 self.slog.log(req_context, SagaLog.errorSaga, self.name)
-                raise SagaError(e, [])
+                logger.debug("e=" + str(e))
+                if rollback is None:
+                    rollback = e
+                    tname = self.__get_action(tname).compensate(status.HTTP_500_INTERNAL_SERVER_ERROR)
+                else:
+                    raise SagaError(e, [])
 
 
             if type(kwargs) is not dict:

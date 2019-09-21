@@ -55,11 +55,11 @@
     "url": "http://www.cnn.com",
     "type": "api"
   },
-  "Tst1": {
+  "Tst": {
     "url": "http://www.cnddmfgkkn.com",
     "type": "api"
   },
-  "Tst": {
+  "Tst1": {
     "url": "http://127.0.0.1",
     "type": "api"
   }

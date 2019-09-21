@@ -24,11 +24,10 @@ from ..settingsx import settingsx
 
 
 import flask_restful as restful
-from ..flask.mixinx import PerfMixinX
+from ..flask.mixinx import PerfMixinX,AbsApiMixinX
 from flask import request
 
 from halo_flask.const import HTTPChoice
-from halo_flask.flask.mixinx import TestMixinX
 
 settings = settingsx()
 # aws
@@ -84,12 +83,11 @@ class AbsBaseLinkX(MethodView):
         logger.debug("set ssm for host:" + str(HALO_HOST)+" and HTTP_HOST:"+str(request.headers['HOST']),extra=log_json(self.req_context))
         #from flask import current_app as app
         #app.config["INFO"] = ???
-        if HALO_HOST is None and 'HOST' in request.headers:
+        if HALO_HOST is None and 'HOST' in request.headers and settings.SSM_TYPE and settings.SSM_TYPE != 'NONE':
             HALO_HOST = request.headers['HOST']
             logger.debug("request.headers['HOST']:"+str(request.headers['HOST']))
-            if settings.SSM_TYPE and settings.SSM_TYPE != 'NONE':
-                from halo_flask.ssm import set_app_param_config
-                set_app_param_config(settings.SSM_TYPE,HALO_HOST)
+            from halo_flask.ssm import set_app_param_config
+            set_app_param_config(settings.SSM_TYPE,HALO_HOST)
 
 
         try:
@@ -277,8 +275,25 @@ class AbsBaseLinkX(MethodView):
         """
         return '&jwt=' + self.get_jwt(request).decode()
 
+    def get(self):
+        ret = self.do_process(HTTPChoice.get,request.args)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
 
+    def post(self):
+        ret = self.do_process(HTTPChoice.post,request.args)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
 
+    def put(self):
+        ret = self.do_process(HTTPChoice.put,request.args)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
+
+    def patch(self):
+        ret = self.do_process(HTTPChoice.patch,request.args)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
+
+    def delete(self):
+        ret = self.do_process(HTTPChoice.delete,request.args)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
 
 
 class Resource(restful.Resource):
@@ -286,37 +301,6 @@ class Resource(restful.Resource):
 
 
 class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
-    def get(self):
-        ret = self.do_process( HTTPChoice.get)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def post(self):
-        ret = self.do_process( HTTPChoice.post)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def put(self):
-        ret = self.do_process( HTTPChoice.put)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def delete(self):
-        ret = self.do_process( HTTPChoice.delete)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
+    pass
 
 
-class TestLinkX(Resource, TestMixinX, AbsBaseLinkX):
-
-    def get(self):
-        ret = self.do_process( HTTPChoice.get)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def post(self):
-        ret = self.do_process( HTTPChoice.post)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def put(self):
-        ret = self.do_process( HTTPChoice.put)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def delete(self):
-        ret = self.do_process( HTTPChoice.delete)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)

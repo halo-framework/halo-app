@@ -392,13 +392,12 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
 class CnnApi(AbsBaseApi):
     name = 'Cnn'
 
-
 class GoogleApi(AbsBaseApi):
     name = 'Google'
 
 class TstApi(AbsBaseApi):
     name = 'Tst'
 
-API_LIST = {"Google": 'GoogleApi', "Cnn": "ApiTest","Tst":"TstApi"}
+API_LIST = {"Google": 'GoogleApi', "Cnn": "CnnApi","Tst":"TstApi"}
 
 ApiMngr.set_api_list(API_LIST)

@@ -75,8 +75,14 @@ class CacheExpireError(CacheError):
     pass
 
 class BadRequestError(HaloError):
-    __metaclass__ = ABCMeta
-    """Custom exception class to be thrown when local error occurs."""
+    """Custom exception class to be thrown when local request error occurs."""
+    def __init__(self, message, http_status=400, payload=None):
+        self.message = message
+        self.status = http_status
+        self.payload = payload
+
+class ServerError(HaloError):
+    """Custom exception class to be thrown when local server error occurs."""
     def __init__(self, message, http_status=400, payload=None):
         self.message = message
         self.status = http_status
