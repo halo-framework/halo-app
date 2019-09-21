@@ -7,7 +7,7 @@ from setuptools import setup
 # twine upload dist/halo_flask-0.13.8.tar.gz -r pypitest
 
 with open("README.md", "r") as h:
-    long_description = fh.read()
+    long_description = h.read()
 
 setup(
     name='halo_flask',
