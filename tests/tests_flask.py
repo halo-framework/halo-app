@@ -368,18 +368,12 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_998_perf_get(self):
         with app.test_request_context(method='GET', path='/perf'):
             response = self.p1.process_get(request, {})
-            #print("x="+str(response.content))
-            #print("ret=" + str(json.loads(response.content)))
-            #eq_(json.loads(response.content)['error']['error_message'], 'test error msg')
-            eq_(response.code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_999_perf_get_link(self):
         with app.test_request_context(method='GET', path='/perf'):
-            response = self.p2.process_get(request, {})
-            #print("x="+str(response.content))
-            #print("ret=" + str(json.loads(response.content)))
-            #eq_(json.loads(response.content)['error']['error_message'], 'test error msg')
-            eq_(response.code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response = self.p2.get()
+            eq_(response.status_code, status.HTTP_200_OK)
 
 
 
