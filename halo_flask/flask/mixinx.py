@@ -437,12 +437,12 @@ class AbsApiMixinX(AbsBaseMixinX):
             # 2. get api definition to access the BANK API  - url + vars dict
             back_api = self.set_back_api(halo_request, foi)
             # 2. do api work
-            back_json = self.do_api_work(halo_request, back_api, seq)
+            back_json = self.do_api_work(halo_request, back_api, seq, dict)
             # 3. store in dict
             dict[seq] = back_json
         return dict
 
-    def do_api_work(self,halo_request, back_api, seq):
+    def do_api_work(self,halo_request, back_api, seq, dict=None):
         # 3. array to store the headers required for the API Access
         back_headers = self.set_api_headers(halo_request, seq, dict)
         # 4. set vars
