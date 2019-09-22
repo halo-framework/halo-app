@@ -284,11 +284,13 @@ class AbsApiMixinX(AbsBaseMixinX):
             headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(halo_request,
                                                                                 halo_request.request.headers)
             # 6. build json and add to bian response
-            ret = self.create_response(halo_request, payload, headers)
+            halo_response = self.create_response(halo_request, payload, headers)
             # 7. post condition
-            getattr(self, 'validate_post_%s' % behavior_qualifier)(halo_request, ret)
+            getattr(self, 'validate_post_%s' % behavior_qualifier)(halo_request, halo_response)
+            # 8. do filter
+            self.do_filter(halo_request, halo_response)
             # return json response
-            return ret
+            return halo_response
         except AttributeError as ex:
             raise HaloMethodNotImplementedException(ex)
 
