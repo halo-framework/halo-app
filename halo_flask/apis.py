@@ -137,6 +137,19 @@ class AbsBaseApi(AbsBaseClass):
         self.url = strx
         return self.url
 
+    def set_api_base(self, base_url):
+        """
+
+        :param query:
+        :return:
+        """
+        strx = self.url
+        if "base_url" in self.url:
+            strx = strx.replace("base_url",base_url)
+        logger.debug("url add base: " + strx, extra=log_json(self.req_context))
+        self.url = strx
+        return self.url
+
     def set_api_query(self, query):
         """
 
