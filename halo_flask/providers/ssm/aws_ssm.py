@@ -7,7 +7,7 @@ import logging
 import os
 import time
 from environs import Env
-from botocore.exceptions import ClientError
+
 
 from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError
 from halo_flask.classes import AbsBaseClass
@@ -118,7 +118,11 @@ def load_config(region_name, ssm_parameter_path):
     :param ssm_parameter_path: Path to app config in SSM Parameter Store
     :return: ConfigParser holding loaded config
     """
-
+    try:
+        from botocore.exceptions import ClientError
+    except Exception as e:
+        logger.error("Encountered a client error loading config from SSM:" + str(e))
+        raise HaloError("please Load package Halo_aws in order to use AWS SSM")
     configuration = configparser.ConfigParser()
     logger.debug("ssm_parameter_path=" + str(ssm_parameter_path))
     try:
@@ -187,6 +191,11 @@ def set_config(region_name, ssm_parameter_path, value):
     :param ssm_parameter_path: Path to app config in SSM Parameter Store
     :return: ConfigParser holding loaded config
     """
+    try:
+        from botocore.exceptions import ClientError
+    except Exception as e:
+        logger.error("Encountered a client error loading config from SSM:" + str(e))
+        raise HaloError("please Load package Halo_aws in order to use AWS SSM")
     try:
         # set parameters for this app
 

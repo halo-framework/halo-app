@@ -207,7 +207,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
-            ret["bq"] = halo_request.behavior_qualifier
+            ret["behavior_qualifier"] = halo_request.behavior_qualifier
             return ret
         raise HaloException("no var")
 
@@ -639,6 +639,9 @@ class PerfMixinX(AbsBaseMixinX):
         logger.debug('db perf: ')
         total = datetime.datetime.now() - self.now
         return 'db access: ' + str(total)
+
+    def process_delete(self, request, vars):
+        return HaloResponse(request,{}, 500, [])
 
 
 class AbsAuthMixinX(AbsApiMixinX):

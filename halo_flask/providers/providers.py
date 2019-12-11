@@ -12,14 +12,11 @@ from abc import ABCMeta,abstractmethod
 #@ TODO perf activation will reload SSM if needed and refresh API table
 
 
-from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
-from .ssm.aws_ssm import get_config as get_config_cld
-from .ssm.aws_ssm import get_app_config as get_app_config_cld
 from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem
 from .ssm.onprem_ssm import get_config as get_config_onprem
 from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from ..settingsx import settingsx
-from halo_flask.exceptions import HaloError, HaloException
+from halo_flask.exceptions import ProviderError
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
 
@@ -54,8 +51,12 @@ class Provider(AbsBaseClass):
 
 def get_provider():
     if PROVIDER == AWS:
-        from halo_aws.providers.cloud.aws.aws import AwsProvider
-        return AwsProvider()
+        try:
+            from halo_aws.providers.cloud.aws.aws import AwsProvider
+            return AwsProvider()
+        except Exception as e:
+            raise ProviderError(e)
+
 
 ################## ssm ###########################
 
@@ -67,7 +68,11 @@ def set_app_param_config(ssm_type, host):
     :return:
     """
     if ssm_type == AWS:
-        return set_app_param_config_cld(host)
+        try:
+            from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
+            return set_app_param_config_cld(host)
+        except Exception as e:
+            raise ProviderError(e)
     return set_app_param_config_onprem(host)
 
 
@@ -80,7 +85,11 @@ def get_config(ssm_type):
     """
     # Initialize app if it doesn't yet exist
     if ssm_type == AWS:
-        return get_config_cld()
+        try:
+            from .ssm.aws_ssm import get_config as get_config_cld
+            return get_config_cld()
+        except Exception as e:
+            raise ProviderError(e)
     return get_config_onprem()
 
 
@@ -92,6 +101,10 @@ def get_app_config(ssm_type):
     """
     # Initialize app if it doesn't yet exist
     if ssm_type == AWS:
-        return get_app_config_cld()
+        try:
+            from .ssm.aws_ssm import get_app_config as get_app_config_cld
+            return get_app_config_cld()
+        except Exception as e:
+            raise ProviderError(e)
     return get_app_config_onprem()
 

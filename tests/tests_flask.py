@@ -328,14 +328,26 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
-    def test_994_ssm_aws(self):  # @TODO
+    def test_9940_ssm_aws(self):  # @TODO test without HALO_AWS
+        header = {'HTTP_HOST': '127.0.0.2'}
+        with app.test_request_context(method='GET', path='/?a=b', headers=header):
+            try:
+                from halo_flask.ssm import set_app_param_config
+                set_app_param_config("AWS", "124")
+                from halo_flask.ssm import get_app_config
+                config = get_app_config("AWS")
+                eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
+            except Exception as e:
+                eq_(e.__class__.__name__, "ProviderError")
+
+    def test_9941_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config
             set_app_param_config("AWS", "124")
             from halo_flask.ssm import get_app_config
             config = get_app_config("AWS")
-            eq_(config.get_param("halo_base")["url"], 'https://127.0.0.1:8000/loc')
+            eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
 
     def test_995_ssm_onperm(self):  # @TODO
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -344,14 +356,16 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_flask.providers.ssm.onprem_ssm_client'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config
-            set_app_param_config("AWS", "124")
+            set_app_param_config("ONPREM", "124")
             from halo_flask.ssm import get_app_config
             config = get_app_config("ONPREM")
-            eq_(config.get_param('halo_base')["url"], 'https://127.0.0.1:8000/loc')
+            t = config.get_param('halo_flask')
+            print("t="+str(t))
+            eq_(str(t), '<Section: DEFAULT>')
 
     def test_996_error_handler(self):
         with app.test_request_context(method='DELETE', path='/perf'):
-            response = self.a1.process_delete(request, {})
+            response = self.p1.process_delete(request, {})
             #print("x="+str(response.content))
             #print("ret=" + str(json.loads(response.content)))
             #eq_(json.loads(response.content)['error']['error_message'], 'test error msg')

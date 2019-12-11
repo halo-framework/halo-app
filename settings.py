@@ -15,8 +15,11 @@ THE_ENV=os.path.join(BASE_DIR,'env','.env')
 env.read_env(path=THE_ENV)
 print('The .env file has been loaded. env: '+str(THE_ENV))
 
-ENV = env.str('FLASK_ENV', default='production')
-DEBUG = ENV == 'development'
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env.bool('DEBUG', default=False)
+print("DEBUG=" + str(DEBUG))
+
+ENV = env.str('FLASK_ENV', default='production') # development,testing, production
 SQLALCHEMY_DATABASE_URI = env.str('DATABASE_URL')
 SECRET_KEY = env.str('SECRET_KEY')
 BCRYPT_LOG_ROUNDS = env.int('BCRYPT_LOG_ROUNDS', default=13)
@@ -38,7 +41,7 @@ ENV_NAME = LOC  # env.str('ENV_NAME')
 FUNC_NAME = env.str('FUNC_NAME', 'halo_flask')
 #os.environ['HALO_FUNC_NAME'] = FUNC_NAME  # done in settings json file
 #os.environ['HALO_APP_NAME'] = 'app'  #done in settings json file
-APP_NAME = env.str('APP_NAME', 'halo_app')
+APP_NAME = env.str('APP_NAME', 'halo')
 
 SERVER_LOCAL = True
 
@@ -46,7 +49,6 @@ SERVER_LOCAL = True
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = env('SECRET_KEY')
 
-AWS_REGION = env('AWS_REGION')
 
 ###
 # Given a version number MAJOR.MINOR.PATCH, increment the:
@@ -81,10 +83,6 @@ VERSION = get_version()
 print(VERSION)
 
 APPEND_SLASH = True
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # env.bool('DEBUG', default=True)
-print("DEBUG=" + str(DEBUG))
 
 SERVER = env('SERVER_NAME')
 HALO_HOST = None
