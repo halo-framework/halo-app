@@ -90,7 +90,7 @@ class AbsBaseLinkX(MethodView):
             set_app_param_config(settings.SSM_TYPE,HALO_HOST)
 
 
-        try:
+        try: #@todo LAMBDA with universal id
             ret = self.process(request,typer, args)
             total = datetime.datetime.now() - now
             logger.info("performance_data", extra=log_json(self.req_context,
