@@ -7,6 +7,7 @@ from abc import ABCMeta
 import json
 import requests
 import importlib
+from jsonpath_ng import jsonpath, parse
 # aws
 # common
 # flask
@@ -245,8 +246,42 @@ class AbsApiMixinX(AbsBaseMixinX):
     def create_resp_payload(self, halo_request, dict_back_json):
         logger.debug("in create_resp_payload " + str(dict_back_json))
         if dict_back_json:
-            return dict_back_json
+            mapping = self.load_resp_mapping(halo_request)
+            if mapping:
+                try:
+                    jsonpath_expression = parse(str(mapping))
+                    matchs = jsonpath_expression.find(dict_back_json)
+                    for match in matchs:
+                        logger.debug( match.value)
+                    ret = self.create_resp_json(halo_request, dict_back_json,matchs)
+                    return ret
+                except Exception as e:
+                    logger.debug(str(e))
+                    raise HaloException("mapping error for " + halo_request.request.path)
+            ret = self.create_resp_json(halo_request, dict_back_json)
+            return ret
         return {}
+
+    def create_resp_json(self,halo_request, dict_back_json, matchs=None):
+        logger.debug("in create_resp_json ")
+        if matchs:
+            js = {}
+            try:
+                for match in matchs:
+                    logger.debug(match.value)
+                    js[match.value] = match.value
+                    return js
+            except Exception as e:
+                pass
+        return dict_back_json
+
+    def load_resp_mapping(self, halo_request):
+        logger.debug("in load_resp_mapping " + str(halo_request))
+        if settings.MAPPING and halo_request.request.path in settings.MAPPING:
+            mapping = settings.MAPPING[halo_request.request.path]
+            logger.debug("in load_resp_mapping " + str(mapping))
+            return mapping
+        raise HaloException("no mapping for "+halo_request.request.path)
 
     def set_resp_headers(self, halo_request, headers):
         logger.debug("in set_resp_headers " + str(headers))

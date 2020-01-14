@@ -7,7 +7,7 @@ from faker import Faker
 from flask import Flask, request
 from flask_restful import Api
 from nose.tools import eq_
-
+from jsonpath_ng import jsonpath, parse
 
 from halo_flask.flask.utilx import Util, status
 from halo_flask.flask.mixinx import AbsApiMixinX,PerfMixinX
@@ -95,6 +95,56 @@ class A2(Resource, A1, AbsBaseLinkX):
                     return {"tst_post_deposit":"good2"}
             if halo_request.request.method == HTTPChoice.patch.value:#method type
                 return {"tst_patch_deposit":"good"}
+
+    def create_resp_payload(self, halo_request, dict_back_json):
+        if dict_back_json:
+            dict_back_json = {
+              "employees": [
+                {
+                  "id": 1,
+                  "name": "Pankaj",
+                  "salary": "10000"
+                },
+                {
+                  "name": "David",
+                  "salary": "5000",
+                  "id": 2
+                }
+              ]
+            }
+            dict_back_json1 = {
+	"store": {
+		"book": [{
+			"category": "reference",
+			"author": "Nigel Rees",
+			"title": "Sayings of the Century",
+			"price": 8.95
+		}, {
+			"category": "fiction",
+			"author": "Evelyn Waugh",
+			"title": "Sword of Honour",
+			"price": 12.99
+		}, {
+			"category": "fiction",
+			"author": "Herman Melville",
+			"title": "Moby Dick",
+			"isbn": "0-553-21311-3",
+			"price": 8.99
+		}, {
+			"category": "fiction",
+			"author": "J. R. R. Tolkien",
+			"title": "The Lord of the Rings",
+			"isbn": "0-395-19395-8",
+			"price": 22.99
+		}],
+		"bicycle": {
+			"color": "red",
+			"price": 19.95
+		}
+	},
+	"expensive": 10
+}
+            return  super(A2,self).create_resp_payload(halo_request, dict_back_json)
 
 
 class P1(PerfMixinX):
@@ -291,6 +341,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST', path="/tst?behavior_qualifier=tst"):
             try:
                 response = self.a2.post()
+                raise False
+            except Exception as e:
+                eq_(e.__class__.__name__, "InternalServerError")
+
+    def test_9923_trans_json(self):
+        with app.test_request_context(method='GET', path="/tst"):
+            try:
+                response = self.a2.get()
                 raise False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")

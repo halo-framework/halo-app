@@ -353,4 +353,11 @@ with open(file_path, 'r') as fi:
             dictx[bq] = dict
         BUSINESS_EVENT_MAP[clazz] = dictx
 
+MAPPING = None
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir, 'env','config','mapping.json')
+with open(file_path, 'r') as fi:
+    MAPPING = json.load(fi)
+    print("mapping:" + str(MAPPING))
+
 print('The settings file has been loaded.')
