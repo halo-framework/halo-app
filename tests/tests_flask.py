@@ -447,5 +447,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             response = self.p2.get()
             eq_(response.status_code, status.HTTP_200_OK)
 
+    def test_9991_tst2_get(self):
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            response = self.a2.get()
+            eq_(response.status_code, status.HTTP_200_OK)
+
 
 

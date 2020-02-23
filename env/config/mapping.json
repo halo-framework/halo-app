@@ -1,4 +1,7 @@
 {
   "/tst": "employees[*].id",
-  "/tst1": ""
+  "/tst1": "",
+  "/xst2/(*)/t*":"",
+  "^/xst2/([a-zA-Z0-9]+)/tst1/([a-zA-Z0-9]+)/tst/([a-zA-Z0-9]+)/":"employees[*].id",
+  "^/(?P<artist>[a-zA-Z0-9 ]+)/(?P<release>[a-zA-Z0-9 ]+)/(?P<track>[a-zA-Z0-9 -_]+).[a-zA-Z]*.*":""
 }

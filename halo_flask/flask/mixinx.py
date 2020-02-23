@@ -5,6 +5,7 @@ import datetime
 import logging
 from abc import ABCMeta
 import json
+import re
 import requests
 import importlib
 from jsonpath_ng import jsonpath, parse
@@ -275,13 +276,26 @@ class AbsApiMixinX(AbsBaseMixinX):
                 pass
         return dict_back_json
 
-    def load_resp_mapping(self, halo_request):
+    def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
         if settings.MAPPING and halo_request.request.path in settings.MAPPING:
             mapping = settings.MAPPING[halo_request.request.path]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
         raise HaloException("no mapping for "+halo_request.request.path)
+
+    def load_resp_mapping(self, halo_request):
+        logger.debug("in load_resp_mapping " + str(halo_request))
+        if settings.MAPPING:
+            for path in settings.MAPPING:
+                try:
+                    if re.match(path,halo_request.request.path):
+                        mapping = settings.MAPPING[path]
+                        logger.debug("in load_resp_mapping " + str(mapping))
+                        return mapping
+                except Exception as e:
+                    logger.debug("error in load_resp_mapping " + str(path))
+        return None
 
     def set_resp_headers(self, halo_request, headers):
         logger.debug("in set_resp_headers " + str(headers))
