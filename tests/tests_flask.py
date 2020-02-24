@@ -34,7 +34,7 @@ class A1(AbsApiMixinX):
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
-            if not halo_request.behavior_qualifier:#not in bq
+            if not halo_request.sub_func:#not in bq
                 if halo_request.request.method == HTTPChoice.delete.value:
                     return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)

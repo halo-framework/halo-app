@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 class HaloRequest(AbsBaseClass):
 
     request = None
-    behavior_qualifier = None
+    sub_func = None
 
-    def __init__(self, request, behavior_qualifier=None):
+    def __init__(self, request, sub_func=None):
         if request:
             self.request = request
-            self.behavior_qualifier = behavior_qualifier
+            self.sub_func = sub_func

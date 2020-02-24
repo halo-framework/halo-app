@@ -209,7 +209,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
-            ret["behavior_qualifier"] = halo_request.behavior_qualifier
+            ret["behavior_qualifier"] = halo_request.sub_func
             return ret
         raise HaloException("no var")
 
@@ -316,10 +316,10 @@ class AbsApiMixinX(AbsBaseMixinX):
         return RequestFilter(None)
 
     def do_operation_bq(self, halo_request):
-        if halo_request.behavior_qualifier is None:
+        if halo_request.sub_func is None:
             raise IllegalBQException("missing behavior_qualifier value")
         try:
-            behavior_qualifier = halo_request.behavior_qualifier.lower()
+            behavior_qualifier = halo_request.sub_func.lower()
             # 1. validate input params
             getattr(self, 'validate_req_%s' % behavior_qualifier)(halo_request)
             # 2. Code to access the BANK API  to retrieve data - url + vars dict
@@ -558,19 +558,19 @@ class AbsApiMixinX(AbsBaseMixinX):
     def processing_engine(self, halo_request):
         if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
-                if halo_request.behavior_qualifier:
-                    return self.do_operation_3_bq(halo_request, halo_request.behavior_qualifier.lower())
+                if halo_request.sub_func:
+                    return self.do_operation_3_bq(halo_request, halo_request.sub_func.lower())
                 return self.do_operation_3(halo_request)
             if self.business_event.get_business_event_type() == SEQ:
                 if self.business_event.keys():
-                    if halo_request.behavior_qualifier:
-                        return self.do_operation_2_bq(halo_request, halo_request.behavior_qualifier.lower())
+                    if halo_request.sub_func:
+                        return self.do_operation_2_bq(halo_request, halo_request.sub_func.lower())
                     return self.do_operation_2(halo_request)
                 else:
                     raise BusinessEventMissingSeqException(self.service_operation)
         else:
-            if halo_request.behavior_qualifier:
-                return self.do_operation_1_bq(halo_request, halo_request.behavior_qualifier.lower())
+            if halo_request.sub_func:
+                return self.do_operation_1_bq(halo_request, halo_request.sub_func.lower())
             return self.do_operation_1(halo_request)
 
     def set_businss_event(self, halo_request, event_category):
@@ -579,8 +579,8 @@ class AbsApiMixinX(AbsBaseMixinX):
             if settings.BUSINESS_EVENT_MAP:
                 if self.service_operation in settings.BUSINESS_EVENT_MAP:
                     bq = "base"
-                    if halo_request.behavior_qualifier:
-                        bq = halo_request.behavior_qualifier
+                    if halo_request.sub_func:
+                        bq = halo_request.sub_func
                     bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
                     if bq in bqs:
                         service_list = bqs[bq]
