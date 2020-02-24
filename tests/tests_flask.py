@@ -333,12 +333,12 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
-        with app.test_request_context(method='POST', path="/tst?behavior_qualifier=deposit"):
+        with app.test_request_context(method='POST', path="/tst?sub_func=deposit"):
             response = self.a2.post()
             eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_9922_run_saga_bq_error(self):
-        with app.test_request_context(method='POST', path="/tst?behavior_qualifier=tst"):
+        with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
             try:
                 response = self.a2.post()
                 raise False
@@ -379,7 +379,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_9933_all_rollback_saga_bq(self):
-        with app.test_request_context(method='PUT', path="/test?behavior_qualifier=deposit"):
+        with app.test_request_context(method='PUT', path="/test?sub_func=deposit"):
             try:
                 response = self.a2.put()
                 assert False

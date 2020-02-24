@@ -209,7 +209,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
-            ret["behavior_qualifier"] = halo_request.sub_func
+            ret["sub_func"] = halo_request.sub_func
             return ret
         raise HaloException("no var")
 
@@ -317,25 +317,25 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_bq(self, halo_request):
         if halo_request.sub_func is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQException("missing sub_func value")
         try:
-            behavior_qualifier = halo_request.sub_func.lower()
+            sub_func = halo_request.sub_func.lower()
             # 1. validate input params
-            getattr(self, 'validate_req_%s' % behavior_qualifier)(halo_request)
+            getattr(self, 'validate_req_%s' % sub_func)(halo_request)
             # 2. Code to access the BANK API  to retrieve data - url + vars dict
-            getattr(self, 'validate_pre_%s' % behavior_qualifier)(halo_request)
+            getattr(self, 'validate_pre_%s' % sub_func)(halo_request)
             # 3. processing engine
             dict = self.processing_engine(halo_request)
             # 4. Build the payload target response structure which is Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(halo_request, dict)
+            payload = getattr(self, 'create_resp_payload_%s' % sub_func)(halo_request, dict)
             logger.debug("payload=" + str(payload))
             # 5. setup headers for reply
-            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(halo_request,
+            headers = getattr(self, 'set_resp_headers_%s' % sub_func)(halo_request,
                                                                                 halo_request.request.headers)
             # 6. build json and add to bian response
             halo_response = self.create_response(halo_request, payload, headers)
             # 7. post condition
-            getattr(self, 'validate_post_%s' % behavior_qualifier)(halo_request, halo_response)
+            getattr(self, 'validate_post_%s' % sub_func)(halo_request, halo_response)
             # 8. do filter
             self.do_filter(halo_request, halo_response)
             # return json response
@@ -343,47 +343,47 @@ class AbsApiMixinX(AbsBaseMixinX):
         except AttributeError as ex:
             raise HaloMethodNotImplementedException(ex)
 
-    def do_operation_1_bq(self, halo_request, behavior_qualifier):  # basic maturity - single request
+    def do_operation_1_bq(self, halo_request, sub_func):  # basic maturity - single request
         logger.debug("do_operation_1_bq")
-        if behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+        if sub_func is None:
+            raise IllegalBQException("missing sub_func value")
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(halo_request)
+        back_api = getattr(self, 'set_back_api_%s' % sub_func)(halo_request)
         # 2. array to store the headers required for the API Access
-        back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(halo_request)
+        back_headers = getattr(self, 'set_api_headers_%s' % sub_func)(halo_request)
         # 3. set request params
-        back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(halo_request)
+        back_vars = getattr(self, 'set_api_vars_%s' % sub_func)(halo_request)
         # 4. Sset request auth
-        back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(halo_request)
+        back_auth = getattr(self, 'set_api_auth_%s' % sub_func)(halo_request)
         # 5. Sset request data
         if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(halo_request)
+            back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request)
         else:
             back_data = None
         # 6. Sending the request to the BANK API with params
-        back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(halo_request, back_api, back_vars,
+        back_response = getattr(self, 'execute_api_%s' % sub_func)(halo_request, back_api, back_vars,
                                                                              back_headers, back_auth, back_data)
         # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(halo_request, back_response)
+        back_json = getattr(self, 'extract_json_%s' % sub_func)(halo_request, back_response)
         dict = {1: back_json}
         # 8. return json response
         return dict
 
-    def do_operation_2_bq(self, halo_request, behavior_qualifier):  # medium maturity - foi
+    def do_operation_2_bq(self, halo_request, sub_func):  # medium maturity - foi
         logger.debug("do_operation_2_bq")
         dict = {}
         for seq in self.business_event.keys():
             # 1. get get first order interaction
             foi = self.business_event.get(seq)
             # 2. get api definition to access the BANK API  - url + vars dict
-            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(halo_request, foi)
-            back_json = self.do_api_work_bq(halo_request, behavior_qualifier, back_api, seq)
+            back_api = getattr(self, 'set_back_api_%s' % sub_func)(halo_request, foi)
+            back_json = self.do_api_work_bq(halo_request, sub_func, back_api, seq)
             # 9. store in dict
             dict[seq] = back_json
         return dict
 
-    def do_operation_3_bq(self, halo_request,behavior_qualifier):  # high maturity - saga transactions
+    def do_operation_3_bq(self, halo_request,sub_func):  # high maturity - saga transactions
         logger.debug("do_operation_3_bq")
         sagax = load_saga("test", self.business_event.saga, settings.SAGA_SCHEMA)
         payloads = {}
@@ -393,7 +393,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             if 'Resource' in self.business_event.saga["States"][state]:
                 api_name = self.business_event.saga["States"][state]['Resource']
                 print(api_name)
-                payloads[state] = {"request": halo_request, 'seq': str(counter),"behavior_qualifier":behavior_qualifier}
+                payloads[state] = {"request": halo_request, 'seq': str(counter),"sub_func":sub_func}
                 apis[state] = self.do_saga_work_bq
                 counter = counter + 1
 
@@ -410,26 +410,26 @@ class AbsApiMixinX(AbsBaseMixinX):
     def do_saga_work_bq(self, api, results, payload):
         print("do_saga_work_bq=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
         set_api = self.set_api_op(api,payload)
-        return self.do_api_work_bq(payload['request'],payload['behavior_qualifier'], set_api, payload['seq'])
+        return self.do_api_work_bq(payload['request'],payload['sub_func'], set_api, payload['seq'])
 
-    def do_api_work_bq(self,halo_request,behavior_qualifier, back_api, seq):
+    def do_api_work_bq(self,halo_request,sub_func, back_api, seq):
         # 3. array to store the headers required for the API Access
-        back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(halo_request, seq, dict)
+        back_headers = getattr(self, 'set_api_headers_%s' % sub_func)(halo_request, seq, dict)
         # 4. set vars
-        back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(halo_request, seq, dict)
+        back_vars = getattr(self, 'set_api_vars_%s' % sub_func)(halo_request, seq, dict)
         # 5. auth
-        back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(halo_request, seq, dict)
+        back_auth = getattr(self, 'set_api_auth_%s' % sub_func)(halo_request, seq, dict)
         # 6. set request data
         if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(halo_request, seq, dict)
+            back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request, seq, dict)
         else:
             back_data = None
         # 7. Sending the request to the BANK API with params
-        back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(halo_request, back_api, back_vars,
+        back_response = getattr(self, 'execute_api_%s' % sub_func)(halo_request, back_api, back_vars,
                                                                              back_headers, back_auth, back_data,
                                                                              seq, dict)
         # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(halo_request, back_response, seq)
+        back_json = getattr(self, 'extract_json_%s' % sub_func)(halo_request, back_response, seq)
         # return
         return back_json
 
@@ -515,14 +515,14 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def set_api_op(self, api, payload):
         req = payload['request']
-        #if not req.behavior_qualifier:# base option
+        #if not req.sub_func:# base option
             #if req.request.method == HTTPChoice.put.value:
                 #if payload['state'] == 'BookHotel':
                 #    api.op = HTTPChoice.post.value
                 # if payload['state'] == 'BookCancel':
                 #    api.op = HTTPChoice.delete.value
         #else:
-            #if req.behavior_qualifier == "deposit":
+            #if req.sub_func == "deposit":
                 # if req.request.method == HTTPChoice.put.value:
                     # if payload['state'] == 'BookHotel':
                     #    api.op = HTTPChoice.post.value
@@ -597,8 +597,8 @@ class AbsApiMixinX(AbsBaseMixinX):
        return self.business_event
 
     def get_bq(self,vars):
-        if vars and "behavior_qualifier" in vars:
-            return self.validate_bq(vars["behavior_qualifier"]).lower()
+        if vars and "sub_func" in vars:
+            return self.validate_bq(vars["sub_func"]).lower()
         return None
 
     def validate_bq(self,bq):
