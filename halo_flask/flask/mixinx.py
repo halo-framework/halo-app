@@ -340,7 +340,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             # 5. setup headers for reply
             headers = getattr(self, 'set_resp_headers_%s' % sub_func)(halo_request,
                                                                                 halo_request.request.headers)
-            # 6. build json and add to bian response
+            # 6. build json and add to halo response
             halo_response = self.create_response(halo_request, payload, headers)
             # 7. post condition
             getattr(self, 'validate_post_%s' % sub_func)(halo_request, halo_response)
@@ -453,7 +453,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("payload=" + str(payload))
         # 5. setup headers for reply
         headers = self.set_resp_headers(halo_request, halo_request.request.headers)
-        # 6. build json and add to bian response
+        # 6. build json and add to halo response
         halo_response = self.create_response(halo_request, payload, headers)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
