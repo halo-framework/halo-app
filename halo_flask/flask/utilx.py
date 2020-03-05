@@ -217,18 +217,6 @@ class Util(BaseUtil):
         return request_headers
 
     @staticmethod
-    def get_return_code_tag(request):
-        """
-
-        :param request:
-        :return:
-        """
-        tag = "tag"
-        if "x-code-tag-id" in request.headers:
-            tag = request.headers["x-code-tag-id"]
-        return tag
-
-    @staticmethod
     def get_client_ip(request):  # front - when browser calls us
         """
 

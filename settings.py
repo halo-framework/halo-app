@@ -360,4 +360,8 @@ with open(file_path, 'r') as fi:
     MAPPING = json.load(fi)
     print("mapping:" + str(MAPPING))
 
+
+HALO_CONTEXT_LIST = []
+HALO_CONTEXT_CLASS = None
+
 print('The settings file has been loaded.')

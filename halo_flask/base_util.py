@@ -13,7 +13,7 @@ from .classes import AbsBaseClass
 from .exceptions import CacheError, ApiTimeOutExpired
 from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
-
+from halo_flask.context import HaloContext
 settings = settingsx()
 
 """
@@ -229,6 +229,27 @@ class BaseUtil(AbsBaseClass):
                "x-correlation-id": x_correlation_id, "debug-log-enabled": dlog, "request_path": request.path}
         if api_key:
             ret["x-api-key"] = api_key
+        return ret
+
+    @classmethod
+    def get_halo_context(cls, halo_request, api_key=None):
+        """
+
+        :param request:
+        :param api_key:
+        :return:
+        """
+        keys = halo_request.context.keys()
+        if HaloContext.CORRELATION not in keys or HaloContext.USER_AGENT not in keys or HaloContext.REQUEST not in keys or HaloContext.DEBUG_LOG not in keys:
+            return cls.get_req_context(halo_request.request)
+        x_correlation_id = halo_request.context.get(HaloContext.CORRELATION)
+        x_user_agent = halo_request.context.get(HaloContext.USER_AGENT)
+        dlog = halo_request.context.get(HaloContext.DEBUG_LOG)
+        request_id = halo_request.context.get(HaloContext.REQUEST)
+        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent, "aws_request_id": request_id,
+               HaloContext.items[HaloContext.CORRELATION]: x_correlation_id, "debug-log-enabled": dlog, "request_path": halo_request.request.path}
+        if api_key:
+            ret[HaloContext.items[HaloContext.API_KEY]] = api_key
         return ret
 
     @classmethod

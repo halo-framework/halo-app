@@ -194,7 +194,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             class_ = getattr(module, class_name)
             if not issubclass(class_, AbsBaseApi):
                 raise ApiClassErrorException(class_name)
-            instance = class_(Util.get_req_context(halo_request.request))
+            instance = class_(Util.get_halo_context(halo_request))
             instance.op = foi_op
             return instance
         raise NoApiClassException("api class not defined")
@@ -308,12 +308,20 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_filter(self, halo_request, halo_response):  #
         logger.debug("do_filter")
-        # @todo fix filter config
-        request_filter = self.get_request_filter()
+        request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
-    def get_request_filter(self):
-        return RequestFilter(None)
+    def get_request_filter(self,halo_request):
+        if settings.REQUEST_FILTER_CLASS:
+            k = settings.REQUEST_FILTER_CLASS.rfind(".")
+            module_name = settings.REQUEST_FILTER_CLASS[:k]
+            class_name = settings.REQUEST_FILTER_CLASS[k + 1:]
+            module = importlib.import_module(module_name)
+            class_ = getattr(module, class_name)
+            if not issubclass(class_, RequestFilter):
+                raise HaloException("REQUEST FILTER CLASS error:" + settings.REQUEST_FILTER_CLASS)
+            return class_()
+        return RequestFilter()
 
     def do_operation_bq(self, halo_request):
         if halo_request.sub_func is None:
@@ -398,7 +406,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 counter = counter + 1
 
         try:
-            ret = sagax.execute(Util.get_req_context(halo_request.request), payloads, apis)
+            ret = sagax.execute(Util.get_halo_context(halo_request), payloads, apis)
             return ret
         except SagaRollBack as e:
             ret = HaloResponse(halo_request)
@@ -550,7 +558,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 counter = counter + 1
 
         try:
-            ret = sagax.execute(Util.get_req_context(halo_request.request), payloads, apis)
+            ret = sagax.execute(Util.get_halo_context(halo_request), payloads, apis)
             return ret
         except SagaRollBack as e:
             raise ServerError(str(e), http_status=500, payload=None)

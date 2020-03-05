@@ -46,5 +46,4 @@ PyJWT==1.6.3
 jsonschema==2.6.0
 Flask-RESTful==0.3.6
 six==1.11.0
-swagger-py-codegen==0.3.7
 jsonpath-ng==1.4.3

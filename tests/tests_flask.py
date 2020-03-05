@@ -18,6 +18,7 @@ from halo_flask import saga
 from halo_flask.const import HTTPChoice
 from halo_flask.apis import CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
+from halo_flask.context import HaloContext
 import unittest
 
 
@@ -153,8 +154,16 @@ class P1(PerfMixinX):
 class P2(PerfLinkX):
     pass
 
+from halo_flask.flask.filter import RequestFilter
+class TestFilter(RequestFilter):
+    def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
+        event.put("x-correlation-id", halo_request.request.headers["x-correlation-id"])
+        return event
 
+class CAContext(HaloContext):
+    TESTER = "TESTER"
 
+    HaloContext.items[TESTER] = "x-tester-id"
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -257,6 +266,12 @@ class TestUserDetailTestCase(unittest.TestCase):
             response = event.send_event(dict)
             print("event response " + str(response))
             eq_(response, 'sent event')
+
+    def test_90_event_filter(self):
+        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        with app.test_request_context(method='GET', path='/?a=b'):
+            response = self.a2.process_get(request, {})
+
 
     def test_91_system_debug_enabled(self):
         with app.test_request_context(method='GET', path='/?a=b'):
@@ -452,5 +467,36 @@ class TestUserDetailTestCase(unittest.TestCase):
             response = self.a2.get()
             eq_(response.status_code, status.HTTP_200_OK)
 
+    def test_9992_CORR(self):
+        headers = {'HTTP_HOST': '127.0.0.2','x-correlation-id':"123"}
+        app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
+            response = self.a2.get()
+            eq_(response.status_code, status.HTTP_200_OK)
 
+    def test_9993_NOCORR(self):
+        header = {'HTTP_HOST': '127.0.0.2'}
+        app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
+            try:
+                response = self.a2.get()
+            except Exception as e:
+                eq_(e.__class__.__name__, "InternalServerError")
 
+    def test_9994_CORR(self):
+        headers = {'HTTP_HOST': '127.0.0.2','x-tester-id':"123"}
+        app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
+        app.config['HALO_CONTEXT_CLASS'] = 'tests_flask.CAContext'
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
+            response = self.a2.get()
+            eq_(response.status_code, status.HTTP_200_OK)
+
+    def test_9995_NOCORR(self):
+        header = {'HTTP_HOST': '127.0.0.2'}
+        app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
+        app.config['HALO_CONTEXT_CLASS'] = 'tests_flask.CAContext'
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
+            try:
+                response = self.a2.get()
+            except Exception as e:
+                eq_(e.__class__.__name__, "InternalServerError")

@@ -11,22 +11,23 @@ import queue
 from halo_flask.exceptions import StoreException
 
 from halo_flask.classes import AbsBaseClass
+from halo_flask.settingsx import settingsx
 
 logger = logging.getLogger(__name__)
 
 #https://hackernoon.com/analytics-for-restful-interfaces-579856dea9a9
 
+settings = settingsx()
 
 class BaseEvent(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     name = None
     time = None
-    userId = None
     method = None
-    country = None
-    city = None
-    region = None
+    remote_addr = None
+    host = None
+
 
     dict = {}
 
@@ -46,39 +47,27 @@ class BaseEvent(AbsBaseClass):
 class FilterEvent(BaseEvent):
     pass
 
-class FilterChain(AbsBaseClass):
-
-    list = None
-
-    def __init__(self,list):
-        self.list = list
-
-    def do_filter(self, halo_request, halo_response):
-        pass
-
-#@WebFilter(filterName="RequestFilter", urlPatterns="/api/*")
-
 class Filter(AbsBaseClass):
     __metaclass__ = ABCMeta
 
-    config = None
+    def do_filter(self,halo_request,  halo_response):
+        pass
 
-    def __init__(self,config):
-        self.config = config
+    def augment_event_with_headers_and_data(self, event, halo_request, halo_response):
+        pass
 
 class RequestFilter(Filter):
 
     def do_filter(self,halo_request,  halo_response):
         logger.debug("do_filter")
-        #raise IOException, ServletException
         try:
-            #catching all requests to api and logging
-            #@todo fix filter config
+            #catching all requests to api and logging them for analytics
             event = FilterEvent({})
             event.name = halo_request.request.path
             event.time = datetime.datetime.now()
             event.method = halo_request.request.method
-            #event.userId = "user_" + (Random().nextInt(1000) + 1)
+            event.remote_addr = halo_request.request.remote_addr
+            event.host = halo_request.request.host
             event = self.augment_event_with_headers_and_data(event, halo_request,halo_response)
             inserted = store_util.put(event)
             if (not inserted):
@@ -87,14 +76,19 @@ class RequestFilter(Filter):
             logger.debug("error:"+str(e))
 
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
-        #event.country = halo_request.request.headers["X-AppEngine-Country"]
-        #event.city = halo_request.request.headers["X-AppEngine-City"]
-        #event.region = halo_request.request.headers["X-AppEngine-Region"]
+        if "x-correlation-id" in halo_request.request.headers:
+            event.put("x-correlation-id",halo_request.request.headers["x-correlation-id"])
+        if halo_request.sub_func:
+            event.put("sub_func",halo_request.sub_func)
         return event
 
 
 class StoreUtil(AbsBaseClass):
     eventQueue = queue.Queue()
+    config = None
+
+    def __init__(self, config):
+        self.config = config
 
     @staticmethod
     def put(event):
@@ -105,4 +99,4 @@ class StoreUtil(AbsBaseClass):
         except Exception as e:
             raise StoreException(e)
 
-store_util = StoreUtil()
+store_util = StoreUtil(settings.REQUEST_FILTER_CONFIG)
