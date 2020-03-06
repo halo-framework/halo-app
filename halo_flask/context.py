@@ -3,7 +3,9 @@ from __future__ import print_function
 import logging
 from halo_flask.classes import AbsBaseClass
 logger = logging.getLogger(__name__)
+from .settingsx import settingsx
 
+settings = settingsx()
 
 class HaloContext(AbsBaseClass):
 
