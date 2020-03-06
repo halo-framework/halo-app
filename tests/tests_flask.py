@@ -18,7 +18,7 @@ from halo_flask import saga
 from halo_flask.const import HTTPChoice
 from halo_flask.apis import CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
-from halo_flask.context import HaloContext
+from halo_flask.request import HaloContext
 import unittest
 
 

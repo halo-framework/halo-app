@@ -13,7 +13,7 @@ from .classes import AbsBaseClass
 from .exceptions import CacheError, ApiTimeOutExpired
 from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
-from halo_flask.context import HaloContext
+from halo_flask.request import HaloContext
 settings = settingsx()
 
 """
