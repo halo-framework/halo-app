@@ -109,8 +109,9 @@ class StoreUtil(AbsBaseClass):
     def clearing(self):
         if not self.flag:
             executor = get_executor()
-            executor.submit(self.start_queue_listener)
-            self.flag = True
+            if executor:
+                executor.submit(self.start_queue_listener)
+                self.flag = True
         return self.flag
 
 

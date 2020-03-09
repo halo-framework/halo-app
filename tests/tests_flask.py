@@ -60,6 +60,30 @@ class A1(AbsApiMixinX):
             if halo_request.request.method == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 
+class A3(AbsApiMixinX):
+
+    def do_operation(self, halo_request):
+        # 1. validate input params
+        self.validate_req(halo_request)
+        # 2. run pre conditions
+        self.validate_pre(halo_request)
+        # 3. processing engine
+        # 4. Build the payload target response structure which is Compliant
+        payload = self.create_resp_payload(halo_request, {})
+        # 5. setup headers for reply
+        headers = self.set_resp_headers(halo_request, halo_request.request.headers)
+        # 6. build json and add to halo response
+        halo_response = self.create_response(halo_request, payload, headers)
+        # 7. post condition
+        self.validate_post(halo_request, halo_response)
+        # 8. do filter
+        self.do_filter(halo_request,halo_response)
+        # 9. return json response
+        return halo_response
+
+    def do_filter(self, halo_request, halo_response):  #
+        request_filter = self.get_request_filter(halo_request)
+        request_filter.do_filter(halo_request, halo_response)
 
 class A2(Resource, A1, AbsBaseLinkX):
     def set_api_headers_deposit(self,halo_request, seq=None, dict=None):
@@ -182,6 +206,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config.from_object('settings')
         self.a1 = A1()
         self.a2 = A2()
+        self.a3 = A3()
         self.p1 = P1()
         self.p2 = P2()
 
@@ -466,6 +491,16 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             response = self.a2.get()
             eq_(response.status_code, status.HTTP_200_OK)
+
+    def test_99911_filter(self):
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            response = self.a3.process_get(request, {})
+            eq_(response.code, status.HTTP_200_OK)
+
+    def test_99911_filter(self):
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            response = self.a3.process_get(request, {})
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_9992_CORR(self):
         headers = {'HTTP_HOST': '127.0.0.2','x-correlation-id':"123"}
