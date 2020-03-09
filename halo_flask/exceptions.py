@@ -118,5 +118,8 @@ class NoApiClassException(HaloException):
 class StoreException(HaloException):
     pass
 
+class StoreClearException(HaloException):
+    pass
+
 class MissingHaloContextException(HaloException):
     pass

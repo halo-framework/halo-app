@@ -700,6 +700,14 @@ class PerfMixinX(AbsBaseMixinX):
     def process_delete(self, request, vars):
         return HaloResponse(request,{}, 500, [])
 
+class TestMixinX(AbsApiMixinX):
+    def do_operation_1(self, halo_request):  # basic maturity - single request
+        logger.debug("do_operation_1")
+        # 1. get api definition to access the BANK API  - url + vars dict
+        back_json = {}
+        dict = {1: back_json}
+        # 8. return json response
+        return dict
 
 class AbsAuthMixinX(AbsApiMixinX):
     __metaclass__ = ABCMeta

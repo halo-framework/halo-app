@@ -24,7 +24,7 @@ from ..settingsx import settingsx
 
 
 import flask_restful as restful
-from ..flask.mixinx import PerfMixinX,AbsApiMixinX
+from ..flask.mixinx import PerfMixinX,TestMixinX
 from flask import request
 
 from halo_flask.const import HTTPChoice
@@ -90,11 +90,11 @@ class AbsBaseLinkX(MethodView):
             set_app_param_config(settings.SSM_TYPE,HALO_HOST)
 
 
-        try: #@todo LAMBDA with universal id
+        try:
             ret = self.process(request,typer, args)
             total = datetime.datetime.now() - now
             logger.info("performance_data", extra=log_json(self.req_context,
-                                                           {"type": "LAMBDA",
+                                                           {"type": "SERVER",
                                                             "milliseconds": int(total.total_seconds() * 1000)}))
             return ret
 
@@ -122,7 +122,7 @@ class AbsBaseLinkX(MethodView):
 
         total = datetime.datetime.now() - now
         logger.info("error performance_data", extra=log_json(self.req_context,
-                                                             {"type": "LAMBDA",
+                                                             {"type": "SERVER",
                                                               "milliseconds": int(total.total_seconds() * 1000)}))
 
         error_code, json_error = Util.json_error_response(self.req_context, settings.ERR_MSG_CLASS, error)
@@ -299,6 +299,8 @@ class AbsBaseLinkX(MethodView):
 class Resource(restful.Resource):
     pass
 
+class TestLinkX(Resource, TestMixinX, AbsBaseLinkX):
+    pass
 
 class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
     pass
