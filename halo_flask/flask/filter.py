@@ -91,6 +91,7 @@ class RequestFilter(Filter):
             logger.debug("error:"+str(e))
 
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
+        #@todo finish context data
         if HaloContext.items[HaloContext.CORRELATION] in halo_request.request.headers:
             event.put(HaloContext.items[HaloContext.CORRELATION],halo_request.request.headers[HaloContext.items[HaloContext.CORRELATION]])
         if HaloContext.items[HaloContext.REQUEST] in halo_request.request.headers:
