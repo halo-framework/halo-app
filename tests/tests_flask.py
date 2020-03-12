@@ -181,7 +181,7 @@ class P2(PerfLinkX):
 from halo_flask.flask.filter import RequestFilter
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
-        event.put("x-correlation-id", halo_request.request.headers["x-correlation-id"])
+        event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.request.headers[HaloContext.items.get(HaloContext.CORRELATION)])
         return event
 
 class CAContext(HaloContext):
@@ -294,8 +294,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_90_event_filter(self):
         app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
-        with app.test_request_context(method='GET', path='/?a=b'):
-            response = self.a2.process_get(request, {})
+        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            response = self.a2.process_get(request,{})
 
 
     def test_91_system_debug_enabled(self):

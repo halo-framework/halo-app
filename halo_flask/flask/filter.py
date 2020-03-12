@@ -8,13 +8,15 @@ import traceback
 from abc import ABCMeta
 import queue
 import time
-
+import importlib
 from flask import current_app as app
 from halo_flask.exceptions import StoreException,StoreClearException
 from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloContext
 from halo_flask.settingsx import settingsx
 from halo_flask.executor import get_executor
+from ..exceptions import *
+
 logger = logging.getLogger(__name__)
 
 #https://hackernoon.com/analytics-for-restful-interfaces-579856dea9a9
@@ -91,13 +93,20 @@ class RequestFilter(Filter):
             logger.debug("error:"+str(e))
 
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
-        #@todo finish context data
-        if HaloContext.items[HaloContext.CORRELATION] in halo_request.request.headers:
-            event.put(HaloContext.items[HaloContext.CORRELATION],halo_request.request.headers[HaloContext.items[HaloContext.CORRELATION]])
-        if HaloContext.items[HaloContext.REQUEST] in halo_request.request.headers:
-            event.put(HaloContext.items[HaloContext.REQUEST],halo_request.request.headers[HaloContext.items[HaloContext.REQUEST]])
+        # context data
+        for key in HaloContext.items.keys():
+            if HaloContext.items[key] in halo_request.request.headers:
+                event.put(HaloContext.items[key],halo_request.request.headers[HaloContext.items[key]])
         return event
 
+class RequestFilterClear(AbsBaseClass):
+
+    def __init__(self, events):
+        self.events = events
+
+    def run(self):
+        for event in self.events:
+            logger.debug("insert_events_to_repository " + str(event.serialize()))
 
 class StoreUtil(AbsBaseClass):
     event_queue = queue.Queue()
@@ -118,7 +127,7 @@ class StoreUtil(AbsBaseClass):
 
     @staticmethod
     def put(event):
-        print("StoreUtil:"+str(event.name))
+        logger.debug("StoreUtil:"+str(event.name))
         try:
             __class__.event_queue.put(event)
             return True
@@ -127,17 +136,29 @@ class StoreUtil(AbsBaseClass):
 
     @staticmethod
     def insert_events_to_repository(events):
-        print("insert_events_to_repository")
-        for event in events:
-            print("insert_events_to_repository " + str(event.serialize()))
+        logger.debug("insert_events_to_repository")
+        # clear to cache/db/other
+        if settings.REQUEST_FILTER_CLEAR_CLASS:
+            k = settings.REQUEST_FILTER_CLEAR_CLASS.rfind(".")
+            module_name = settings.REQUEST_FILTER_CLEAR_CLASS[:k]
+            class_name = settings.REQUEST_FILTER_CLEAR_CLASS[k + 1:]
+            module = importlib.import_module(module_name)
+            class_ = getattr(module, class_name)
+            if not issubclass(class_, RequestFilterClear):
+                raise HaloException("REQUEST FILTER CLEAR CLASS error:" + settings.REQUEST_FILTER_CLEAR_CLASS)
+            clazz = class_(events)
+        else:
+            clazz = RequestFilterClear(events)
+        clazz.run()
 
     @staticmethod
     def start_queue_listener():
-        print("start_queue_listener")
+        #@todo replace 50 with var default and sleep 5
+        logger.debug("start_queue_listener")
         try:
             while (True):
                 size = __class__.event_queue.qsize()
-                print("while start_queue_listener "+str(size))
+                logger.debug("while start_queue_listener "+str(size))
                 numberOfIngested = 0;
                 if size > 0:
                     events = []
@@ -150,7 +171,7 @@ class StoreUtil(AbsBaseClass):
                 if numberOfIngested < 50:
                     time.sleep(5);
         except Exception as e:
-            print("Event queue loop broken! , queue size: " + str(
+            logger.debug("Event queue loop broken! , queue size: " + str(
                 StoreUtil.event_queue.qsize()))
             raise StoreClearException(e)
 

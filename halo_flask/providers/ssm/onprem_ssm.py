@@ -117,7 +117,7 @@ class MyConfig(AbsBaseClass):
         now = current_milli_time()
         if now <= self.cache.expiration:
             for key in self.cache.items:
-                print("key=" + str(key))
+                logger.debug("key=" + str(key))
             if key in self.cache.items:
                 return self.cache.items[key]
             else:

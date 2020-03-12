@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 executor = None
 
 def register_exec(app):
-    print("reg executor")
+    logger.debug("reg executor")
     global executor
     executor = Executor(app)
 
 def get_executor():
-    print("get executor")
+    logger.debug("get executor")
     global executor
     return executor
 

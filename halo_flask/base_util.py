@@ -338,7 +338,7 @@ class BaseUtil(AbsBaseClass):
                "x-correlation-id": correlate_id, "debug-log-enabled": debug_flag}
         if "x-api-key" in event:
             ret["x-api-key"] = event["x-api-key"]
-        # @TODO get all data for request contect
+        # @TODO get all data for request context
         cls.event_req_context = ret
         return cls.event_req_context
 

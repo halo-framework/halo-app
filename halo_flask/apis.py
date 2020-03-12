@@ -388,13 +388,13 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
         for item in SSM_APP_CONFIG.cache.items:
             if item not in [func_name, 'DEFAULT']:
                 url = SSM_APP_CONFIG.get_param(item)["url"]
-                print(item + ":" + url)
+                logger.debug(item + ":" + url)
                 for key in API_CONFIG:
                     current = API_CONFIG[key]
                     new_url = current["url"]
                     if "service://" + item in new_url:
                         API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
-        print(str(API_CONFIG))
+        logger.debug(str(API_CONFIG))
 
 
 

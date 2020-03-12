@@ -181,7 +181,7 @@ def set_app_param_config(host):
     else:
         url = host
     value = '{"url":"' + str(url) + '"}'
-    print("aws ssm_parameter_path:" + ssm_parameter_path+" value:"+value)
+    logger.debug("aws ssm_parameter_path:" + ssm_parameter_path+" value:"+value)
     return set_config(region_name, ssm_parameter_path, value)
 
 
@@ -241,7 +241,7 @@ def get_config():
     """
     # Initialize app if it doesn't yet exist
     region_name = get_region()
-    print("region_name:"+str(region_name))
+    logger.debug("region_name:"+str(region_name))
     logger.debug("Loading config and creating new MyConfig..." + full_config_path+",AWS_REGION="+region_name)
     cache = get_cache(region_name, full_config_path)
     myconfig = MyConfig(cache, full_config_path, region_name)

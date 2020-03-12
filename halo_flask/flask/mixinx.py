@@ -400,7 +400,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         for state in self.business_event.saga["States"]:
             if 'Resource' in self.business_event.saga["States"][state]:
                 api_name = self.business_event.saga["States"][state]['Resource']
-                print(api_name)
+                logger.debug(api_name)
                 payloads[state] = {"request": halo_request, 'seq': str(counter),"sub_func":sub_func}
                 apis[state] = self.do_saga_work_bq
                 counter = counter + 1
@@ -416,7 +416,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             return ret
 
     def do_saga_work_bq(self, api, results, payload):
-        print("do_saga_work_bq=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
+        logger.debug("do_saga_work_bq=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
         set_api = self.set_api_op(api,payload)
         return self.do_api_work_bq(payload['request'],payload['sub_func'], set_api, payload['seq'])
 
@@ -539,7 +539,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         return api
 
     def do_saga_work(self, api, results, payload):
-        print("do_saga_work=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
+        logger.debug("do_saga_work=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
         set_api = self.set_api_op(api,payload)
         return self.do_api_work(payload['request'], set_api, payload['seq'])
 
@@ -552,7 +552,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         for state in self.business_event.saga["States"]:
             if 'Resource' in self.business_event.saga["States"][state]:
                 api_name = self.business_event.saga["States"][state]['Resource']
-                print(api_name)
+                logger.debug(api_name)
                 payloads[state] = {"request": halo_request, 'seq': str(counter),"state":state}
                 apis[state] = self.do_saga_work
                 counter = counter + 1
