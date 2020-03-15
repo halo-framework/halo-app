@@ -244,6 +244,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.payload, {'$.BookHotelResult': {'tst_patch': 'good'}, '$.BookFlightResult': {'tst_patch': 'good'}, '$.BookRentalResult': {'tst_patch': 'good'}})
 
     def test_6_api_request_returns_a_CircuitBreakerError(self):
+        app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/?a=b'):
             api = CnnApi(Util.get_req_context(request))
             timeout = Util.get_timeout(request)
@@ -256,6 +257,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
 
     def test_7_api_request_returns_a_given_CircuitBreakerError2(self):
+        app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/?a=b'):
             api = TstApi(Util.get_req_context(request))
             timeout = Util.get_timeout(request)
