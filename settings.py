@@ -365,5 +365,6 @@ HALO_CONTEXT_LIST = []
 HALO_CONTEXT_CLASS = None
 REQUEST_FILTER_CLASS = None
 REQUEST_FILTER_CLEAR_CLASS = None
+CIRCUIT_BREAKER = False
 
 print('The settings file has been loaded.')

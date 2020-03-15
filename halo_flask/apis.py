@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 from halo_flask.circuitbreaker import CircuitBreaker
 class MyCircuitBreaker(CircuitBreaker):
     def __init__(self):
+        print("init MyCircuitBreaker")
         FAILURE_THRESHOLD =  self.get_failure_threshold()
         RECOVERY_TIMEOUT = self.get_recovery_timeout()
         EXPECTED_EXCEPTION = Exception
@@ -63,12 +64,20 @@ class AbsBaseApi(AbsBaseClass):
         if method:
             self.op = method
         self.url, self.api_type = self.get_url_str()
-        self.cb._name = self.name
+        if settings.CIRCUIT_BREAKER:
+            self.cb._name = self.name
 
     @cb
-    def do_request(self,method, url, timeout, data=None, headers=None, auth=None):
+    def do_cb_request(self,method, url, timeout, data=None, headers=None, auth=None):
+        print("do MyCircuitBreaker")
         return requests.request(method, url, data=data, headers=headers,
                          timeout=timeout, auth=auth)
+
+    def do_request(self, method, url, timeout, data=None, headers=None, auth=None):
+        if settings.CIRCUIT_BREAKER:
+            return self.do_cb_request(method, url, timeout, data, headers, auth)
+        return requests.request(method, url, data=data, headers=headers,
+                                timeout=timeout, auth=auth)
 
     def exec_client(self, req_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
         """

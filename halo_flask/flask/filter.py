@@ -85,10 +85,10 @@ class RequestFilter(Filter):
             if store_util.clearing():
                 inserted = store_util.put(event)
                 if (not inserted):
-                    logger.debug("Event queue is full! inserted: " + str(inserted) + ", queue size: " + str(StoreUtil.event_queue.qsize()))
-                else:
-                    logger.debug("Event queue is not clearing! , queue size: " + str(
-                        StoreUtil.event_queue.qsize()))
+                    logger.error("Event queue is full! inserted: " + str(inserted) + ", queue size: " + str(StoreUtil.event_queue.qsize()))
+            else:
+                logger.error("Event queue is not clearing! , queue size: " + str(
+                    StoreUtil.event_queue.qsize()))
         except StoreException as e:
             logger.debug("error:"+str(e))
 
@@ -108,6 +108,21 @@ class RequestFilterClear(AbsBaseClass):
         for event in self.events:
             logger.debug("insert_events_to_repository " + str(event.serialize()))
 
+# @todo monitor the job
+def exec_callback(future):
+    if future:
+        logger.debug("StoreUtil: executor finished - " + str(future.result()))
+        if future.exception():
+            logger.debug("StoreUtil: executor exception - " + str(future.exception()))
+    StoreUtil.set_flag()
+
+#@todo consider adding api call to start executor
+#@app.route('/start-task')
+#def start_task():
+    #store_util.clearing()
+    #return jsonify({'result':'success'})
+
+#@todo is it thread safe including the event queue and set_flag
 class StoreUtil(AbsBaseClass):
     event_queue = queue.Queue()
     config = None
@@ -116,14 +131,19 @@ class StoreUtil(AbsBaseClass):
     def __init__(self, config):
         self.config = config
 
-    def clearing(self):
-        if not self.flag:
+    @staticmethod
+    def clearing():
+        if not __class__.flag:
             executor = get_executor()
             if executor:
-                executor.submit(self.start_queue_listener)
-                self.flag = True
-        return self.flag
+                executor.add_default_done_callback(exec_callback)
+                executor.submit(__class__.start_queue_listener)
+                __class__.flag = True
+        return __class__.flag
 
+    @staticmethod
+    def set_flag():
+        __class__.flag = False
 
     @staticmethod
     def put(event):
