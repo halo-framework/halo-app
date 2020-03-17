@@ -111,9 +111,9 @@ class RequestFilterClear(AbsBaseClass):
 # @todo monitor the job
 def exec_callback(future):
     if future:
-        logger.debug("StoreUtil: executor finished - " + str(future.result()))
+        logger.info("StoreUtil: executor finished - " + str(future.result()))
         if future.exception():
-            logger.debug("StoreUtil: executor exception - " + str(future.exception()))
+            logger.info("StoreUtil: executor exception - " + str(future.exception()))
     StoreUtil.set_flag()
 
 #@todo consider adding api call to start executor

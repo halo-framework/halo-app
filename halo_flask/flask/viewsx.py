@@ -16,7 +16,7 @@ from flask_restful import abort
 from flask.views import MethodView
 from ..exceptions import BadRequestError
 from .utilx import Util
-from ..const import HTTPChoice
+from ..const import HTTPChoice,SYSTEMChoice,LOGChoice
 from ..logs import log_json
 from ..request import HaloRequest
 from ..response import HaloResponse
@@ -93,9 +93,9 @@ class AbsBaseLinkX(MethodView):
         try:
             ret = self.process(request,typer, args)
             total = datetime.datetime.now() - now
-            logger.info("performance_data", extra=log_json(self.req_context,
-                                                           {"type": "SERVER",
-                                                            "milliseconds": int(total.total_seconds() * 1000)}))
+            logger.info(LOGChoice.performance_data.value, extra=log_json(self.req_context,
+                                                           {LOGChoice.type.value: SYSTEMChoice.server.value,
+                                                            LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
             return ret
 
         except BadRequestError as e:
@@ -121,9 +121,9 @@ class AbsBaseLinkX(MethodView):
             self.process_finally(request, orig_log_level)
 
         total = datetime.datetime.now() - now
-        logger.info("error performance_data", extra=log_json(self.req_context,
-                                                             {"type": "SERVER",
-                                                              "milliseconds": int(total.total_seconds() * 1000)}))
+        logger.info(LOGChoice.error_performance_data.value, extra=log_json(self.req_context,
+                                                             {LOGChoice.type.value: SYSTEMChoice.server.value,
+                                                              LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
         error_code, json_error = Util.json_error_response(self.req_context, settings.ERR_MSG_CLASS, error)
         if settings.FRONT_WEB:
@@ -139,7 +139,7 @@ class AbsBaseLinkX(MethodView):
         if Util.isDebugEnabled(self.req_context, request):
             if logger.getEffectiveLevel() != orig_log_level:
                 logger.setLevel(orig_log_level)
-                logger.info("process_finally - back to orig:" + str(orig_log_level),
+                logger.debug("process_finally - back to orig:" + str(orig_log_level),
                             extra=log_json(self.req_context))
 
     def process(self,request, typer, args):

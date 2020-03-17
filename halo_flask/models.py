@@ -8,6 +8,7 @@ from abc import ABCMeta
 
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
+from halo_flask.const import SYSTEMChoice,LOGChoice
 from .settingsx import settingsx
 
 settings = settingsx()
@@ -37,10 +38,10 @@ class AbsDbMixin(AbsBaseClass):
                 now = datetime.datetime.now()
                 result = attr(*args, **kwargs)
                 total = datetime.datetime.now() - now
-                logger.info("performance_data", extra=log_json(self.req_context,
-                                                               {"type": "DBACCESS",
-                                                           "milliseconds": int(total.total_seconds() * 1000),
-                                                           "function": str(attr.__name__)}))
+                logger.info(LOGChoice.performance_data.value, extra=log_json(self.req_context,
+                                                               {LOGChoice.type.value: SYSTEMChoice.dbaccess.value,
+                                                           LOGChoice.milliseconds.value: int(total.total_seconds() * 1000),
+                                                           LOGChoice.function.value: str(attr.__name__)}))
                 return result
 
             return newfunc

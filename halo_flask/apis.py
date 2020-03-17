@@ -15,7 +15,7 @@ from .logs import log_json
 from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
 from .flask.utilx import Util
-from .const import HTTPChoice
+from .const import HTTPChoice,SYSTEMChoice,LOGChoice
 
 settings = settingsx()
 
@@ -209,9 +209,9 @@ class AbsBaseApi(AbsBaseClass):
             now = datetime.datetime.now()
             ret = self.exec_client(self.req_context, method, url, self.api_type, timeout, data=data, headers=headers,auth=auth)
             total = datetime.datetime.now() - now
-            logger.info("performance_data", extra=log_json(self.req_context,
-                                                           {"type": "API", "milliseconds": int(total.total_seconds() * 1000),
-                                                       "url": str(url)}))
+            logger.info(LOGChoice.performance_data.value, extra=log_json(self.req_context,
+                                                           {LOGChoice.type.value: SYSTEMChoice.api.value, LOGChoice.milliseconds.value: int(total.total_seconds() * 1000),
+                                                       LOGChoice.url.value: str(url)}))
             logger.debug("ret: " + str(ret), extra=log_json(self.req_context))
             return ret
         except requests.ConnectionError as e:

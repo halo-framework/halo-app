@@ -4,7 +4,19 @@ import logging
 from halo_flask.classes import AbsBaseClass
 logger = logging.getLogger(__name__)
 
-
+"""
+{
+    "statusCode": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "isBase64Encoded": false,
+    "multiValueHeaders": { 
+      "X-Custom-Header": ["My value", "My other value"],
+    },
+    "body": "{\n  \"TotalCodeSize\": 104330022,\n  \"FunctionCount\": 26\n}"
+  }
+"""
 class HaloResponse(AbsBaseClass):
 
     request = None

@@ -17,7 +17,7 @@ import threading
 import uuid
 from halo_flask.exceptions import ApiError
 from halo_flask.classes import AbsBaseClass
-
+from halo_flask.const import LOGChoice
 logger = logging.getLogger(__name__)
 
 #manage monitor in a multi thread env
@@ -91,7 +91,7 @@ class CircuitBreaker(AbsBaseClass):
         """
         self._state = STATE_CLOSED
         self._failure_count = 0
-        logger.info("call_succeeded-Close circuit " + str(self.name)+ " : "+self._uuid)
+        logger.info(LOGChoice.performance_data.value+" : call_succeeded-Close circuit " + str(self.name)+ " : "+self._uuid)
 
     def __call_failed(self):
         """

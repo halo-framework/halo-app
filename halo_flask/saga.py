@@ -7,7 +7,7 @@ from .exceptions import HaloException, HaloError
 from .logs import log_json
 from  .classes import AbsBaseClass
 from .flask.utilx import status
-
+from .const import LOGChoice
 logger = logging.getLogger(__name__)
 
 """
@@ -129,7 +129,7 @@ class SagaLog(AbsBaseClass):
             # @TODO finish db log for saga
             # db_logeer(saga_stage + " " + name)
             logger.debug("db log")
-        logger.info("SagaLog: " + saga_stage + " " + name,
+        logger.info(LOGChoice.saga.value+" Log: " + saga_stage + " " + name,
                     extra=log_json(req_context))
 
 class Saga(AbsBaseClass):
