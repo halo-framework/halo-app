@@ -3,6 +3,7 @@
 import os
 from environs import Env
 import json
+import uuid
 from halo_flask.const import LOC,DEV,TST,PRD
 
 print("start base")
@@ -24,9 +25,9 @@ SQLALCHEMY_DATABASE_URI = env.str('DATABASE_URL')
 SECRET_KEY = env.str('SECRET_KEY')
 BCRYPT_LOG_ROUNDS = env.int('BCRYPT_LOG_ROUNDS', default=13)
 DEBUG_TB_ENABLED = DEBUG
-DEBUG_TB_INTERCEPT_REDIRECTS = False
+DEBUG_TB_INTERCEPT_REDIRECTS = env.bool('DEBUG_TB_INTERCEPT_REDIRECTS', default=False)
 CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_TRACK_MODIFICATIONS = env.bool('SQLALCHEMY_TRACK_MODIFICATIONS', default=False)
 WEBPACK_MANIFEST_PATH = 'webpack/manifest.json'
 
 
@@ -43,7 +44,7 @@ FUNC_NAME = env.str('FUNC_NAME', 'halo_flask')
 #os.environ['HALO_APP_NAME'] = 'app'  #done in settings json file
 APP_NAME = env.str('APP_NAME', 'halo')
 
-SERVER_LOCAL = True
+SERVER_LOCAL = env.bool('SERVER_LOCAL', default=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Make this unique, and don't share it with anybody.
@@ -294,8 +295,6 @@ FRONT_WEB = False
 
 FRONT_API = False
 
-import uuid
-
 INSTANCE_ID = uuid.uuid4().__str__()[0:4]
 
 LOG_SAMPLE_RATE = 0.05  # 5%
@@ -304,6 +303,10 @@ ERR_MSG_CLASS = 'halo_flask.mixin_err_msg'
 
 SSM_TYPE = env.str('SSM_TYPE',default='NONE')
 print('SSM_TYPE='+SSM_TYPE)
+
+EVENTS_INGESTED = env.int('EVENTS_INGESTED',default=50)
+
+EVENTS_INGESTED_SLEEP = env.int('EVENTS_INGESTED_SLEEP',default=5)
 
 file_dir = os.path.dirname(__file__)
 file_path = os.path.join(file_dir, 'halo_flask','schema',"saga_schema.json")

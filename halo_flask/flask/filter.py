@@ -9,6 +9,8 @@ from abc import ABCMeta
 import queue
 import time
 import importlib
+import threading
+
 from flask import current_app as app
 from halo_flask.exceptions import StoreException,StoreClearException
 from halo_flask.classes import AbsBaseClass
@@ -23,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 settings = settingsx()
 
+sem = threading.Semaphore()
 
 class BaseEvent(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -122,7 +125,7 @@ def exec_callback(future):
     #store_util.clearing()
     #return jsonify({'result':'success'})
 
-#@todo is it thread safe including the event queue and set_flag
+#thread safe including the event queue and set_flag
 class StoreUtil(AbsBaseClass):
     event_queue = queue.Queue()
     config = None
@@ -143,7 +146,9 @@ class StoreUtil(AbsBaseClass):
 
     @staticmethod
     def set_flag():
+        sem.acquire()
         __class__.flag = False
+        sem.release()
 
     @staticmethod
     def put(event):
@@ -173,7 +178,6 @@ class StoreUtil(AbsBaseClass):
 
     @staticmethod
     def start_queue_listener():
-        #@todo replace 50 with var default and sleep 5
         logger.debug("start_queue_listener")
         try:
             while (True):
@@ -182,14 +186,14 @@ class StoreUtil(AbsBaseClass):
                 numberOfIngested = 0;
                 if size > 0:
                     events = []
-                    maxer = min([50,size])
+                    maxer = min([settings.EVENTS_INGESTED,size])
                     for i in range(0,maxer):
                         event =  __class__.event_queue.get()
                         events.append(event)
                     __class__.insert_events_to_repository(events)
                     numberOfIngested = __class__.event_queue.qsize()
-                if numberOfIngested < 50:
-                    time.sleep(5);
+                if numberOfIngested < settings.EVENTS_INGESTED:
+                    time.sleep(settings.EVENTS_INGESTED_SLEEP);
         except Exception as e:
             logger.debug("Event queue loop broken! , queue size: " + str(
                 StoreUtil.event_queue.qsize()))
