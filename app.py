@@ -4,7 +4,7 @@ from flask import Flask
 from flask_restful import Api
 from halo_flask.executor import register_exec
 
-
+#@todo remove aws from code
 
 def create_app(config_object='settings'):
     """An application factory, as explained here: http://flask.pocoo.org/docs/patterns/appfactories/.
@@ -21,6 +21,10 @@ def create_app(config_object='settings'):
         app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
         from halo_flask.flask.filter import StoreUtil
+        from halo_flask.flask.viewsx import load_global_data
+        data_map = None
+        class_name = None
+        load_global_data(data_map,class_name)
 
     register_exec(app)
 

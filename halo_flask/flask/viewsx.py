@@ -306,3 +306,5 @@ class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
     pass
 
 
+def load_global_data(data_map,class_name):
+    pass

@@ -8,7 +8,7 @@ class HaloException(Exception):
     The exception used when a template does not exist. Accepts the following
     optional arguments:
 
-
+    @TODO fix exception with tried=None, backend=None, chain=None
     """
     def __init__(self, msg, tried=None, backend=None, chain=None):
         super(HaloException, self).__init__(msg)
