@@ -21,10 +21,11 @@ def create_app(config_object='settings'):
         app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
         from halo_flask.flask.filter import StoreUtil
-        from halo_flask.flask.viewsx import load_global_data
-        data_map = None
-        class_name = None
-        load_global_data(data_map,class_name)
+        if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
+            from halo_flask.flask.viewsx import load_global_data
+            data_map = app.config['INIT_DATA_MAP']
+            class_name = app.config['INIT_CLASS_NAME']
+            load_global_data(class_name,data_map)
 
     register_exec(app)
 

@@ -5,8 +5,8 @@ import datetime
 import logging
 import os
 import traceback
-from abc import ABCMeta
-
+from abc import ABCMeta,abstractmethod
+import importlib
 import jwt
 from flask import Response as HttpResponse
 from flask import redirect
@@ -14,7 +14,7 @@ from flask_restful import abort
 # from flask import request
 # flask
 from flask.views import MethodView
-from ..exceptions import BadRequestError
+from ..exceptions import BadRequestError,HaloException
 from .utilx import Util
 from ..const import HTTPChoice,SYSTEMChoice,LOGChoice
 from ..logs import log_json
@@ -305,6 +305,21 @@ class TestLinkX(Resource, TestMixinX, AbsBaseLinkX):
 class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
     pass
 
+class GlobalService():
+    data_map = None
+    def __init__(self, data_map):
+        self.data_map = data_map
+    @abstractmethod
+    def load_global_data(self):
+        pass
 
-def load_global_data(data_map,class_name):
-    pass
+def load_global_data(class_name,data_map):
+    k = class_name.rfind(".")
+    module_name = class_name[:k]
+    class_name = class_name[k + 1:]
+    module = importlib.import_module(module_name)
+    class_ = getattr(module, class_name)
+    if not issubclass(class_, GlobalService):
+        raise HaloException("Global Service CLASS error:" + class_name)
+    clazz = class_(data_map)
+    clazz.load_global_data()
