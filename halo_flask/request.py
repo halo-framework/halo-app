@@ -17,13 +17,17 @@ class HaloContext(AbsBaseClass):
     REQUEST = "REQUEST"
     DEBUG_LOG = "DEBUG LOG"
     API_KEY = "API KEY"
+    SESSION = "SESSION"
+    ACCESS = "ACCESS"
 
     items = {
         CORRELATION:"x-correlation-id",
         USER_AGENT: "x-user-agent",
         REQUEST: "x-request-id",
         DEBUG_LOG: "x-debug-log-enabled",
-        API_KEY: "x-api-key"
+        API_KEY: "x-api-key",
+        SESSION: "x-session-id",
+        ACCESS: "x-access-token"
     }
 
     dict = {}
