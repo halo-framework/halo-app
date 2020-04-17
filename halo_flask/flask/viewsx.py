@@ -61,40 +61,27 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         now = datetime.datetime.now()
-        global HALO_HOST
-        self.req_context = Util.get_req_context(request)
-        self.correlate_id = self.req_context["x-correlation-id"]
-        self.user_agent = self.req_context["x-user-agent"]
+        self.halo_context = Util.get_halo_context(request)
         error_message = None
         error = None
         orig_log_level = 0
         http_status_code = 500
 
-        if Util.isDebugEnabled(self.req_context, request):
+        if Util.isDebugEnabled(self.halo_context, request):
             orig_log_level = logger.getEffectiveLevel()
             logger.setLevel(logging.DEBUG)
             logger.debug("DebugEnabled - in debug mode",
-                         extra=log_json(self.req_context, Util.get_req_params(request)))
+                         extra=log_json(self.halo_context, Util.get_req_params(request)))
 
-        logger.debug("headers", extra=log_json(self.req_context, Util.get_headers(request)))
+        logger.debug("headers", extra=log_json(self.halo_context, Util.get_headers(request)))
 
-        logger.debug("environ", extra=log_json(self.req_context, os.environ))
-
-        logger.debug("set ssm for host:" + str(HALO_HOST)+" and HTTP_HOST:"+str(request.headers['HOST']),extra=log_json(self.req_context))
-        #from flask import current_app as app
-        #app.config["INFO"] = ???
-        if HALO_HOST is None and 'HOST' in request.headers and settings.SSM_TYPE and settings.SSM_TYPE != 'NONE':
-            HALO_HOST = request.headers['HOST']
-            logger.debug("request.headers['HOST']:"+str(request.headers['HOST']))
-            from halo_flask.ssm import set_app_param_config
-            set_app_param_config(settings.SSM_TYPE,HALO_HOST)
-
+        logger.debug("environ", extra=log_json(self.halo_context, os.environ))
 
         try:
             ret = self.process(request,typer, args)
             total = datetime.datetime.now() - now
-            logger.info(LOGChoice.performance_data.value, extra=log_json(self.req_context,
-                                                           {LOGChoice.type.value: SYSTEMChoice.server.value,
+            logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
+                                                                         {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                             LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
             return ret
 
@@ -103,7 +90,7 @@ class AbsBaseLinkX(MethodView):
             error = e
             error_message = str(error)
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(self.req_context, Util.get_req_params(request), e))
+            logger.error(error_message, extra=log_json(self.halo_context, Util.get_req_params(request), e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -112,7 +99,7 @@ class AbsBaseLinkX(MethodView):
             error = e
             error_message = str(error)
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(self.req_context, Util.get_req_params(request), e))
+            logger.error(error_message, extra=log_json(self.halo_context, Util.get_req_params(request), e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -121,11 +108,11 @@ class AbsBaseLinkX(MethodView):
             self.process_finally(request, orig_log_level)
 
         total = datetime.datetime.now() - now
-        logger.info(LOGChoice.error_performance_data.value, extra=log_json(self.req_context,
-                                                             {LOGChoice.type.value: SYSTEMChoice.server.value,
+        logger.info(LOGChoice.error_performance_data.value, extra=log_json(self.halo_context,
+                                                                           {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        error_code, json_error = Util.json_error_response(self.req_context, settings.ERR_MSG_CLASS, error)
+        error_code, json_error = Util.json_error_response(self.halo_context, settings.ERR_MSG_CLASS, error)
         if settings.FRONT_WEB:
             return redirect("/" + settings.ENV_NAME +"/"+ str(http_status_code))
         abort(http_status_code, errors=json_error)
@@ -136,11 +123,11 @@ class AbsBaseLinkX(MethodView):
         :param request:
         :param orig_log_level:
         """
-        if Util.isDebugEnabled(self.req_context, request):
+        if Util.isDebugEnabled(self.halo_context, request):
             if logger.getEffectiveLevel() != orig_log_level:
                 logger.setLevel(orig_log_level)
                 logger.debug("process_finally - back to orig:" + str(orig_log_level),
-                            extra=log_json(self.req_context))
+                             extra=log_json(self.halo_context))
 
     def process(self,request, typer, args):
         """
@@ -241,7 +228,7 @@ class AbsBaseLinkX(MethodView):
         :return:
         """
         ip = request.headers.get('REMOTE_ADDR')
-        logger.debug("get_client_ip: " + str(ip), extra=log_json(self.req_context))
+        logger.debug("get_client_ip: " + str(ip), extra=log_json(self.halo_context))
         return ip
 
     def get_jwt(self, request):

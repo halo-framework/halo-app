@@ -117,10 +117,10 @@ class SagaLog(AbsBaseClass):
     endTx = "endTx"
     failTx = "failTx"
 
-    def log(self, req_context, saga_stage, name, log_db=False):
+    def log(self, halo_context, saga_stage, name, log_db=False):
         """
 
-        :param req_context:
+        :param halo_context:
         :param saga_stage:
         :param name:
         :param log_db:
@@ -129,8 +129,8 @@ class SagaLog(AbsBaseClass):
             # @TODO finish db log for saga
             # db_logeer(saga_stage + " " + name)
             logger.debug("db log")
-        logger.info(LOGChoice.saga.value+" Log: " + saga_stage + " " + name,
-                    extra=log_json(req_context))
+        logger.info(LOGChoice.saga.value +" Log: " + saga_stage + " " + name,
+                    extra=log_json(halo_context))
 
 class Saga(AbsBaseClass):
     """
@@ -151,16 +151,16 @@ class Saga(AbsBaseClass):
         self.start = start
         self.slog = SagaLog()
 
-    def execute(self, req_context, payloads, apis):
+    def execute(self, halo_context, payloads, apis):
         """
         Execute this Saga.
-        :param req_context:
+        :param halo_context:
         :param payloads:
         :param apis:
         :return: None
         """
 
-        self.slog.log(req_context, SagaLog.startSaga, self.name)
+        self.slog.log(halo_context, SagaLog.startSaga, self.name)
         tname = self.start
         results = {}
         kwargs = {'results': results}
@@ -168,12 +168,12 @@ class Saga(AbsBaseClass):
         for action_index in range(len(self.actions)):
             try:
                 logger.debug("execute=" + tname)
-                kwargs['req_context'] = req_context
+                kwargs['halo_context'] = halo_context
                 kwargs['payload'] = payloads[tname]
                 kwargs['exec_api'] = apis[tname]
-                self.slog.log(req_context, SagaLog.startTx, tname)
+                self.slog.log(halo_context, SagaLog.startTx, tname)
                 ret = self.__get_action(tname).act(**kwargs) or {}
-                self.slog.log(req_context, SagaLog.endTx, tname)
+                self.slog.log(halo_context, SagaLog.endTx, tname)
                 results.update(ret)
                 kwargs = {'results': results}
                 logger.debug("kwargs=" + str(kwargs))
@@ -182,8 +182,8 @@ class Saga(AbsBaseClass):
                     logger.debug("finished")
                     break
             except ApiError as e:
-                self.slog.log(req_context, SagaLog.failTx, tname)
-                self.slog.log(req_context, SagaLog.abortSaga, self.name)
+                self.slog.log(halo_context, SagaLog.failTx, tname)
+                self.slog.log(halo_context, SagaLog.abortSaga, self.name)
                 logger.debug("ApiError=" + str(e))
                 if rollback is None:
                     rollback = e
@@ -191,13 +191,13 @@ class Saga(AbsBaseClass):
                 else:
                     raise SagaError(rollback, [e])
             except AttributeError as e:
-                self.slog.log(req_context, SagaLog.failTx, tname)
-                self.slog.log(req_context, SagaLog.abortSaga, self.name)
+                self.slog.log(halo_context, SagaLog.failTx, tname)
+                self.slog.log(halo_context, SagaLog.abortSaga, self.name)
                 logger.debug("AttributeError=" + str(e))
                 raise SagaError("AttributeError", [e])
             except BaseException as e:
-                self.slog.log(req_context, SagaLog.failTx, tname)
-                self.slog.log(req_context, SagaLog.errorSaga, self.name)
+                self.slog.log(halo_context, SagaLog.failTx, tname)
+                self.slog.log(halo_context, SagaLog.errorSaga, self.name)
                 logger.debug("e=" + str(e))
                 if rollback is None:
                     rollback = e
@@ -210,10 +210,10 @@ class Saga(AbsBaseClass):
                 raise TypeError('action return type should be dict or None but is {}'.format(type(kwargs)))
 
         if rollback:
-            self.slog.log(req_context, SagaLog.rollbackSaga, self.name)
+            self.slog.log(halo_context, SagaLog.rollbackSaga, self.name)
             raise SagaRollBack(rollback)
 
-        self.slog.log(req_context, SagaLog.commitSaga, self.name)
+        self.slog.log(halo_context, SagaLog.commitSaga, self.name)
         return results
 
     def __get_action(self, name):
@@ -292,8 +292,8 @@ def load_saga(name, jsonx, schema):
                 result_path = jsonx["States"][state]["ResultPath"]
                 # action = lambda req_context, payload, api=api_instance_name: ApiMngr(req_context).get_api_instance(api).post(payload)
                 do_run = lambda key, x: {key: x}
-                action = lambda req_context, payload, exec_api, results, result_path=result_path, api=api_instance_name: \
-                    do_run(result_path, exec_api(ApiMngr(req_context).get_api_instance(api), results, payload))
+                action = lambda halo_context, payload, exec_api, results, result_path=result_path, api=api_instance_name: \
+                    do_run(result_path, exec_api(ApiMngr(halo_context).get_api_instance(api), results, payload))
                 comps = []
                 if "Catch" in jsonx["States"][state]:
                     for item in jsonx["States"][state]["Catch"]:

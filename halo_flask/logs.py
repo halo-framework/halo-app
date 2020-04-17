@@ -21,16 +21,16 @@ def append_error(params, err):
     return logMsg
 
 
-def log_json(req_context, params=None, err=None):
+def log_json(halo_context, params=None, err=None):
     """
 
-    :param req_context:
+    :param halo_context:
     :param params:
     :param err:
     :return:
     """
     context = Util.get_context()
-    dict_items = dict(req_context)
+    dict_items = dict(halo_context.dict)
     dict_items.update(context)
     logMsg = {key: value for (key, value) in (dict_items.items())}
     if params or err:

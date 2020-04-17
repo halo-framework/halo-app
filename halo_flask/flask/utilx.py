@@ -4,13 +4,17 @@ import json
 # python
 import logging
 import re
-
+import os
+import uuid
+import random
+import importlib
 from flask import Response
-
 from ..base_util import BaseUtil
 from ..settingsx import settingsx
 from halo_flask.classes import AbsBaseClass
-from halo_flask.const import HTTPChoice
+from halo_flask.const import HTTPChoice,LOC
+from halo_flask.request import HaloContext
+from halo_flask.exceptions import ApiTimeOutExpired,CacheError
 
 class status(AbsBaseClass):
 
@@ -100,7 +104,7 @@ def strx(str1):
             return str(str1)
     return ''
 
-class Util(BaseUtil):
+class Util(AbsBaseClass):
 
     @staticmethod
     def get_chrome_browser(request):
@@ -288,3 +292,205 @@ class Util(BaseUtil):
         elif request.method == HTTPChoice.post.value:
             qd = request.args
         return qd
+
+#########################################################################################33
+
+#@todo clean these methods or move to aws provider
+
+    @staticmethod
+    def get_func_name():
+        """
+
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_NAME' in os.environ:
+            return os.environ['AWS_LAMBDA_FUNCTION_NAME']
+        else:
+            return settings.FUNC_NAME
+
+    @staticmethod
+    def get_func_ver():
+        """
+
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_VERSION' in os.environ:
+            return os.environ['AWS_LAMBDA_FUNCTION_VERSION']
+        else:
+            return "VER"
+
+    @staticmethod
+    def get_func_mem():
+        """
+
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE' in os.environ:
+            return os.environ['AWS_LAMBDA_FUNCTION_MEMORY_SIZE']
+        else:
+            return "MEM"
+
+    @staticmethod
+    def get_func_region():
+        """
+
+        :return:
+        """
+        if 'AWS_REGION' in os.environ:
+            return os.environ['AWS_REGION']
+        else:
+            if 'AWS_DEFAULT_REGION' in os.environ:
+                return os.environ['AWS_DEFAULT_REGION']
+            return settings.AWS_REGION
+
+    @staticmethod
+    def get_stage():
+        """
+
+        :return:
+        """
+        if 'HALO_STAGE' in os.environ:
+            return os.environ['HALO_STAGE']
+        return LOC
+
+    @classmethod
+    def get_context(cls):
+        """
+
+        :return:
+        """
+        ret = {"awsRegion": cls.get_func_region(), "functionName": cls.get_func_name(),
+               "functionVersion": cls.get_func_ver(), "functionMemorySize": cls.get_func_mem(),
+               "stage": cls.get_stage()}
+        return ret
+
+    @classmethod
+    def get_timeout(cls, request):
+        """
+
+        :param request:
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_NAME' in os.environ:
+            context = cls.get_lambda_context(request)
+            if context:
+                return cls.get_timeout_mili(context)
+        return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
+
+    @classmethod
+    def get_timeout_mili(cls, context):
+        """
+
+        :param context:
+        :return:
+        """
+        mili = context.get_remaining_time_in_millis()
+        logger.debug("mili=" + str(mili))
+        sc = mili / 1000
+        timeout = sc - settings.RECOVER_TIMEOUT_IN_SC
+        logger.debug("timeout=" + str(timeout))
+        if timeout > settings.MINIMUM_SERVICE_TIMEOUT_IN_SC:
+            return timeout
+        raise ApiTimeOutExpired("left " + str(timeout))
+
+    @classmethod
+    def get_halo_context(cls, request, api_key=None):
+        """
+        :param request:
+        :param api_key:
+        :return:
+        """
+        x_correlation_id = cls.get_correlation_id(request)
+        x_user_agent = cls.get_user_agent(request)
+        dlog = cls.get_debug_enabled(request)
+        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent, HaloContext.items[HaloContext.REQUEST]: cls.get_aws_request_id(request),
+               HaloContext.items[HaloContext.CORRELATION]: x_correlation_id, HaloContext.items[HaloContext.DEBUG_LOG]: dlog}
+        if api_key:
+            ret[HaloContext.items[HaloContext.API_KEY]] = api_key
+        ctx = HaloContext(request)
+        ctx.dict = ret
+        return ctx
+
+    @classmethod
+    def get_aws_request_id(cls, request):
+        """
+
+        :param request:
+        :return:
+        """
+        context = cls.get_lambda_context(request)
+        if context:
+            return context.aws_request_id
+        return uuid.uuid4().__str__()
+
+    @classmethod
+    def get_system_debug_enabled(cls):
+        """
+
+        :return:
+        """
+        # check if env var for sampled debug logs is on and activate for percentage in settings (5%)
+        if ('DEBUG_LOG' in os.environ and os.environ['DEBUG_LOG'] == 'true') or (cls.get_debug_param() == 'true'):
+            rand = random.random()
+            if settings.LOG_SAMPLE_RATE > rand:
+                return 'true'
+        return 'false'
+
+    @staticmethod
+    def get_debug_param():
+        """
+
+        :return:
+        """
+        # check if env var for sampled debug logs is on and activate for percentage in settings (5%)
+        dbg = 'false'
+        if settings.SSM_CONFIG is None:
+            return dbg
+        try:
+            DEBUG_LOG = settings.SSM_CONFIG.get_param('DEBUG_LOG')
+            dbg = DEBUG_LOG["val"]
+            logger.debug("get_debug_param=" + dbg)
+        except CacheError as e:
+            pass
+        return dbg
+
+    @classmethod
+    def isDebugEnabled(cls, halo_context, request=None):
+        """
+
+        :param req_context:
+        :param request:
+        :return:
+        """
+        # disable debug logging by default, but allow override via env variables
+        # or if enabled via forwarded request context or if debug flag is on
+        if halo_context.get(HaloContext.items[HaloContext.DEBUG_LOG]) == 'true' or cls.get_system_debug_enabled() == 'true':
+            return True
+        return False
+
+    @staticmethod
+    def json_error_response(halo_context, clazz, e):  # code, msg, requestId):
+        """
+
+        :param req_context:
+        :param clazz:
+        :param e:
+        :return:
+        """
+        module = importlib.import_module(clazz)
+        my_class = getattr(module, 'ErrorMessages')
+        msgs = my_class()
+        error_code, message = msgs.get_code(e)
+        if hasattr(e, 'message'):
+            e_msg = e.message
+        else:
+            e_msg = str(e)
+        error_detail = ""
+        if e_msg is not None and e_msg != 'None' and e_msg != "":
+            error_detail = e_msg
+        e_payload = {}
+        if hasattr(e, 'payload'):
+            e_payload = e.payload
+        payload = {"error": {"error_code": error_code, "error_message": message, "error_detail": error_detail,
+                             "data": e_payload, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}}
+        return error_code, json.dumps(payload)

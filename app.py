@@ -26,6 +26,10 @@ def create_app(config_object='settings'):
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']
             load_global_data(class_name,data_map)
+        if app.config['SSM_TYPE'] and app.config['SSM_TYPE'] != 'NONE':
+            HALO_HOST = None
+            from halo_flask.ssm import set_app_param_config
+            set_app_param_config(app.config['SSM_TYPE'], HALO_HOST)
 
     register_exec(app)
 

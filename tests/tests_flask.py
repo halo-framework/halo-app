@@ -21,7 +21,7 @@ from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
 from halo_flask.request import HaloContext
 import unittest
 
-
+#6,7,9923,9941 failing
 
 fake = Faker()
 app = Flask(__name__)
@@ -37,7 +37,7 @@ class A1(AbsApiMixinX):
         if not foi:#not in seq
             if not halo_request.sub_func:#not in bq
                 if halo_request.request.method == HTTPChoice.delete.value:
-                    return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.delete.value)
+                    return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
 
     def extract_json(self,halo_request, back_response, seq=None):
@@ -246,7 +246,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_6_api_request_returns_a_CircuitBreakerError(self):
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = CnnApi(Util.get_req_context(request))
+            api = CnnApi(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
@@ -259,7 +259,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_7_api_request_returns_a_given_CircuitBreakerError2(self):
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = TstApi(Util.get_req_context(request))
+            api = TstApi(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
@@ -270,7 +270,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_8_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = CnnApi(Util.get_req_context(request))
+            api = CnnApi(Util.get_halo_context(request))
             api.url = api.url + "/lgkmlgkhm??l,mhb&&,g,hj "
             timeout = Util.get_timeout(request)
             try:
@@ -314,21 +314,21 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_92_debug_enabled(self):
         header = {'HTTP_DEBUG_LOG_ENABLED': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            ret = Util.get_req_context(request)
-            eq_(ret["debug-log-enabled"], 'true')
+            ret = Util.get_halo_context(request)
+            eq_(ret.dict["x-debug-log-enabled"], 'true')
 
     def test_93_json_log(self):
         import traceback
         header = {'HTTP_DEBUG_LOG_ENABLED': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            req_context = Util.get_req_context(request)
+            halo_context = Util.get_halo_context(request)
             try:
                 raise Exception("test it")
             except Exception as e:
                 e.stack = traceback.format_exc()
-                ret = log_json(req_context, {"abc": "def"}, err=e)
+                ret = log_json(halo_context, {"abc": "def"}, err=e)
                 print(str(ret))
-                eq_(ret["debug-log-enabled"], 'true')
+                eq_(ret["x-debug-log-enabled"], 'true')
 
     def test_94_get_request_with_debug(self):
         header = {'HTTP_DEBUG_LOG_ENABLED': 'true'}
@@ -337,11 +337,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(ret, 'true')
 
     def test_95_debug_event(self):
-        event = {'debug-log-enabled': 'true'}
+        event = {'x-debug-log-enabled': 'true'}
         ret = Util.get_correlation_from_event(event)
-        eq_(Util.event_req_context["debug-log-enabled"], 'true')
+        eq_(Util.event_req_context["x-debug-log-enabled"], 'true')
         ret = Util.get_correlation_from_event(event)
-        eq_(ret["debug-log-enabled"], 'true')
+        eq_(ret["x-debug-log-enabled"], 'true')
 
     def test_96_pref_mixin(self):
         with app.test_request_context(method='GET', path='/perf'):

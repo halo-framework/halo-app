@@ -194,7 +194,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             class_ = getattr(module, class_name)
             if not issubclass(class_, AbsBaseApi):
                 raise ApiClassErrorException(class_name)
-            instance = class_(Util.get_halo_context(halo_request))
+            instance = class_(halo_request.context)
             instance.op = foi_op
             return instance
         raise NoApiClassException("api class not defined")
@@ -406,7 +406,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 counter = counter + 1
 
         try:
-            ret = sagax.execute(Util.get_halo_context(halo_request), payloads, apis)
+            ret = sagax.execute(halo_request.context, payloads, apis)
             return ret
         except SagaRollBack as e:
             ret = HaloResponse(halo_request)
@@ -558,7 +558,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 counter = counter + 1
 
         try:
-            ret = sagax.execute(Util.get_halo_context(halo_request), payloads, apis)
+            ret = sagax.execute(halo_request.context, payloads, apis)
             return ret
         except SagaRollBack as e:
             raise ServerError(str(e), http_status=500, payload=None)
@@ -708,7 +708,7 @@ class TestMixinX(AbsApiMixinX):
         dict = {1: back_json}
         # 8. return json response
         return dict
-
+"""
 class AbsAuthMixinX(AbsApiMixinX):
     __metaclass__ = ABCMeta
 
@@ -809,7 +809,7 @@ class AbsAuthMixinX(AbsApiMixinX):
         if typer == HTTPChoice.delete:
             return super(AbsAuthMixinX,self).process_delete(request,vars)
 
-"""
+
 ##############################################################################3
 
 from halo_flask.logs import log_json

@@ -26,10 +26,10 @@ class AbsDbMixin(AbsBaseClass):
     __metaclass__ = ABCMeta
     # intercept db calls
 
-    req_context = None
+    halo_context = None
 
-    def __init__(self, req_context):
-        self.req_context = req_context
+    def __init__(self, halo_context):
+        self.halo_context = halo_context
 
     def __getattribute__(self, name):
         attr = object.__getattribute__(self, name)
@@ -38,7 +38,7 @@ class AbsDbMixin(AbsBaseClass):
                 now = datetime.datetime.now()
                 result = attr(*args, **kwargs)
                 total = datetime.datetime.now() - now
-                logger.info(LOGChoice.performance_data.value, extra=log_json(self.req_context,
+                logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                {LOGChoice.type.value: SYSTEMChoice.dbaccess.value,
                                                            LOGChoice.milliseconds.value: int(total.total_seconds() * 1000),
                                                            LOGChoice.function.value: str(attr.__name__)}))

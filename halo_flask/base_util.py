@@ -217,7 +217,6 @@ class BaseUtil(AbsBaseClass):
     @classmethod
     def get_req_context(cls, request, api_key=None):
         """
-
         :param request:
         :param api_key:
         :return:

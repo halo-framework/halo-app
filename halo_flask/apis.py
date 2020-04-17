@@ -56,11 +56,11 @@ class AbsBaseApi(AbsBaseClass):
     op = HTTPChoice.get.value
     url = None
     api_type = None
-    req_context = None
+    halo_context = None
     cb = MyCircuitBreaker()
 
-    def __init__(self, req_context,method=None):
-        self.req_context = req_context
+    def __init__(self, halo_context, method=None):
+        self.halo_context = halo_context
         if method:
             self.op = method
         self.url, self.api_type = self.get_url_str()
@@ -79,10 +79,10 @@ class AbsBaseApi(AbsBaseClass):
         return requests.request(method, url, data=data, headers=headers,
                                 timeout=timeout, auth=auth)
 
-    def exec_client(self, req_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
+    def exec_client(self, halo_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
         """
 
-        :param req_context:
+        :param halo_context:
         :param method:
         :param url:
         :param api_type:
@@ -94,11 +94,11 @@ class AbsBaseApi(AbsBaseClass):
 
         msg = "Max Try for url: ("+str(settings.HTTP_MAX_RETRY)+") " + str(url)
         for i in range(0, settings.HTTP_MAX_RETRY):
-            logger.debug("try index: "+str(i), extra=log_json(req_context))
+            logger.debug("try index: " + str(i), extra=log_json(halo_context))
             try:
-                logger.debug("try: " + str(i), extra=log_json(req_context))
+                logger.debug("try: " + str(i), extra=log_json(halo_context))
                 ret = self.do_request(method, url, timeout, data=data, headers=headers, auth=auth)
-                logger.debug("request status_code=" + str(ret.status_code)+" content="+str(ret.content), extra=log_json(req_context))
+                logger.debug("request status_code=" + str(ret.status_code) +" content=" + str(ret.content), extra=log_json(halo_context))
                 if ret.status_code >= 500:
                     continue
                 if 200 > ret.status_code or 500 > ret.status_code >= 300:
@@ -112,13 +112,13 @@ class AbsBaseApi(AbsBaseClass):
                 logger.debug(
                     "ReadTimeout " + str(
                         settings.SERVICE_READ_TIMEOUT_IN_MS) + " in method=" + method + " for url=" + url,
-                    extra=log_json(req_context))
+                    extra=log_json(halo_context))
                 continue
             except requests.exceptions.ConnectTimeout as e:
                 logger.debug(str(e))
                 logger.debug("ConnectTimeout in method=" + str(
                     settings.SERVICE_CONNECT_TIMEOUT_IN_MS) + " in method=" + method + " for url=" + url,
-                             extra=log_json(req_context))
+                             extra=log_json(halo_context))
                 continue
         raise MaxTryHttpException(msg)
 
@@ -128,7 +128,7 @@ class AbsBaseApi(AbsBaseClass):
         :return:
         """
         api_config = settings.API_CONFIG
-        logger.debug("api_config: " + str(api_config), extra=log_json(self.req_context))
+        logger.debug("api_config: " + str(api_config), extra=log_json(self.halo_context))
         if api_config and self.name in api_config:
             return api_config[self.name]["url"], api_config[self.name]["type"]
         raise NoApiDefinition(self.name)
@@ -142,7 +142,7 @@ class AbsBaseApi(AbsBaseClass):
         """
         strx = self.url
         strx = strx.replace("$" + str(key), str(val))
-        logger.debug("url replace var: " + strx, extra=log_json(self.req_context))
+        logger.debug("url replace var: " + strx, extra=log_json(self.halo_context))
         self.url = strx
         return self.url
 
@@ -155,7 +155,7 @@ class AbsBaseApi(AbsBaseClass):
         strx = self.url
         if "base_url" in self.url:
             strx = strx.replace("base_url",base_url)
-        logger.debug("url add base: " + strx, extra=log_json(self.req_context))
+        logger.debug("url add base: " + strx, extra=log_json(self.halo_context))
         self.url = strx
         return self.url
 
@@ -170,7 +170,7 @@ class AbsBaseApi(AbsBaseClass):
             strx = strx + "&" + query
         else:
             strx = strx + "?" + query
-        logger.debug("url add query: " + strx, extra=log_json(self.req_context))
+        logger.debug("url add query: " + strx, extra=log_json(self.halo_context))
         self.url = strx
         return self.url
 
@@ -190,7 +190,7 @@ class AbsBaseApi(AbsBaseClass):
                 strx = strx + "&" + query
             else:
                 strx = strx + "?" + query
-        logger.debug("url add query: " + strx, extra=log_json(self.req_context))
+        logger.debug("url add query: " + strx, extra=log_json(self.halo_context))
         self.url = strx
         return self.url
 
@@ -205,42 +205,42 @@ class AbsBaseApi(AbsBaseClass):
         :return:
         """
         try:
-            logger.debug("Api name: "+self.name+" method: " + str(method) + " url: " + str(url)+ " headers:"+str(headers), extra=log_json(self.req_context))
+            logger.debug("Api name: " + self.name +" method: " + str(method) + " url: " + str(url) + " headers:" + str(headers), extra=log_json(self.halo_context))
             now = datetime.datetime.now()
-            ret = self.exec_client(self.req_context, method, url, self.api_type, timeout, data=data, headers=headers,auth=auth)
+            ret = self.exec_client(self.halo_context, method, url, self.api_type, timeout, data=data, headers=headers, auth=auth)
             total = datetime.datetime.now() - now
-            logger.info(LOGChoice.performance_data.value, extra=log_json(self.req_context,
-                                                           {LOGChoice.type.value: SYSTEMChoice.api.value, LOGChoice.milliseconds.value: int(total.total_seconds() * 1000),
+            logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
+                                                                         {LOGChoice.type.value: SYSTEMChoice.api.value, LOGChoice.milliseconds.value: int(total.total_seconds() * 1000),
                                                        LOGChoice.url.value: str(url)}))
-            logger.debug("ret: " + str(ret), extra=log_json(self.req_context))
+            logger.debug("ret: " + str(ret), extra=log_json(self.halo_context))
             return ret
         except requests.ConnectionError as e:
             msg = str(e)
-            logger.debug("error: " + msg, extra=log_json(self.req_context))
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
             er = ApiError(e)
             er.status_code = 500
             raise er
         except requests.HTTPError as e:
             msg = str(e)
-            logger.debug("error: " + msg, extra=log_json(self.req_context))
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
             er = ApiError(e)
             er.status_code = 500
             raise er
         except requests.Timeout as e:
             msg = str(e)
-            logger.debug("error: " + msg, extra=log_json(self.req_context))
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
             er = ApiError(e)
             er.status_code = 500
             raise er
         except requests.RequestException as e:
             msg = str(e)
-            logger.debug("error: " + msg, extra=log_json(self.req_context))
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
             er = ApiError(e)
             er.status_code = 500
             raise er
         except ApiError as e:
             msg = str(e)
-            logger.debug("error: " + msg, extra=log_json(self.req_context))
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
             raise e
 
     def run(self,timeout, headers=None, auth=None,data=None):
@@ -327,9 +327,9 @@ class ApiMngr(AbsBaseClass):
     API_LIST = []
 
 
-    def __init__(self, req_context):
-        logger.debug("ApiMngr=" + str(req_context))
-        self.req_context = req_context
+    def __init__(self, halo_context):
+        logger.debug("ApiMngr=" + str(halo_context))
+        self.halo_context = halo_context
 
     @staticmethod
     def set_api_list(list):
@@ -364,7 +364,7 @@ class ApiMngr(AbsBaseClass):
         logger.debug("get_api_instance=" + class_name)
         module = importlib.import_module(__name__)
         class_ = getattr(module, class_name)
-        instance = class_(self.req_context)
+        instance = class_(self.halo_context)
         logger.debug("class=" + str(instance))
         return instance
 
