@@ -27,9 +27,10 @@ logger = logging.getLogger(__name__)
 
 AWS = 'AWS'
 AZURE = 'AZURE'
+GCP = 'GCP'
 KUBELESS = 'KUBELESS'
 ONPREM = 'ONPREM'
-PROVIDERS = [AWS,AZURE,KUBELESS]
+PROVIDERS = [AWS,AZURE,GCP,KUBELESS]
 
 
 def get_provider_name():

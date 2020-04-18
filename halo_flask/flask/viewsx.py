@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 HALO_HOST = None
 
+#@todo add jsonify to al responses
 
 class AbsBaseLinkX(MethodView):
     __metaclass__ = ABCMeta

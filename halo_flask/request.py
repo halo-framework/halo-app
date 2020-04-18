@@ -21,13 +21,13 @@ class HaloContext(AbsBaseClass):
     ACCESS = "ACCESS"
 
     items = {
-        CORRELATION:"x-correlation-id",
-        USER_AGENT: "x-user-agent",
-        REQUEST: "x-request-id",
-        DEBUG_LOG: "x-debug-log-enabled",
-        API_KEY: "x-api-key",
-        SESSION: "x-session-id",
-        ACCESS: "x-access-token"
+        CORRELATION:"x-halo-correlation-id",
+        USER_AGENT: "x-halo-user-agent",
+        REQUEST: "x-halo-request-id",
+        DEBUG_LOG: "x-halo-debug-log-enabled",
+        API_KEY: "x-halo-api-key",
+        SESSION: "x-halo-session-id",
+        ACCESS: "x-halo-access-token"
     }
 
     dict = {}
