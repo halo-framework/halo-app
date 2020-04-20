@@ -312,14 +312,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(flag, 'true')
 
     def test_92_debug_enabled(self):
-        header = {'HTTP_DEBUG_LOG_ENABLED': 'true'}
+        header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             ret = Util.get_halo_context(request)
-            eq_(ret.dict["x-debug-log-enabled"], 'true')
+            eq_(ret.dict["x-halo-debug-log-enabled"], 'true')
 
     def test_93_json_log(self):
         import traceback
-        header = {'HTTP_DEBUG_LOG_ENABLED': 'true'}
+        header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             halo_context = Util.get_halo_context(request)
             try:
@@ -328,20 +328,20 @@ class TestUserDetailTestCase(unittest.TestCase):
                 e.stack = traceback.format_exc()
                 ret = log_json(halo_context, {"abc": "def"}, err=e)
                 print(str(ret))
-                eq_(ret["x-debug-log-enabled"], 'true')
+                eq_(ret["x-halo-debug-log-enabled"], 'true')
 
     def test_94_get_request_with_debug(self):
-        header = {'HTTP_DEBUG_LOG_ENABLED': 'true'}
+        header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             ret = Util.get_debug_enabled(request)
             eq_(ret, 'true')
 
     def test_95_debug_event(self):
-        event = {'x-debug-log-enabled': 'true'}
+        event = {'x-halo-debug-log-enabled': 'true'}
         ret = Util.get_correlation_from_event(event)
-        eq_(Util.event_req_context["x-debug-log-enabled"], 'true')
+        eq_(Util.event_req_context["x-halo-debug-log-enabled"], 'true')
         ret = Util.get_correlation_from_event(event)
-        eq_(ret["x-debug-log-enabled"], 'true')
+        eq_(ret["x-halo-debug-log-enabled"], 'true')
 
     def test_96_pref_mixin(self):
         with app.test_request_context(method='GET', path='/perf'):

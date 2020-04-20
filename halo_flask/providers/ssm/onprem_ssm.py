@@ -20,7 +20,7 @@ current_milli_time = lambda: int(round(time.time() * 1000))
 logger = logging.getLogger(__name__)
 
 client = None
-full_config_path,short_config_path = BaseUtil.get_env()
+
 
 class AbsOnPremClient(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -175,6 +175,7 @@ def set_param_config(region_name, key, value):
     :param value:
     :return:
     """
+    full_config_path,short_config_path = BaseUtil.get_env()
     ssm_parameter_path = full_config_path + '/' + key
     return set_config(region_name, ssm_parameter_path, value)
 
@@ -186,6 +187,7 @@ def set_app_param_config(host):
     :param host:
     :return:
     """
+    full_config_path,short_config_path = BaseUtil.get_env()
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
     if host:
         url = "https://" + host + "/" + BaseUtil.get_stage()
@@ -212,7 +214,7 @@ def set_config(ssm_parameter_path, value):
             Type='String',
             Overwrite=True
         )
-
+        full_config_path,short_config_path = BaseUtil.get_env()
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
     except HaloException as e:
@@ -246,6 +248,7 @@ def get_config():
     :return:
     """
     # Initialize app if it doesn't yet exist
+    full_config_path,short_config_path = BaseUtil.get_env()
     logger.debug("Loading config and creating new MyConfig..." + full_config_path)
     cache = get_cache(full_config_path)
     myconfig = MyConfig(cache, full_config_path)
@@ -260,6 +263,7 @@ def get_app_config():
     :return:
     """
     # Initialize app if it doesn't yet exist
+    full_config_path,short_config_path = BaseUtil.get_env()
     logger.debug("Loading app config and creating new AppConfig..." + short_config_path)
     cache = get_cache(short_config_path)
     appconfig = MyConfig(cache, short_config_path)

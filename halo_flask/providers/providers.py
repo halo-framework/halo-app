@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import time
+import uuid
 from abc import ABCMeta,abstractmethod
 
 #@ TODO put_parameter should be activated only is current value is different then the existing one
@@ -18,7 +19,8 @@ from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from ..settingsx import settingsx
 from halo_flask.exceptions import ProviderError
 from halo_flask.classes import AbsBaseClass
-from halo_flask.logs import log_json
+#from halo_flask.logs import log_json
+from halo_flask.sys_util import SysUtil
 
 
 #current_milli_time = lambda: int(round(time.time() * 1000))
@@ -46,8 +48,25 @@ print('PROVIDER='+PROVIDER)
 class Provider(AbsBaseClass):
     __metaclass__ = ABCMeta
 
+    PROVIDER_NAME = ONPREM
+
     @abstractmethod
-    def show(self): raise NotImplementedError
+    def show(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_context(self):
+        return {"stage": SysUtil.get_stage()}
+
+    @abstractmethod
+    def get_header_name(self,request,name):
+        return name
+
+    @abstractmethod
+    def get_request_id(self,request):
+        return uuid.uuid4().__str__()
+
+
 
 
 def get_provider():
@@ -57,6 +76,7 @@ def get_provider():
             return AwsProvider()
         except Exception as e:
             raise ProviderError(e)
+    return Provider()
 
 
 ################## ssm ###########################

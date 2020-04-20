@@ -15,6 +15,8 @@ from halo_flask.classes import AbsBaseClass
 from halo_flask.const import HTTPChoice,LOC
 from halo_flask.request import HaloContext
 from halo_flask.exceptions import ApiTimeOutExpired,CacheError
+from halo_flask.providers.providers import get_provider
+from halo_flask.exceptions import NoCorrelationIdException
 
 class status(AbsBaseClass):
 
@@ -107,19 +109,28 @@ def strx(str1):
 class Util(AbsBaseClass):
 
     @staticmethod
-    def get_chrome_browser(request):
+    def get_header_name(request,header):
+        provider = get_provider()
+        if provider:
+            header_name = provider.get_header_name(request,header)
+        else:
+            header_name = header
+        return header_name
+
+    @staticmethod
+    def get_chrome_browser(cls,request):
         """
 
         :param request:
         :return:
         """
+        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.USER_AGENT])
         CHROME_AGENT_RE = re.compile(r".*(Chrome)", re.IGNORECASE)
         NON_CHROME_AGENT_RE = re.compile(
             r".*(Aviator | ChromePlus | coc_ | Dragon | Edge | Flock | Iron | Kinza | Maxthon | MxNitro | Nichrome | OPR | Perk | Rockmelt | Seznam | Sleipnir | Spark | UBrowser | Vivaldi | WebExplorer | YaBrowser)",
             re.IGNORECASE)
-
-        if CHROME_AGENT_RE.match(request.headers['HTTP_USER_AGENT']):
-            if NON_CHROME_AGENT_RE.match(request.headers['HTTP_USER_AGENT']):
+        if CHROME_AGENT_RE.match(request.headers[header_name]):
+            if NON_CHROME_AGENT_RE.match(request.headers[header_name]):
                 return False
             else:
                 return True
@@ -127,36 +138,17 @@ class Util(AbsBaseClass):
             return False
 
     @staticmethod
-    def mobile(request):
+    def mobile(cls,request):
         """Return True if the request comes from a mobile device.
         :param request:
         :return:
         """
-
+        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.USER_AGENT])
         MOBILE_AGENT_RE = re.compile(r".*(iphone|mobile|androidtouch)", re.IGNORECASE)
-
-        if MOBILE_AGENT_RE.match(request.headers['HTTP_USER_AGENT']):
+        if MOBILE_AGENT_RE.match(request.headers[header_name]):
             return True
         else:
             return False
-
-    @staticmethod
-    def get_lambda_context(request):
-        """
-
-        :param request:
-        :return:
-        """
-        # AWS_REGION
-        # AWS_LAMBDA_FUNCTION_NAME
-        # 'lambda.context'
-        # x-amzn-RequestId
-        if 'lambda.context' in request.headers:
-            return request.headers['lambda.context']
-        elif 'context' in request.headers:
-            return request.headers['context']
-        else:
-            return None
 
     @classmethod
     def get_correlation_id(cls, request):
@@ -165,11 +157,14 @@ class Util(AbsBaseClass):
         :param request:
         :return:
         """
-        if "HTTP_X_CORRELATION_ID" in request.headers:
-            x_correlation_id = request.headers["HTTP_X_CORRELATION_ID"]
+        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.CORRELATION])
+        if header_name in request.headers:
+            return request.headers[header_name]
         else:
-            x_correlation_id = cls.get_aws_request_id(request)
-        return x_correlation_id
+            provider = get_provider()
+            if provider:
+                return provider.get_request_id(request)
+        raise NoCorrelationIdException()
 
     @classmethod
     def get_user_agent(cls, request):
@@ -178,8 +173,9 @@ class Util(AbsBaseClass):
         :param request:
         :return:
         """
-        if "HTTP_X_USER_AGENT" in request.headers:
-            user_agent = request.headers["HTTP_X_USER_AGENT"]
+        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.USER_AGENT])
+        if header_name in request.headers:
+            user_agent = request.headers[header_name]
         else:
             user_agent = cls.get_func_name() + ':' + request.path + ':' + request.method + ':' + settings.INSTANCE_ID
         return user_agent
@@ -192,12 +188,14 @@ class Util(AbsBaseClass):
         :return:
         """
         # check if the specific call is debug enabled
-        if "HTTP_DEBUG_LOG_ENABLED" in request.headers:
-            dlog = request.headers["HTTP_DEBUG_LOG_ENABLED"]
+        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.DEBUG_LOG])
+        if header_name in request.headers:
+            dlog = request.headers[header_name]
             if dlog == 'true':
                 return 'true'
         # check if system wide enabled - done on edge
-        if "HTTP_X_CORRELATION_ID" not in request.headers:
+        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.CORRELATION])
+        if header_name not in request.headers:
             dlog = cls.get_system_debug_enabled()
             if dlog == 'true':
                 return 'true'
@@ -221,27 +219,33 @@ class Util(AbsBaseClass):
         return request_headers
 
     @staticmethod
-    def get_client_ip(request):  # front - when browser calls us
+    def get_client_ip(cls,request):  # front - when browser calls us
         """
 
         :param request:
         :return:
         """
-        x_forwarded_for = request.headers.get('HTTP_X_FORWARDED_FOR')
+        header = 'HTTP_X_FORWARDED_FOR'
+        header_name = cls.get_header_name(request, header)
+        x_forwarded_for = request.headers.get(header_name)
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
         else:
-            ip = request.headers.get('REMOTE_ADDR')
+            header = 'REMOTE_ADDR'
+            header_name = cls.get_header_name(request, header)
+            ip = request.headers.get(header_name)
         return ip
 
     @staticmethod
-    def get_server_client_ip(request):  # not front - when service calls us
+    def get_server_client_ip(cls,request):  # not front - when service calls us
         """
 
         :param request:
         :return:
         """
-        return request.headers.get('HTTP_REFERER')
+        header = 'HTTP_REFERER'
+        header_name = cls.get_header_name(request, header)
+        return request.headers.get(header_name)
 
 
 
@@ -298,6 +302,24 @@ class Util(AbsBaseClass):
 #@todo clean these methods or move to aws provider
 
     @staticmethod
+    def get_lambda_context(request):
+        """
+
+        :param request:
+        :return:
+        """
+        # AWS_REGION
+        # AWS_LAMBDA_FUNCTION_NAME
+        # 'lambda.context'
+        # x-amzn-RequestId
+        if 'lambda.context' in request.headers:
+            return request.headers['lambda.context']
+        elif 'context' in request.headers:
+            return request.headers['context']
+        else:
+            return None
+
+    @staticmethod
     def get_func_name():
         """
 
@@ -343,15 +365,7 @@ class Util(AbsBaseClass):
                 return os.environ['AWS_DEFAULT_REGION']
             return settings.AWS_REGION
 
-    @staticmethod
-    def get_stage():
-        """
 
-        :return:
-        """
-        if 'HALO_STAGE' in os.environ:
-            return os.environ['HALO_STAGE']
-        return LOC
 
     @classmethod
     def get_context(cls):

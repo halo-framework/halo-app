@@ -3,7 +3,7 @@ from __future__ import print_function
 # python
 import datetime
 import logging
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 import json
 import re
 import requests
@@ -37,9 +37,6 @@ settings = settingsx()
 # but are immediately notified about the internal problem with a default response. It is the essence of a responsive design.
 
 logger = logging.getLogger(__name__)
-
-dbaccess = None
-
 
 class AbsBaseMixinX(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -158,6 +155,11 @@ class AbsBaseMixinX(AbsBaseClass):
         """
         # @TODO check authentication and do masking
         return True, None
+
+    @abstractmethod
+    def get_dbaccess(self, halo_request):
+        global dbaccess
+        return dbaccess
 
 class AbsApiMixinX(AbsBaseMixinX):
     __metaclass__ = ABCMeta

@@ -123,3 +123,6 @@ class StoreClearException(HaloException):
 
 class MissingHaloContextException(HaloException):
     pass
+
+class NoCorrelationIdException(HaloException):
+    pass
