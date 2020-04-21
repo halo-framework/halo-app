@@ -158,8 +158,17 @@ class AbsBaseMixinX(AbsBaseClass):
 
     @abstractmethod
     def get_dbaccess(self, halo_request):
-        global dbaccess
-        return dbaccess
+        if settings.DBACCESS_CLASS:
+            from halo_flask.models import AbsDbMixin
+            k = settings.DBACCESS_CLASS.rfind(".")
+            module_name = settings.DBACCESS_CLASS[:k]
+            class_name = settings.DBACCESS_CLASS[k + 1:]
+            module = importlib.import_module(module_name)
+            class_ = getattr(module, class_name)
+            if not issubclass(class_, AbsDbMixin):
+                raise HaloException("DBACCESS CLASS error:" + settings.DBACCESS_CLASS)
+            return class_(halo_request.context)
+        raise HaloException("NO DBACCESS CLASS error")
 
 class AbsApiMixinX(AbsBaseMixinX):
     __metaclass__ = ABCMeta
