@@ -22,7 +22,7 @@ from halo_flask.classes import AbsBaseClass
 #from halo_flask.logs import log_json
 from halo_flask.sys_util import SysUtil
 
-
+settings = settingsx()
 #current_milli_time = lambda: int(round(time.time() * 1000))
 
 logger = logging.getLogger(__name__)
@@ -40,10 +40,12 @@ def get_provider_name():
         return AWS
     if 'KUBELESS_FUNCTION_NAME' in os.environ:
         return KUBELESS
+    if settings.PROVIDER and settings.PROVIDER in PROVIDERS:
+        return settings.PROVIDER
     return ONPREM
 
-PROVIDER = get_provider_name()
-print('PROVIDER='+PROVIDER)
+#PROVIDER = get_provider_name()
+#print('PROVIDER='+PROVIDER)
 
 class Provider(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -69,14 +71,20 @@ class Provider(AbsBaseClass):
 
 
 
+provider = None
 def get_provider():
-    if PROVIDER == AWS:
+    global provider
+    if provider:
+        return provider
+    if get_provider_name() == AWS:
         try:
-            from halo_aws.providers.cloud.aws.aws import AwsProvider
-            return AwsProvider()
+            from halo_aws.providers.cloud.aws.aws import AWSProvider
+            provider = AWSProvider()
         except Exception as e:
             raise ProviderError(e)
-    return Provider()
+    else:
+        provider = Provider()
+    return provider
 
 
 ################## ssm ###########################
