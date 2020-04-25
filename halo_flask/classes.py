@@ -16,6 +16,7 @@ from .exceptions import MaxTryHttpException, ApiError
 logger = logging.getLogger(__name__)
 
 
+
 class AbsBaseClass(object):
     __metaclass__ = ABCMeta
 
@@ -28,8 +29,19 @@ class AbsBaseClass(object):
         raise NotImplementedError
 
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+        #return json.dumps(self, default=lambda o: o.__dict__,
+        #                  sort_keys=True, indent=4)
+        def myconverter(o):
+            if isinstance(o, datetime.datetime):
+                return o.__str__()
+            if isinstance(o, datetime.date):
+                serial = o.isoformat()
+                return serial
+            if isinstance(o, datetime.time):
+                serial = o.isoformat()
+                return serial
+
+        return json.dumps(self.__dict__, default = myconverter)
 
 
 
