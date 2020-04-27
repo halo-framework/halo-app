@@ -12,7 +12,8 @@ from environs import Env
 from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError
 from halo_flask.classes import AbsBaseClass
 # from .logs import log_json
-from halo_flask.base_util import BaseUtil
+#from halo_flask.base_util import BaseUtil
+from halo_flask.flask.utilx import Util as BaseUtil
 from halo_flask.settingsx import settingsx
 settings = settingsx()
 

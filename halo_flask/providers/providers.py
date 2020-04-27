@@ -19,7 +19,7 @@ from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from ..settingsx import settingsx
 from halo_flask.exceptions import ProviderError
 from halo_flask.classes import AbsBaseClass
-#from halo_flask.logs import log_json
+from halo_flask.logs import log_json
 from halo_flask.sys_util import SysUtil
 
 settings = settingsx()
@@ -44,10 +44,8 @@ def get_provider_name():
         return settings.PROVIDER
     return ONPREM
 
-#PROVIDER = get_provider_name()
-#print('PROVIDER='+PROVIDER)
 
-class Provider(AbsBaseClass):
+class ONPREMProvider(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     PROVIDER_NAME = ONPREM
@@ -76,14 +74,16 @@ def get_provider():
     global provider
     if provider:
         return provider
-    if get_provider_name() == AWS:
+    provider_name = get_provider_name()
+    logger.info("provider_name:"+str(provider_name))
+    if  provider_name == AWS:
         try:
             from halo_aws.providers.cloud.aws.aws import AWSProvider
             provider = AWSProvider()
         except Exception as e:
             raise ProviderError(e)
     else:
-        provider = Provider()
+        provider = ONPREMProvider()
     return provider
 
 

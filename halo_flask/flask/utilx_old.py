@@ -13,8 +13,8 @@ from ..settingsx import settingsx
 from halo_flask.classes import AbsBaseClass
 from halo_flask.const import HTTPChoice,LOC
 from halo_flask.request import HaloContext
-from halo_flask.exceptions import ApiTimeOutExpired,CacheError,HaloException
-from halo_flask.providers.providers import get_provider,ONPREM
+from halo_flask.exceptions import ApiTimeOutExpired,CacheError
+from halo_flask.providers.providers import get_provider
 from halo_flask.exceptions import NoCorrelationIdException
 
 class status(AbsBaseClass):
@@ -296,6 +296,87 @@ class Util(AbsBaseClass):
             qd = request.args
         return qd
 
+#########################################################################################33
+
+#@todo clean these methods or move to aws provider
+
+    @staticmethod
+    def get_lambda_context(request):
+        """
+
+        :param request:
+        :return:
+        """
+        # AWS_REGION
+        # AWS_LAMBDA_FUNCTION_NAME
+        # 'lambda.context'
+        # x-amzn-RequestId
+        if 'lambda.context' in request.headers:
+            return request.headers['lambda.context']
+        elif 'context' in request.headers:
+            return request.headers['context']
+        else:
+            return None
+
+    @staticmethod
+    def get_func_name():
+        """
+
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_NAME' in os.environ:
+            return os.environ['AWS_LAMBDA_FUNCTION_NAME']
+        else:
+            return settings.FUNC_NAME
+
+    @staticmethod
+    def get_func_ver():
+        """
+
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_VERSION' in os.environ:
+            return os.environ['AWS_LAMBDA_FUNCTION_VERSION']
+        else:
+            return "VER"
+
+    @staticmethod
+    def get_func_mem():
+        """
+
+        :return:
+        """
+        if 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE' in os.environ:
+            return os.environ['AWS_LAMBDA_FUNCTION_MEMORY_SIZE']
+        else:
+            return "MEM"
+
+    @staticmethod
+    def get_func_region():
+        """
+
+        :return:
+        """
+        if 'AWS_REGION' in os.environ:
+            return os.environ['AWS_REGION']
+        else:
+            if 'AWS_DEFAULT_REGION' in os.environ:
+                return os.environ['AWS_DEFAULT_REGION']
+            return settings.AWS_REGION
+
+
+
+    @classmethod
+    def get_context(cls):
+        """
+
+        :return:
+        """
+        ret = {"awsRegion": cls.get_func_region(), "functionName": cls.get_func_name(),
+               "functionVersion": cls.get_func_ver(), "functionMemorySize": cls.get_func_mem(),
+               "stage": cls.get_stage()}
+        return ret
+
     @classmethod
     def get_timeout(cls, request):
         """
@@ -303,10 +384,27 @@ class Util(AbsBaseClass):
         :param request:
         :return:
         """
-        provider = get_provider()
-        if provider.PROVIDER_NAME != ONPREM:
-            return provider.get_timeout_mili(request)
+        if 'AWS_LAMBDA_FUNCTION_NAME' in os.environ:
+            context = cls.get_lambda_context(request)
+            if context:
+                return cls.get_timeout_mili(context)
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
+
+    @classmethod
+    def get_timeout_mili(cls, context):
+        """
+
+        :param context:
+        :return:
+        """
+        mili = context.get_remaining_time_in_millis()
+        logger.debug("mili=" + str(mili))
+        sc = mili / 1000
+        timeout = sc - settings.RECOVER_TIMEOUT_IN_SC
+        logger.debug("timeout=" + str(timeout))
+        if timeout > settings.MINIMUM_SERVICE_TIMEOUT_IN_SC:
+            return timeout
+        raise ApiTimeOutExpired("left " + str(timeout))
 
     @classmethod
     def get_halo_context(cls, request, api_key=None):
@@ -318,7 +416,7 @@ class Util(AbsBaseClass):
         x_correlation_id = cls.get_correlation_id(request)
         x_user_agent = cls.get_user_agent(request)
         dlog = cls.get_debug_enabled(request)
-        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent, HaloContext.items[HaloContext.REQUEST]: cls.get_request_id(request),
+        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent, HaloContext.items[HaloContext.REQUEST]: cls.get_aws_request_id(request),
                HaloContext.items[HaloContext.CORRELATION]: x_correlation_id, HaloContext.items[HaloContext.DEBUG_LOG]: dlog}
         if api_key:
             ret[HaloContext.items[HaloContext.API_KEY]] = api_key
@@ -326,34 +424,17 @@ class Util(AbsBaseClass):
         ctx.dict = ret
         return ctx
 
-    @staticmethod
-    def get_func_name():
-        """
-
-        :return:
-        """
-        provider = get_provider()
-        if provider.PROVIDER_NAME != ONPREM:
-            return provider.get_func_name()
-        return settings.FUNC_NAME
-
-    @staticmethod
-    def get_func_ver():
-        """
-
-        :return:
-        """
-        provider = get_provider()
-        if provider.PROVIDER_NAME != ONPREM:
-            return provider.get_func_ver()
-        return settings.FUNC_VER
-
     @classmethod
-    def get_request_id(cls,request):
-        provider = get_provider()
-        if provider:
-            return provider.get_request_id(request)
-        raise HaloException("no provider defined")
+    def get_aws_request_id(cls, request):
+        """
+
+        :param request:
+        :return:
+        """
+        context = cls.get_lambda_context(request)
+        if context:
+            return context.aws_request_id
+        return uuid.uuid4().__str__()
 
     @classmethod
     def get_system_debug_enabled(cls):
@@ -396,8 +477,7 @@ class Util(AbsBaseClass):
         """
         # disable debug logging by default, but allow override via env variables
         # or if enabled via forwarded request context or if debug flag is on
-        if halo_context.get(
-                HaloContext.items[HaloContext.DEBUG_LOG]) == 'true' or cls.get_system_debug_enabled() == 'true':
+        if halo_context.get(HaloContext.items[HaloContext.DEBUG_LOG]) == 'true' or cls.get_system_debug_enabled() == 'true':
             return True
         return False
 

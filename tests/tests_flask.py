@@ -8,7 +8,7 @@ from flask import Flask, request
 from flask_restful import Api
 from nose.tools import eq_
 from jsonpath_ng import jsonpath, parse
-
+from halo_flask.base_util import BaseUtil
 from halo_flask.flask.utilx import Util, status
 from halo_flask.flask.mixinx import AbsApiMixinX,PerfMixinX
 from halo_flask.flask.viewsx import PerfLinkX
@@ -315,7 +315,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             ret = Util.get_halo_context(request)
-            eq_(ret.dict["x-halo-debug-log-enabled"], 'true')
+            eq_(ret.dict[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
     def test_93_json_log(self):
         import traceback
@@ -328,7 +328,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 e.stack = traceback.format_exc()
                 ret = log_json(halo_context, {"abc": "def"}, err=e)
                 print(str(ret))
-                eq_(ret["x-halo-debug-log-enabled"], 'true')
+                eq_(ret[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
     def test_94_get_request_with_debug(self):
         header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
@@ -337,11 +337,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(ret, 'true')
 
     def test_95_debug_event(self):
-        event = {'x-halo-debug-log-enabled': 'true'}
-        ret = Util.get_correlation_from_event(event)
-        eq_(Util.event_req_context["x-halo-debug-log-enabled"], 'true')
-        ret = Util.get_correlation_from_event(event)
-        eq_(ret["x-halo-debug-log-enabled"], 'true')
+        event = {HaloContext.items[HaloContext.DEBUG_LOG]: 'true'}
+        ret = BaseUtil.get_correlation_from_event(event)
+        eq_(BaseUtil.event_req_context[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
+        ret = BaseUtil.get_correlation_from_event(event)
+        eq_(ret[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
     def test_96_pref_mixin(self):
         with app.test_request_context(method='GET', path='/perf'):

@@ -1,9 +1,6 @@
 from __future__ import print_function
 
 
-#from halo_flask.flask.utilx import Util
-from halo_flask.providers.providers import get_provider
-
 def append_error(params, err):
     """
 
@@ -22,7 +19,7 @@ def append_error(params, err):
     return logMsg
 
 
-def log_json(halo_context, params=None, err=None):
+def log_json(halo_context, params=None, err=None,provider_context=None):
     """
 
     :param halo_context:
@@ -30,9 +27,10 @@ def log_json(halo_context, params=None, err=None):
     :param err:
     :return:
     """
-    context = get_provider().get_context()
+
     dict_items = dict(halo_context.dict)
-    dict_items.update(context)
+    if provider_context:
+        dict_items.update(provider_context)
     logMsg = {key: value for (key, value) in (dict_items.items())}
     if params or err:
         pe = append_error(params, err)

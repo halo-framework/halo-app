@@ -1,7 +1,7 @@
 import logging
 
 from .apis import ApiMngr
-from .base_util import BaseUtil as Util
+from .base_util import BaseUtil
 from .exceptions import ApiError
 from .exceptions import HaloException, HaloError
 from .logs import log_json
@@ -274,7 +274,7 @@ def load_saga(name, jsonx, schema):
     """
     # validate saga json
     if schema:
-        Util.assert_valid_schema(jsonx, schema)
+        BaseUtil.assert_valid_schema(jsonx, schema)
     # process saga
     try:
         if "StartAt" in jsonx:
