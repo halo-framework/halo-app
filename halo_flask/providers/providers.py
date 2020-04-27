@@ -46,23 +46,22 @@ def get_provider_name():
 
 
 class ONPREMProvider(AbsBaseClass):
-    __metaclass__ = ABCMeta
 
     PROVIDER_NAME = ONPREM
 
-    @abstractmethod
+    def __init__(self):
+        pass
+
     def show(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def get_context(self):
+    @staticmethod
+    def get_context():
         return {"stage": SysUtil.get_stage()}
 
-    @abstractmethod
     def get_header_name(self,request,name):
         return name
 
-    @abstractmethod
     def get_request_id(self,request):
         return uuid.uuid4().__str__()
 
