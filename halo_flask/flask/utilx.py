@@ -305,7 +305,9 @@ class Util(AbsBaseClass):
         """
         provider = get_provider()
         if provider.PROVIDER_NAME != ONPREM:
-            return provider.get_timeout_mili(request)
+            timeout =  provider.get_timeout(request)
+            if timeout:
+                return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
 
     @classmethod
