@@ -432,11 +432,13 @@ class Util(AbsBaseClass):
         else:
             e_msg = str(e)
         error_detail = ""
-        if e_msg is not None and e_msg != 'None' and e_msg != "":
+        if hasattr(e, 'detail'):
+            error_detail = e.detail
+        elif e_msg is not None and e_msg != 'None' and e_msg != "":
             error_detail = e_msg
-        e_payload = {}
-        if hasattr(e, 'payload'):
-            e_payload = e.payload
+        error_data = {}
+        if hasattr(e, 'data'):
+            error_data = e.data
         payload = {"error": {"error_code": error_code, "error_message": message, "error_detail": error_detail,
-                             "data": e_payload, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}}
+                             "data": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}}
         return error_code, json.dumps(payload)
