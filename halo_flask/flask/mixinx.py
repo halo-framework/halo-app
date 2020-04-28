@@ -17,6 +17,7 @@ from flask import Response as HttpResponse
 from .utilx import Util, status
 from ..const import HTTPChoice
 from ..exceptions import *
+from ..reflect import Reflect
 from ..request import HaloRequest
 from ..response import HaloResponse
 from ..settingsx import settingsx
@@ -26,6 +27,7 @@ from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
 from ..apis import AbsBaseApi
 from .filter import RequestFilter,FilterEvent
 from halo_flask.saga import Saga, SagaRollBack, load_saga
+from halo_flask.models import AbsDbMixin
 
 settings = settingsx()
 
@@ -158,23 +160,12 @@ class AbsBaseMixinX(AbsBaseClass):
 
     @abstractmethod
     def get_dbaccess(self, halo_request):
-        if settings.DBACCESS_CLASS:
-            from halo_flask.models import AbsDbMixin
-            k = settings.DBACCESS_CLASS.rfind(".")
-            module_name = settings.DBACCESS_CLASS[:k]
-            class_name = settings.DBACCESS_CLASS[k + 1:]
-            module = importlib.import_module(module_name)
-            class_ = getattr(module, class_name)
-            if not issubclass(class_, AbsDbMixin):
-                raise HaloException("DBACCESS CLASS error:" + settings.DBACCESS_CLASS)
-            return class_(halo_request.context)
-        raise HaloException("NO DBACCESS CLASS error")
+        return Reflect.instantiate(settings.DBACCESS_CLASS, AbsDbMixin, halo_request.context)
 
 class AbsApiMixinX(AbsBaseMixinX):
     __metaclass__ = ABCMeta
 
     business_event = None
-
 
     def create_response(self,halo_request, payload, headers):
         code = status.HTTP_200_OK
@@ -193,19 +184,11 @@ class AbsApiMixinX(AbsBaseMixinX):
             return True
         raise HaloException("Fail pre validation for Halo Request")
 
-    def set_back_api(self,halo_request, foi=None):
-        logger.debug("in set_back_api " + str(foi))
+    def set_back_api(self, halo_request, foi=None):
         if foi:
             foi_name = foi["name"]
             foi_op = foi["op"]
-            k = foi_name.rfind(".")
-            module_name = foi_name[:k]
-            class_name = foi_name[k + 1:]
-            module = importlib.import_module(module_name)
-            class_ = getattr(module, class_name)
-            if not issubclass(class_, AbsBaseApi):
-                raise ApiClassErrorException(class_name)
-            instance = class_(halo_request.context)
+            instance = Reflect.instantiate(foi_name, AbsBaseApi, halo_request.context)
             instance.op = foi_op
             return instance
         raise NoApiClassException("api class not defined")
@@ -322,16 +305,9 @@ class AbsApiMixinX(AbsBaseMixinX):
         request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
-    def get_request_filter(self,halo_request):
+    def get_request_filter(self, halo_request):
         if settings.REQUEST_FILTER_CLASS:
-            k = settings.REQUEST_FILTER_CLASS.rfind(".")
-            module_name = settings.REQUEST_FILTER_CLASS[:k]
-            class_name = settings.REQUEST_FILTER_CLASS[k + 1:]
-            module = importlib.import_module(module_name)
-            class_ = getattr(module, class_name)
-            if not issubclass(class_, RequestFilter):
-                raise HaloException("REQUEST FILTER CLASS error:" + settings.REQUEST_FILTER_CLASS)
-            return class_()
+            return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
     def do_operation_bq(self, halo_request):

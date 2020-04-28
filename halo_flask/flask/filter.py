@@ -18,6 +18,7 @@ from halo_flask.request import HaloContext
 from halo_flask.settingsx import settingsx
 from halo_flask.executor import get_executor
 from ..exceptions import *
+from ..reflect import Reflect
 
 logger = logging.getLogger(__name__)
 
@@ -161,17 +162,8 @@ class StoreUtil(AbsBaseClass):
 
     @staticmethod
     def insert_events_to_repository(events):
-        logger.debug("insert_events_to_repository")
-        # clear to cache/db/other
         if settings.REQUEST_FILTER_CLEAR_CLASS:
-            k = settings.REQUEST_FILTER_CLEAR_CLASS.rfind(".")
-            module_name = settings.REQUEST_FILTER_CLEAR_CLASS[:k]
-            class_name = settings.REQUEST_FILTER_CLEAR_CLASS[k + 1:]
-            module = importlib.import_module(module_name)
-            class_ = getattr(module, class_name)
-            if not issubclass(class_, RequestFilterClear):
-                raise HaloException("REQUEST FILTER CLEAR CLASS error:" + settings.REQUEST_FILTER_CLEAR_CLASS)
-            clazz = class_(events)
+            clazz = Reflect.instantiate(settings.REQUEST_FILTER_CLEAR_CLASS,RequestFilterClear,events)
         else:
             clazz = RequestFilterClear(events)
         clazz.run()

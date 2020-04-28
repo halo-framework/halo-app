@@ -11,6 +11,7 @@ from halo_flask.logs import log_json
 from halo_flask.providers.providers import get_provider
 from halo_flask.classes import AbsBaseClass
 from .flask.utilx import Util
+from .reflect import Reflect
 from .settingsx import settingsx
 
 settings = settingsx()
@@ -104,10 +105,11 @@ class AbsMainHandler(AbsBaseClass):
                 val = self.vals[key]
                 if val == event[key]:
                     class_name = self.classes[key]
-                    module = importlib.import_module(settings.MIXIN_HANDLER)
-                    logger.debug('module : ' + str(module))
-                    class_ = getattr(module, class_name)
-                    instance = class_()
+                    #module = importlib.import_module(settings.MIXIN_HANDLER)
+                    #logger.debug('module : ' + str(module))
+                    #class_ = getattr(module, class_name)
+                    #instance = class_()
+                    instance = Reflect.do_instantiate(settings.MIXIN_HANDLER,class_name, None)
                     instance.do_event(event, context)
 
 

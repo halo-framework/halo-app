@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from abc import ABCMeta
 
+#@todo fix exception parameters
 class HaloException(Exception):
     __metaclass__ = ABCMeta
     """
@@ -125,4 +126,7 @@ class MissingHaloContextException(HaloException):
     pass
 
 class NoCorrelationIdException(HaloException):
+    pass
+
+class ReflectException(HaloException):
     pass

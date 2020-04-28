@@ -12,6 +12,7 @@ from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError,Hal
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
 from halo_flask.base_util import BaseUtil
+from halo_flask.reflect import Reflect
 from halo_flask.settingsx import settingsx
 settings = settingsx()
 
@@ -31,8 +32,18 @@ class AbsOnPremClient(AbsBaseClass):
     @abstractmethod
     def put_parameter(self,Name,Value,Type,Overwrite): raise NotImplementedError("NotImplemented put_parameter in OnPremClient")
 
-
 def get_onprem_client()->AbsOnPremClient:
+    if settings.ONPREM_SSM_CLASS_NAME:
+        class_name = settings.ONPREM_SSM_CLASS_NAME
+    else:
+        raise NoLocalSSMClass("no ONPREM_SSM_CLASS_NAME")
+    if settings.ONPREM_SSM_MODULE_NAME:
+        module = settings.ONPREM_SSM_MODULE_NAME
+    else:
+        raise NoLocalSSMModule("no ONPREM_SSM_MODULE_NAME")
+    return Reflect.do_instantiate(module,class_name, None)
+
+def get_onprem_client1()->AbsOnPremClient:
     if settings.ONPREM_SSM_CLASS_NAME:
         class_name = settings.ONPREM_SSM_CLASS_NAME
     else:

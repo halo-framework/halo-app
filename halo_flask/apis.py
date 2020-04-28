@@ -12,6 +12,7 @@ import requests
 from .classes import AbsBaseClass
 from .exceptions import MaxTryHttpException, ApiError,NoApiDefinition
 from .logs import log_json
+from .reflect import Reflect
 from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
 from .flask.utilx import Util
@@ -354,19 +355,9 @@ class ApiMngr(AbsBaseClass):
             return ApiMngr.API_LIST[name]
         return None
 
-    def get_api_instance(self, class_name, **kwargs):
-        """
+    def get_api_instance(self, class_name, *args):
+        return Reflect.do_instantiate(__name__,class_name,AbsBaseApi,self.halo_context)
 
-        :param class_name:
-        :param kwargs:
-        :return:
-        """
-        logger.debug("get_api_instance=" + class_name)
-        module = importlib.import_module(__name__)
-        class_ = getattr(module, class_name)
-        instance = class_(self.halo_context)
-        logger.debug("class=" + str(instance))
-        return instance
 
 SSM_CONFIG = None
 SSM_APP_CONFIG = None

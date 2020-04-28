@@ -3,6 +3,7 @@ import importlib
 import logging
 from halo_flask.classes import AbsBaseClass
 from halo_flask.exceptions import HaloException,MissingHaloContextException
+from .reflect import Reflect
 from .settingsx import settingsx
 
 logger = logging.getLogger(__name__)
@@ -66,14 +67,6 @@ class HaloRequest(AbsBaseClass):
 
     def init_ctx(self, request):
         if settings.HALO_CONTEXT_CLASS:
-            k = settings.HALO_CONTEXT_CLASS.rfind(".")
-            module_name = settings.HALO_CONTEXT_CLASS[:k]
-            class_name = settings.HALO_CONTEXT_CLASS[k+1:]
-            module = importlib.import_module(module_name)
-            class_ = getattr(module, class_name)
-            if not issubclass(class_, HaloContext):
-                raise HaloException("HALO CONTEXT CLASS error:"+settings.HALO_CONTEXT_CLASS)
-            instance = class_(request)
-        else:
-            instance = HaloContext(request)
-        return instance
+            return Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext,request)
+        return HaloContext(request)
+

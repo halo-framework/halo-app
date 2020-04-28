@@ -18,6 +18,7 @@ from ..exceptions import BadRequestError,HaloException
 from .utilx import Util
 from ..const import HTTPChoice,SYSTEMChoice,LOGChoice
 from ..logs import log_json
+from ..reflect import Reflect
 from ..request import HaloRequest
 from ..response import HaloResponse
 from ..settingsx import settingsx
@@ -302,12 +303,6 @@ class GlobalService():
         pass
 
 def load_global_data(class_name,data_map):
-    k = class_name.rfind(".")
-    module_name = class_name[:k]
-    class_name = class_name[k + 1:]
-    module = importlib.import_module(module_name)
-    class_ = getattr(module, class_name)
-    if not issubclass(class_, GlobalService):
-        raise HaloException("Global Service CLASS error:" + class_name)
-    clazz = class_(data_map)
+    clazz = Reflect.instantiate(class_name, GlobalService, data_map)
     clazz.load_global_data()
+
