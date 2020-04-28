@@ -350,6 +350,17 @@ class Util(AbsBaseClass):
             return provider.get_func_ver()
         return settings.FUNC_VER
 
+    @staticmethod
+    def get_func_region():
+        """
+
+        :return:
+        """
+        provider = get_provider()
+        if provider.PROVIDER_NAME != ONPREM:
+            return provider.get_func_region()
+        raise HaloException("no region defined")
+
     @classmethod
     def get_request_id(cls,request):
         provider = get_provider()

@@ -83,6 +83,7 @@ class BaseUtil(AbsBaseClass):
                "stage": cls.get_stage()}
         return ret
 
+
     @staticmethod
     def get_env():
         env = BaseUtil.get_stage()

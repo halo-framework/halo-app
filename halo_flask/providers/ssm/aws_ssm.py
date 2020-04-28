@@ -12,8 +12,8 @@ from environs import Env
 from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError
 from halo_flask.classes import AbsBaseClass
 # from .logs import log_json
-#from halo_flask.base_util import BaseUtil
-from halo_flask.flask.utilx import Util as BaseUtil
+from halo_flask.base_util import BaseUtil
+from halo_flask.flask.utilx import Util
 from halo_flask.settingsx import settingsx
 settings = settingsx()
 
@@ -257,7 +257,7 @@ def get_app_config():
     :return:
     """
     # Initialize app if it doesn't yet exist
-    region_name = BaseUtil.get_func_region()
+    region_name = Util.get_func_region()
     logger.debug("Loading app config and creating new AppConfig..." + short_config_path+",AWS_REGION="+region_name)
     cache = get_cache(region_name, short_config_path)
     appconfig = MyConfig(cache, short_config_path, region_name)

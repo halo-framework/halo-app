@@ -6,26 +6,32 @@ from abc import ABCMeta
 class HaloException(Exception):
     __metaclass__ = ABCMeta
     """
-    The exception used when a template does not exist. Accepts the following
+    The abstract exception is used as base template. app expects to handle exception. Accepts the following
     optional arguments:
-
-    @TODO fix exception with tried=None, backend=None, chain=None
     """
-    def __init__(self, msg, tried=None, backend=None, chain=None):
-        super(HaloException, self).__init__(msg)
+    def __init__(self, message, detail=None,data=None):
+        self.message = message
+        self.detail = detail
+        self.data = data
+    def __str__(self):
+        return str(self.message) # __str__() obviously expects a string to be returned, so make sure not to send any other data types
 
 
 class HaloError(HaloException):
     __metaclass__ = ABCMeta
     """
-    The exception used when a template does not exist. Accepts the following
+    The abstract error is used as base template. app does not expect to handle error. Accepts the following
     optional arguments:
-
-
     """
-    def __init__(self, msg, tried=None, backend=None, chain=None):
-        super(HaloError, self).__init__(msg)
 
+    def __init__(self, message, detail=None, data=None):
+        self.message = message
+        self.detail = detail
+        self.data = data
+
+    def __str__(self):
+        return str(
+            self.message)  # __str__() obviously expects a string to be returned, so make sure not to send any other data types
 
 
 class AuthException(HaloException):
