@@ -6,25 +6,11 @@ from abc import ABCMeta
 class HaloException(Exception):
     __metaclass__ = ABCMeta
     """
-    The abstract exception is used as base template. app expects to handle exception. Accepts the following
+    The abstract exception is used as base class. app expects to handle exception. Accepts the following
     optional arguments:
     """
     def __init__(self, message, detail=None,data=None):
-        self.message = message
-        self.detail = detail
-        self.data = data
-    def __str__(self):
-        return str(self.message) # __str__() obviously expects a string to be returned, so make sure not to send any other data types
-
-
-class HaloError(HaloException):
-    __metaclass__ = ABCMeta
-    """
-    The abstract error is used as base template. app does not expect to handle error. Accepts the following
-    optional arguments:
-    """
-
-    def __init__(self, message, detail=None, data=None):
+        super(HaloException,self).__init__()
         self.message = message
         self.detail = detail
         self.data = data
@@ -33,6 +19,13 @@ class HaloError(HaloException):
         return str(
             self.message)  # __str__() obviously expects a string to be returned, so make sure not to send any other data types
 
+class HaloError(HaloException):
+    __metaclass__ = ABCMeta
+    """
+    The abstract error is used as base class. app does not expect to handle error. Accepts the following
+    optional arguments:
+    """
+    pass
 
 class AuthException(HaloException):
     pass
@@ -81,25 +74,29 @@ class CacheKeyError(CacheError):
 class CacheExpireError(CacheError):
     pass
 
-class BadRequestError(HaloError):
+class HaloHttpError(HaloError):
     """Custom exception class to be thrown when local request error occurs."""
     def __init__(self, message, detail=None,data=None, http_status=400):
-        super(BadRequestError,self).__init__(message, detail,data)
+        super(HaloHttpError,self).__init__(message, detail,data)
         self.status = http_status
 
-class ServerError(HaloError):
+class BadRequestError(HaloHttpError):
+    """Custom exception class to be thrown when local request error occurs."""
+    pass
+
+class ServerError(HaloHttpError):
     """Custom exception class to be thrown when local server error occurs."""
-    def __init__(self, message, detail=None,data=None, http_status=500):
-        super(ServerError, self).__init__(message, detail, data)
+    def __init__(self, message, detail=None, data=None, http_status=500):
+        super(HaloHttpError, self).__init__(message, detail, data)
         self.status = http_status
 
 class ProviderError(HaloError):
     pass
 
-class NoLocalSSMClass(HaloError):
+class NoLocalSSMClassError(HaloError):
     pass
 
-class NoLocalSSMModule(HaloError):
+class NoLocalSSMModuleError(HaloError):
     pass
 
 class BusinessEventMissingSeqException(HaloException):
@@ -111,10 +108,10 @@ class HaloMethodNotImplementedException(HaloException):
 class IllegalBQException(HaloException):
     pass
 
-class NoApiDefinition(HaloException):
+class NoApiDefinitionError(HaloError):
     pass
 
-class ApiClassErrorException(HaloException):
+class ApiClassError(HaloError):
     pass
 
 class NoApiClassException(HaloException):

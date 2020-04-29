@@ -8,7 +8,7 @@ import os
 import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError,HaloException,NoLocalSSMClass,NoLocalSSMModule
+from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError,HaloException,NoLocalSSMClassError,NoLocalSSMModuleError
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
 from halo_flask.base_util import BaseUtil

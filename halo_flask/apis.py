@@ -10,7 +10,7 @@ from abc import ABCMeta
 import requests
 
 from .classes import AbsBaseClass
-from .exceptions import MaxTryHttpException, ApiError,NoApiDefinition
+from .exceptions import MaxTryHttpException, ApiError,NoApiDefinitionError
 from .logs import log_json
 from .reflect import Reflect
 from .settingsx import settingsx
@@ -132,7 +132,7 @@ class AbsBaseApi(AbsBaseClass):
         logger.debug("api_config: " + str(api_config), extra=log_json(self.halo_context))
         if api_config and self.name in api_config:
             return api_config[self.name]["url"], api_config[self.name]["type"]
-        raise NoApiDefinition(self.name)
+        raise NoApiDefinitionError(self.name)
 
     def set_api_url(self, key, val):
         """
