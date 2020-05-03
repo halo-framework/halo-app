@@ -178,11 +178,16 @@ class P1(PerfMixinX):
 class P2(PerfLinkX):
     pass
 
-from halo_flask.flask.filter import RequestFilter
+from halo_flask.flask.filter import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.request.headers[HaloContext.items.get(HaloContext.CORRELATION)])
         return event
+
+class TestRequestFilterClear(RequestFilterClear):
+    def run(self,event):
+        print("insert_events_to_repository " + str(event.serialize()))
+
 
 class CAContext(HaloContext):
     TESTER = "TESTER"
@@ -294,8 +299,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             print("event response " + str(response))
             eq_(response, 'sent event')
 
-    def test_90_event_filter(self):
+    def test_901_event_filter(self):
         app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            response = self.a2.process_get(request,{})
+
+    def test_902_event_filter(self):
+        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
 

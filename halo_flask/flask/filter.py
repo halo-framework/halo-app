@@ -8,25 +8,19 @@ import traceback
 from abc import ABCMeta
 import queue
 import time
-import importlib
-import threading
 
 from flask import current_app as app
 from halo_flask.exceptions import StoreException,StoreClearException
 from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloContext
 from halo_flask.settingsx import settingsx
-from halo_flask.executor import get_executor
-from ..exceptions import *
-from ..reflect import Reflect
+from halo_flask.reflect import Reflect
 
 logger = logging.getLogger(__name__)
 
 #https://hackernoon.com/analytics-for-restful-interfaces-579856dea9a9
 
 settings = settingsx()
-
-sem = threading.Semaphore()
 
 class BaseEvent(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -86,15 +80,14 @@ class RequestFilter(Filter):
             if halo_request.sub_func:
                 event.put("sub_func", halo_request.sub_func)
             event = self.augment_event_with_headers_and_data(event, halo_request,halo_response)
-            if store_util.clearing():
+            if store_util:
                 inserted = store_util.put(event)
                 if (not inserted):
-                    logger.error("Event queue is full! inserted: " + str(inserted) + ", queue size: " + str(StoreUtil.event_queue.qsize()))
+                    logger.error("Event queue insert failed: " + str(inserted))
             else:
-                logger.error("Event queue is not clearing! , queue size: " + str(
-                    StoreUtil.event_queue.qsize()))
+                logger.error("Event queue is not active!")
         except StoreException as e:
-            logger.debug("error:"+str(e))
+            logger.info("event filter error:"+str(e))
 
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         # context data
@@ -105,91 +98,36 @@ class RequestFilter(Filter):
 
 class RequestFilterClear(AbsBaseClass):
 
-    def __init__(self, events):
-        self.events = events
+    def __init__(self):
+        pass
 
-    def run(self):
-        for event in self.events:
-            logger.debug("insert_events_to_repository " + str(event.serialize()))
-
-# @todo monitor the job
-def exec_callback(future):
-    if future:
-        logger.info("StoreUtil: executor finished - " + str(future.result()))
-        if future.exception():
-            logger.info("StoreUtil: executor exception - " + str(future.exception()))
-    StoreUtil.set_flag()
-
-#@todo consider adding api call to start executor
-#@app.route('/start-task')
-#def start_task():
-    #store_util.clearing()
-    #return jsonify({'result':'success'})
+    def run(self,event):
+        logger.debug("insert_events_to_repository " + str(event.serialize()))
 
 #thread safe including the event queue and set_flag
 class StoreUtil(AbsBaseClass):
-    event_queue = queue.Queue()
     config = None
-    flag = False
+    cleaner = None
 
     def __init__(self, config):
         self.config = config
 
-    @staticmethod
-    def clearing():
-        if not __class__.flag:
-            executor = get_executor()
-            if executor:
-                executor.add_default_done_callback(exec_callback)
-                executor.submit(__class__.start_queue_listener)
-                __class__.flag = True
-        return __class__.flag
-
-    @staticmethod
-    def set_flag():
-        sem.acquire()
-        __class__.flag = False
-        sem.release()
-
-    @staticmethod
-    def put(event):
+    def put(self,event):
         logger.debug("StoreUtil:"+str(event.name))
         try:
-            __class__.event_queue.put(event)
+            if not self.cleaner:
+                self.cleaner = self.insert_events_to_repository_class()
+            self.cleaner.run(event)
             return True
         except Exception as e:
             raise StoreException(e)
 
-    @staticmethod
-    def insert_events_to_repository(events):
+    def insert_events_to_repository_class(self):
         if settings.REQUEST_FILTER_CLEAR_CLASS:
-            clazz = Reflect.instantiate(settings.REQUEST_FILTER_CLEAR_CLASS,RequestFilterClear,events)
+            clazz = Reflect.instantiate(settings.REQUEST_FILTER_CLEAR_CLASS,RequestFilterClear)
         else:
-            clazz = RequestFilterClear(events)
-        clazz.run()
-
-    @staticmethod
-    def start_queue_listener():
-        logger.debug("start_queue_listener")
-        try:
-            while (True):
-                size = __class__.event_queue.qsize()
-                logger.debug("while start_queue_listener "+str(size))
-                numberOfIngested = 0;
-                if size > 0:
-                    events = []
-                    maxer = min([settings.EVENTS_INGESTED,size])
-                    for i in range(0,maxer):
-                        event =  __class__.event_queue.get()
-                        events.append(event)
-                    __class__.insert_events_to_repository(events)
-                    numberOfIngested = __class__.event_queue.qsize()
-                if numberOfIngested < settings.EVENTS_INGESTED:
-                    time.sleep(settings.EVENTS_INGESTED_SLEEP);
-        except Exception as e:
-            logger.debug("Event queue loop broken! , queue size: " + str(
-                StoreUtil.event_queue.qsize()))
-            raise StoreClearException(e)
+            clazz = RequestFilterClear()
+        return clazz
 
 
 store_util = StoreUtil(settings.REQUEST_FILTER_CONFIG)
