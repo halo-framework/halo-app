@@ -88,7 +88,7 @@ def get_provider():
 
 ################## ssm ###########################
 
-def set_app_param_config(ssm_type, host):
+def set_app_param_config(ssm_type, var_name,var_value):
     """
 
     :param region_name:
@@ -98,10 +98,10 @@ def set_app_param_config(ssm_type, host):
     if ssm_type == AWS:
         try:
             from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
-            return set_app_param_config_cld(host)
+            return set_app_param_config_cld(var_name,var_value)
         except Exception as e:
             raise ProviderError(e)
-    return set_app_param_config_onprem(host)
+    return set_app_param_config_onprem(var_name,var_value)
 
 
 

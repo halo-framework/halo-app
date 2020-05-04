@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 client = None
 
 
-def set_app_param_config(ssm_type, host):
+def set_app_param_config(ssm_type, var_name,var_value):
     """
 
     :param region_name:
@@ -35,7 +35,7 @@ def set_app_param_config(ssm_type, host):
     :return:
     """
 
-    return set_app_param_config_provider(ssm_type,host)
+    return set_app_param_config_provider(ssm_type,var_name,var_value)
 
 
 

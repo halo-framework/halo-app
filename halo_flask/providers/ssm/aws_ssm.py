@@ -168,23 +168,35 @@ def set_param_config(region_name, key, value):
     return set_config(region_name, ssm_parameter_path, value)
 
 
-def set_app_param_config(host):
+def set_app_param_config(var_name,var_value):
     """
 
     :param region_name:
     :param host:
     :return:
     """
-    region_name = get_region()
+    global region_name
+    if not region_name:
+        the_region_name = get_region()
+    else:
+        the_region_name = region_name
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
+    value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
+    logger.debug("var_name:" + var_name+" var_value:"+var_value)
+    return set_config(the_region_name, ssm_parameter_path, value)
+
+def set_host_param_config(host):
+    """
+
+    :param region_name:
+    :param host:
+    :return:
+    """
     if host:
         url = "https://" + host + "/" + BaseUtil.get_stage()
     else:
         url = host
-    value = '{"url":"' + str(url) + '"}'
-    logger.debug("aws ssm_parameter_path:" + ssm_parameter_path+" value:"+value)
-    return set_config(region_name, ssm_parameter_path, value)
-
+    return url
 
 def set_config(region_name, ssm_parameter_path, value):
     """

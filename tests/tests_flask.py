@@ -446,10 +446,14 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9940_ssm_aws(self):  # @TODO test without HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
+        app.config['HALO_HOST'] = '127.0.0.2'
+        #app.config['SSM_TYPE'] = "AWS"
+        #app.config['PROVIDER'] = "AWS"
+        app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
                 from halo_flask.ssm import set_app_param_config
-                set_app_param_config("AWS", "124")
+                set_app_param_config("AWS","url", "124")
                 from halo_flask.ssm import get_app_config
                 config = get_app_config("AWS")
                 eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
@@ -458,12 +462,32 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9941_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
+        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['PROVIDER'] = "AWS"
+        app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config
-            set_app_param_config("AWS", "124")
+            from halo_flask.providers.ssm.aws_ssm import set_host_param_config
+            set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
             from halo_flask.ssm import get_app_config
-            config = get_app_config("AWS")
+            config = get_app_config(app.config['SSM_TYPE'])
             eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
+
+    def test_9942_ssm_aws(self):  # @TODO test with HALO_AWS
+        header = {'HTTP_HOST': '127.0.0.2'}
+        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['PROVIDER'] = "AWS"
+        app.config['AWS_REGION'] = 'us-east-1'
+        with app.test_request_context(method='GET', path='/?a=b', headers=header):
+            from halo_flask.ssm import set_app_param_config
+            import uuid
+            uuidx = uuid.uuid4().__str__()
+            set_app_param_config(app.config['SSM_TYPE'], "session_id",uuidx)
+            from halo_flask.ssm import get_app_config
+            config = get_app_config(app.config['SSM_TYPE'])
+            eq_(config.get_param("halo_flask")["session_id"], uuidx)
 
     def test_995_ssm_onperm(self):  # @TODO
         header = {'HTTP_HOST': '127.0.0.2'}
