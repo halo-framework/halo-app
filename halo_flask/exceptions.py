@@ -9,10 +9,7 @@ class HaloException(Exception):
     The abstract exception is used as base class. app expects to handle exception. Accepts the following
     optional arguments:
     """
-
     def __init__(self, message, detail=None,data=None):
-        if self.__class__ == HaloException:
-            raise Exception('I am abstract class!')
         super(HaloException,self).__init__()
         self.message = message
         self.detail = detail
@@ -31,8 +28,6 @@ class HaloError(HaloException):
     status_code = 400
 
     def __init__(self, message, detail=None, data=None,status_code=None):
-        if self.__class__ == HaloError:
-            raise Exception('I am abstract class!')
         super(HaloError, self).__init__(message, detail=None,data=None)
         if status_code is not None:
             self.status_code = status_code

@@ -548,7 +548,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             ret = sagax.execute(halo_request.context, payloads, apis)
             return ret
         except SagaRollBack as e:
-            raise ServerError(e.message,e.detail ,e.data,http_status=500)
+            raise ApiError(e.message,e.detail ,e.data,status_code=500)
 
     def processing_engine(self, halo_request):
         if self.business_event:

@@ -37,8 +37,6 @@ settings = settingsx()
 # Create your views here.
 logger = logging.getLogger(__name__)
 
-HALO_HOST = None
-
 #@todo add jsonify to al responses
 
 class AbsBaseLinkX(MethodView):
@@ -114,7 +112,7 @@ class AbsBaseLinkX(MethodView):
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        error_code, json_error = Util.json_error_response(self.halo_context, settings.ERR_MSG_CLASS, error)
+        json_error = Util.json_error_response(self.halo_context,request, settings.ERR_MSG_CLASS, error)
         if settings.FRONT_WEB:
             return redirect("/" + settings.ENV_NAME +"/"+ str(http_status_code))
         abort(http_status_code, errors=json_error)

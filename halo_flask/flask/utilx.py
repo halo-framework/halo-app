@@ -415,7 +415,7 @@ class Util(AbsBaseClass):
         return False
 
     @staticmethod
-    def json_error_response(halo_context, clazz, e):  # code, msg, requestId):
+    def json_error_response(halo_context,request, clazz, e):  # code, msg, requestId):
         """
 
         :param req_context:
@@ -441,4 +441,7 @@ class Util(AbsBaseClass):
             error_data = e.data
         payload = {"error": {"error_code": error_code, "error_message": message, "error_detail": error_detail,
                              "data": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}}
+        if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
+            payload["stack"] = e.stack
+            payload["request"] = Util.get_req_params(request)
         return error_code, json.dumps(payload)

@@ -417,7 +417,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.a2.process_put(request, {})
                 assert False
             except Exception as e:
-                eq_(e.__class__.__name__, "ServerError")
+                eq_(e.__class__.__name__, "ApiError")
 
     def test_9931_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):

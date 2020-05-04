@@ -30,7 +30,7 @@ class SagaException(HaloException):
     pass
 
 
-class SagaRollBack(HaloException):
+class SagaRollBack(HaloError):
     """
     Raised when an action failed and the compensations complited.
     """
