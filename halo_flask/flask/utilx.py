@@ -13,7 +13,7 @@ from ..settingsx import settingsx
 from halo_flask.classes import AbsBaseClass
 from halo_flask.const import HTTPChoice,LOC
 from halo_flask.request import HaloContext
-from halo_flask.exceptions import ApiTimeOutExpired,CacheError,HaloException
+from halo_flask.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
 from halo_flask.providers.providers import get_provider,ONPREM
 from halo_flask.exceptions import NoCorrelationIdException
 
@@ -359,14 +359,14 @@ class Util(AbsBaseClass):
         provider = get_provider()
         if provider.PROVIDER_NAME != ONPREM:
             return provider.get_func_region()
-        raise HaloException("no region defined")
+        raise ProviderError("no region defined")
 
     @classmethod
     def get_request_id(cls,request):
         provider = get_provider()
         if provider:
             return provider.get_request_id(request)
-        raise HaloException("no provider defined")
+        raise ProviderError("no provider defined")
 
     @classmethod
     def get_system_debug_enabled(cls):
