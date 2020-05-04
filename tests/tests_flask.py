@@ -553,3 +553,10 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.a2.get()
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
+
+    def test_9996_NOCORR(self):
+        from halo_flask.flask.viewsx import load_global_data
+        app.config["INIT_CLASS_NAME"] = 'halo_flask.flask.viewsx.GlobalService'
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
+            "C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\env\\config\\flask_setting_mapping.json"}
+        load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
