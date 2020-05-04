@@ -28,11 +28,14 @@ class HaloError(HaloException):
     The abstract error is used as base class. app does not expect to handle error. Accepts the following
     optional arguments:
     """
+    status_code = 400
 
-    def __init__(self, message, detail=None, data=None):
+    def __init__(self, message, detail=None, data=None,status_code=None):
         if self.__class__ == HaloError:
             raise Exception('I am abstract class!')
         super(HaloError, self).__init__(message, detail=None,data=None)
+        if status_code is not None:
+            self.status_code = status_code
 
 class AuthException(HaloException):
     pass
@@ -81,21 +84,20 @@ class CacheKeyError(CacheError):
 class CacheExpireError(CacheError):
     pass
 
+"""
 class HaloHttpError(HaloError):
-    """Custom exception class to be thrown when local request error occurs."""
     def __init__(self, message, detail=None,data=None, http_status=400):
         super(HaloHttpError,self).__init__(message, detail,data)
         self.status = http_status
 
 class BadRequestError(HaloHttpError):
-    """Custom exception class to be thrown when local request error occurs."""
     pass
 
 class ServerError(HaloHttpError):
-    """Custom exception class to be thrown when local server error occurs."""
     def __init__(self, message, detail=None, data=None, http_status=500):
         super(HaloHttpError, self).__init__(message, detail, data)
         self.status = http_status
+"""
 
 class ProviderError(HaloError):
     pass
