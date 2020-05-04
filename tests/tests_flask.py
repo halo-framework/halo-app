@@ -310,6 +310,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
 
+    def test_903_event_filter(self):
+        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests_flask.TestRequestFilterClear'
+        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            response = self.a2.do_process(HTTPChoice.get,request.args)
 
     def test_91_system_debug_enabled(self):
         with app.test_request_context(method='GET', path='/?a=b'):

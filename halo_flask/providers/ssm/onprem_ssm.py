@@ -8,7 +8,8 @@ import os
 import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError,HaloException,NoLocalSSMClassError,NoLocalSSMModuleError
+from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, HaloException, NoLocalSSMClassError, \
+    NoLocalSSMModuleError, SSMError
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
 from halo_flask.base_util import BaseUtil
@@ -90,10 +91,10 @@ def load_cache(config, expiryMs=DEFAULT_EXPIRY):
     :return:
     """
     if config is None:
-        raise HaloError('you need to provide a non-empty config')
+        raise SSMError('you need to provide a non-empty config')
 
     if (expiryMs <= 0):
-        raise HaloError('you need to specify an expiry (ms) greater than 0, or leave it undefined')
+        raise SSMError('you need to specify an expiry (ms) greater than 0, or leave it undefined')
 
     # the below uses the captured closure to return an object with a gettable
     # property per config key that on invoke:

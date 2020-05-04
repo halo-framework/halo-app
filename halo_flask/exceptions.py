@@ -1,15 +1,18 @@
 from __future__ import print_function
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
-#@todo fix exception parameters
+
 class HaloException(Exception):
     __metaclass__ = ABCMeta
     """
     The abstract exception is used as base class. app expects to handle exception. Accepts the following
     optional arguments:
     """
+
     def __init__(self, message, detail=None,data=None):
+        if self.__class__ == HaloException:
+            raise Exception('I am abstract class!')
         super(HaloException,self).__init__()
         self.message = message
         self.detail = detail
@@ -25,7 +28,11 @@ class HaloError(HaloException):
     The abstract error is used as base class. app does not expect to handle error. Accepts the following
     optional arguments:
     """
-    pass
+
+    def __init__(self, message, detail=None, data=None):
+        if self.__class__ == HaloError:
+            raise Exception('I am abstract class!')
+        super(HaloError, self).__init__(message, detail=None,data=None)
 
 class AuthException(HaloException):
     pass
@@ -91,6 +98,9 @@ class ServerError(HaloHttpError):
         self.status = http_status
 
 class ProviderError(HaloError):
+    pass
+
+class SSMError(HaloError):
     pass
 
 class NoLocalSSMClassError(HaloError):

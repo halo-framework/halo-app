@@ -9,7 +9,7 @@ import time
 from environs import Env
 
 
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError
+from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError
 from halo_flask.classes import AbsBaseClass
 # from .logs import log_json
 from halo_flask.base_util import BaseUtil
@@ -64,10 +64,10 @@ def load_cache(config, expiryMs=DEFAULT_EXPIRY):
     :return:
     """
     if config is None:
-        raise HaloError('you need to provide a non-empty config')
+        raise SSMError('you need to provide a non-empty config')
 
     if (expiryMs <= 0):
-        raise HaloError('you need to specify an expiry (ms) greater than 0, or leave it undefined')
+        raise SSMError('you need to specify an expiry (ms) greater than 0, or leave it undefined')
 
     # the below uses the captured closure to return an object with a gettable
     # property per config key that on invoke:
@@ -123,7 +123,7 @@ def load_config(region_name, ssm_parameter_path):
         from botocore.exceptions import ClientError
     except Exception as e:
         logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise HaloError("please Load package Halo_aws in order to use AWS SSM")
+        raise SSMError("please Load package Halo_aws in order to use AWS SSM")
     configuration = configparser.ConfigParser()
     logger.debug("ssm_parameter_path=" + str(ssm_parameter_path))
     try:
@@ -196,7 +196,7 @@ def set_config(region_name, ssm_parameter_path, value):
         from botocore.exceptions import ClientError
     except Exception as e:
         logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise HaloError("please Load package Halo_aws in order to use AWS SSM")
+        raise SSMError("please Load package Halo_aws in order to use AWS SSM")
     try:
         # set parameters for this app
 

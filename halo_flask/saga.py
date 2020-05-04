@@ -21,6 +21,7 @@ we implements backward recovery only.
 For forward recovery you also need to ensure the requests are imdempotent.
 """
 
+#@todo enable use of other saga engine like aws step functions
 
 class SagaException(HaloException):
     """
@@ -280,7 +281,7 @@ def load_saga(name, jsonx, schema):
         if "StartAt" in jsonx:
             start = jsonx["StartAt"]
         else:
-            raise HaloError("can not build saga. No StartAt")
+            raise SagaError("can not build saga. No StartAt")
         saga = SagaBuilder.create(name)
         for state in jsonx["States"]:
             logger.debug(str(state))
@@ -306,5 +307,5 @@ def load_saga(name, jsonx, schema):
                 saga.action(state, action, comps, next, result_path)
         return saga.build(start)
     except BaseException as e:
-        raise HaloError("can not build saga", e)
+        raise SagaError("can not build saga", e)
 

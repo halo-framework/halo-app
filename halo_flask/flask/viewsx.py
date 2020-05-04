@@ -14,7 +14,7 @@ from flask_restful import abort
 # from flask import request
 # flask
 from flask.views import MethodView
-from ..exceptions import HaloError,HaloException
+from ..exceptions import HaloHttpError
 from .utilx import Util
 from ..const import HTTPChoice,SYSTEMChoice,LOGChoice
 from ..logs import log_json
@@ -87,7 +87,7 @@ class AbsBaseLinkX(MethodView):
                                                             LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
             return ret
 
-        except HaloError as e:
+        except HaloHttpError as e:
             http_status_code = e.status
             error = e
             error_message = str(error)
