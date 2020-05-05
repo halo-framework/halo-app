@@ -9,7 +9,7 @@ import time
 from environs import Env
 
 
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError
+from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError, NoSSMRegionError
 from halo_flask.classes import AbsBaseClass
 # from .logs import log_json
 from halo_flask.base_util import BaseUtil
@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 # Initialize boto3 client at global scope for connection reuse
 client = None
-region_name = None
 full_config_path,short_config_path = BaseUtil.get_env()
 
 def get_client(region_name):
@@ -41,10 +40,12 @@ def get_client(region_name):
 
 def get_region():
     logger.debug("get_region")
-    global region_name
-    if not region_name:
-        region_name = settings.AWS_REGION
-    return region_name
+    try:
+        return Util.get_func_region()
+    except HaloError:
+        if settings.AWS_REGION:
+            return settings.AWS_REGION
+    raise NoSSMRegionError()
 
 # ALWAYS use json value in parameter store!!!
 
@@ -171,24 +172,28 @@ def set_param_config(region_name, key, value):
 def set_app_param_config(var_name,var_value):
     """
 
-    :param region_name:
-    :param host:
+    :param var_name:
+    :param var_value:
     :return:
     """
-    global region_name
-    if not region_name:
-        the_region_name = get_region()
-    else:
-        the_region_name = region_name
+
+    region_name = get_region()
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
-    value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
     logger.debug("var_name:" + var_name+" var_value:"+var_value)
-    return set_config(the_region_name, ssm_parameter_path, value)
+    app_config = get_app_config()
+    param =  app_config.get_param("halo_flask")
+    param[var_name] = var_value
+    value = '{'
+    for i in param:
+        value = value + '"' + str(i) + '":"' + str(param[i]) + '",'
+    value = value[:-1]
+    value = value + '}'
+    #value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
+    return set_config(region_name, ssm_parameter_path, value)
 
 def set_host_param_config(host):
     """
 
-    :param region_name:
     :param host:
     :return:
     """
@@ -249,7 +254,6 @@ def get_cache(region_name, path):
 def get_config():
     """
 
-    :param region_name:
     :return:
     """
     # Initialize app if it doesn't yet exist
@@ -265,11 +269,10 @@ def get_config():
 def get_app_config():
     """
 
-    :param region_name:
     :return:
     """
     # Initialize app if it doesn't yet exist
-    region_name = Util.get_func_region()
+    region_name = get_region()
     logger.debug("Loading app config and creating new AppConfig..." + short_config_path+",AWS_REGION="+region_name)
     cache = get_cache(region_name, short_config_path)
     appconfig = MyConfig(cache, short_config_path, region_name)

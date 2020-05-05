@@ -8,8 +8,7 @@ import os
 import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, HaloException, NoLocalSSMClassError, \
-    NoLocalSSMModuleError, SSMError
+from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, HaloException, NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
 from halo_flask.base_util import BaseUtil
@@ -37,22 +36,22 @@ def get_onprem_client()->AbsOnPremClient:
     if settings.ONPREM_SSM_CLASS_NAME:
         class_name = settings.ONPREM_SSM_CLASS_NAME
     else:
-        raise NoLocalSSMClass("no ONPREM_SSM_CLASS_NAME")
+        raise NoLocalSSMClassError("no ONPREM_SSM_CLASS_NAME")
     if settings.ONPREM_SSM_MODULE_NAME:
         module = settings.ONPREM_SSM_MODULE_NAME
     else:
-        raise NoLocalSSMModule("no ONPREM_SSM_MODULE_NAME")
+        raise NoLocalSSMModuleError("no ONPREM_SSM_MODULE_NAME")
     return Reflect.do_instantiate(module,class_name, None)
 
 def get_onprem_client1()->AbsOnPremClient:
     if settings.ONPREM_SSM_CLASS_NAME:
         class_name = settings.ONPREM_SSM_CLASS_NAME
     else:
-        raise NoLocalSSMClass("no ONPREM_SSM_CLASS_NAME")
+        raise NoLocalSSMClassError("no ONPREM_SSM_CLASS_NAME")
     if settings.ONPREM_SSM_MODULE_NAME:
         module = settings.ONPREM_SSM_MODULE_NAME
     else:
-        raise NoLocalSSMModule("no ONPREM_SSM_MODULE_NAME")
+        raise NoLocalSSMModuleError("no ONPREM_SSM_MODULE_NAME")
     import importlib
     module = importlib.import_module(module)
     class_ = getattr(module, class_name)
@@ -192,7 +191,7 @@ def set_param_config(region_name, key, value):
     return set_config(region_name, ssm_parameter_path, value)
 
 
-def set_app_param_config(host):
+def set_app_param_config(var_name,var_value):
     """
 
     :param region_name:
@@ -201,12 +200,8 @@ def set_app_param_config(host):
     """
     full_config_path,short_config_path = BaseUtil.get_env()
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
-    if host:
-        url = "https://" + host + "/" + BaseUtil.get_stage()
-    else:
-        url = host
-    value = '{"url":"' + str(url) + '"}'
-    logger.debug(" prem ssm: " + ssm_parameter_path+" "+ value)
+    value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
+    logger.debug("var_name:" + var_name+" var_value:"+var_value)
     return set_config(ssm_parameter_path, value)
 
 

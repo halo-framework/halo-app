@@ -106,6 +106,9 @@ class NoLocalSSMClassError(HaloError):
 class NoLocalSSMModuleError(HaloError):
     pass
 
+class NoSSMRegionError(HaloError):
+    pass
+
 class BusinessEventMissingSeqException(HaloException):
     pass
 
