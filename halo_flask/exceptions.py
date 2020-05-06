@@ -141,3 +141,9 @@ class NoCorrelationIdException(HaloException):
 
 class ReflectException(HaloException):
     pass
+
+class NoSSMDefinedError(HaloError):
+    pass
+
+class NotSSMTypeError(HaloError):
+    pass

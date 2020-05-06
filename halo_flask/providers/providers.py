@@ -124,7 +124,7 @@ def get_config(ssm_type):
 def get_app_config(ssm_type):
     """
 
-    :param region_name:
+    :param ssm_type: [None,ONPREM,AWS]
     :return:
     """
     # Initialize app if it doesn't yet exist

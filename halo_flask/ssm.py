@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import time
+from halo_flask.exceptions import NoSSMDefinedError,NotSSMTypeError
 
 #@ TODO put_parameter should be activated only is current value is different then the existing one
 #@ TODO perf activation will reload SSM if needed and refresh API table
@@ -26,6 +27,12 @@ logger = logging.getLogger(__name__)
 
 client = None
 
+def check_ssm_type(ssm_type):
+    if not ssm_type:
+        raise NoSSMDefinedError("None")
+    if ssm_type not in ["AWS","ONPREM"]:
+        raise NotSSMTypeError(ssm_type)
+    return
 
 def set_app_param_config(ssm_type, var_name,var_value):
     """
@@ -34,7 +41,7 @@ def set_app_param_config(ssm_type, var_name,var_value):
     :param host:
     :return:
     """
-
+    check_ssm_type(ssm_type)
     return set_app_param_config_provider(ssm_type,var_name,var_value)
 
 
@@ -46,7 +53,7 @@ def get_config(ssm_type):
     :return:
     """
     # Initialize app if it doesn't yet exist
-
+    check_ssm_type(ssm_type)
     return get_config_provider(ssm_type)
 
 
@@ -57,5 +64,5 @@ def get_app_config(ssm_type):
     :return:
     """
     # Initialize app if it doesn't yet exist
-
+    check_ssm_type(ssm_type)
     return get_app_config_provider(ssm_type)
