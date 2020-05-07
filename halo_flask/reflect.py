@@ -25,13 +25,19 @@ class Reflect(AbsBaseClass):
     def do_instantiate(cls,module_name,class_name,base_class,*args):
         try:
             module = importlib.import_module(module_name)
-        except:
-            raise ReflectException("import module error:" + module_name)
+        except Exception as e:
+            raise ReflectException("import module error:" + str(e) + " for module:"+ module_name)
         else:
-            class_ = getattr(module, class_name)
+            try:
+                class_ = getattr(module, class_name)
+            except Exception as e:
+                raise ReflectException("import class error:" + str(e) + " for class:" + class_name)
             if base_class and not issubclass(class_, base_class):
                 raise ReflectException("class " + class_name + " is not subclass of " + str(base_class))
-            return cls.init_class(class_, *args)
+            try:
+                return cls.init_class(class_, *args)
+            except Exception as e:
+                raise ReflectException("import class error:" + str(e) + " for class:" + class_name)
 
     @classmethod
     def init_class(cls,class_,*args):
