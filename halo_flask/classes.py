@@ -26,7 +26,7 @@ class AbsBaseClass(object):
 
     @abstractmethod
     def show(self):
-        raise NotImplementedError
+        raise NotImplementedError("show")
 
     def toJSON(self):
         #return json.dumps(self, default=lambda o: o.__dict__,

@@ -226,7 +226,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                 logger.info(msg)
                 return ret
             except ApiError as e:
-                raise HaloException(e)
+                raise HaloError("failed to execute api:"+str(back_api.name),e)
         return None
 
     def extract_json(self,halo_request, back_response, seq=None):
@@ -252,7 +252,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise HaloException("mapping error for " + halo_request.request.path)
+                    raise HaloException("mapping error for " + halo_request.request.path,e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -336,7 +336,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             # return json response
             return halo_response
         except AttributeError as ex:
-            raise HaloMethodNotImplementedException(ex)
+            raise HaloMethodNotImplementedException("function for "+str(halo_request.sub_func),ex)
 
     def do_operation_1_bq(self, halo_request, sub_func):  # basic maturity - single request
         logger.debug("do_operation_1_bq")
@@ -548,7 +548,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             ret = sagax.execute(halo_request.context, payloads, apis)
             return ret
         except SagaRollBack as e:
-            raise ApiError(e.message,e.detail ,e.data,status_code=500)
+            raise ApiError(e.message,e,e.detail ,e.data,status_code=500)
 
     def processing_engine(self, halo_request):
         if self.business_event:

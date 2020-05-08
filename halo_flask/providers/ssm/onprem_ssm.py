@@ -225,14 +225,17 @@ def set_config(ssm_parameter_path, value):
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
     except HaloException as e:
-        logger.error("Encountered a client error setting config from SSM:" + str(e))
-        raise e
+        msg = "Encountered a client error setting config from SSM:" + str(e)
+        logger.error(msg)
+        raise SSMError(msg,e)
     except json.decoder.JSONDecodeError as e:
-        logger.error("Encountered a json error setting config from SSM" + str(e))
-        raise e
+        msg = "Encountered a json error setting config from SSM" + str(e)
+        logger.error(msg)
+        raise SSMError(msg,e)
     except Exception as e:
-        logger.error("Encountered an error setting config from SSM:" + str(e))
-        raise e
+        msg = "Encountered an error setting config from SSM:" + str(e)
+        logger.error(msg)
+        raise SSMError(msg,e)
 
 
 def get_cache(path):

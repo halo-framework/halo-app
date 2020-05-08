@@ -26,22 +26,22 @@ class Reflect(AbsBaseClass):
         try:
             module = importlib.import_module(module_name)
         except Exception as e:
-            raise ReflectException("import module error:" + str(e) + " for module:"+ module_name)
+            raise ReflectException("import module error:" + str(e) + " for module:"+ module_name,e)
         else:
             try:
                 class_ = getattr(module, class_name)
             except Exception as e:
-                raise ReflectException("import class error:" + str(e) + " for class:" + class_name)
+                raise ReflectException("import class error:" + str(e) + " for class:" + class_name,e)
             if base_class and not issubclass(class_, base_class):
                 raise ReflectException("class " + class_name + " is not subclass of " + str(base_class))
             try:
                 return cls.init_class(class_, *args)
             except Exception as e:
-                raise ReflectException("import class error:" + str(e) + " for class:" + class_name)
+                raise ReflectException("import class error:" + str(e) + " for class:" + class_name,e)
 
     @classmethod
     def init_class(cls,class_,*args):
         try:
             return class_(*args)
         except Exception as e:
-            raise ReflectException("initialize error:" + str(e))
+            raise ReflectException("initialize error:" + str(e),e)

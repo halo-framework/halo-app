@@ -45,7 +45,7 @@ def get_region():
     except HaloError:
         if settings.AWS_REGION:
             return settings.AWS_REGION
-    raise NoSSMRegionError()
+    raise NoSSMRegionError("")
 
 # ALWAYS use json value in parameter store!!!
 
@@ -124,7 +124,7 @@ def load_config(region_name, ssm_parameter_path):
         from botocore.exceptions import ClientError
     except Exception as e:
         logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise SSMError("please Load package Halo_aws in order to use AWS SSM")
+        raise SSMError("please Load package Halo_aws in order to use AWS SSM",e)
     configuration = configparser.ConfigParser()
     logger.debug("ssm_parameter_path=" + str(ssm_parameter_path))
     try:
@@ -213,7 +213,7 @@ def set_config(region_name, ssm_parameter_path, value):
         from botocore.exceptions import ClientError
     except Exception as e:
         logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise SSMError("please Load package Halo_aws in order to use AWS SSM")
+        raise SSMError("please Load package Halo_aws in order to use AWS SSM",e)
     try:
         # set parameters for this app
 
@@ -228,14 +228,17 @@ def set_config(region_name, ssm_parameter_path, value):
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
     except ClientError as e:
-        logger.error("Encountered a client error setting config from SSM:" + str(e))
-        raise e
+        msg = "Encountered a client error setting config from SSM:" + str(e)
+        logger.error(msg)
+        raise SSMError(msg,e)
     except json.decoder.JSONDecodeError as e:
-        logger.error("Encountered a json error setting config from SSM" + str(e))
-        raise e
+        msg = "Encountered a json error setting config from SSM" + str(e)
+        logger.error(msg)
+        raise SSMError(msg,e)
     except Exception as e:
-        logger.error("Encountered an error setting config from SSM:" + str(e))
-        raise e
+        msg = "Encountered an error setting config from SSM:" + str(e)
+        logger.error(msg)
+        raise SSMError(msg,e)
 
 
 def get_cache(region_name, path):

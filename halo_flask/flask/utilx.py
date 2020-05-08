@@ -163,7 +163,7 @@ class Util(AbsBaseClass):
             provider = get_provider()
             if provider:
                 return provider.get_request_id(request)
-        raise NoCorrelationIdException()
+        raise NoCorrelationIdException("")
 
     @classmethod
     def get_user_agent(cls, request):

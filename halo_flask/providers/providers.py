@@ -53,7 +53,7 @@ class ONPREMProvider(AbsBaseClass):
         pass
 
     def show(self):
-        raise NotImplementedError
+        raise NotImplementedError("")
 
     @staticmethod
     def get_context():
@@ -80,7 +80,7 @@ def get_provider():
             from halo_aws.providers.cloud.aws.aws import AWSProvider
             provider = AWSProvider()
         except Exception as e:
-            raise ProviderError(e)
+            raise ProviderError("failed to get provider "+provider_name,e)
     else:
         provider = ONPREMProvider()
     return provider
@@ -100,7 +100,7 @@ def set_app_param_config(ssm_type, var_name,var_value):
             from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
             return set_app_param_config_cld(var_name,var_value)
         except Exception as e:
-            raise ProviderError(e)
+            raise ProviderError("failed to get ssm type "+ssm_type,e)
     return set_app_param_config_onprem(var_name,var_value)
 
 
@@ -117,7 +117,7 @@ def get_config(ssm_type):
             from .ssm.aws_ssm import get_config as get_config_cld
             return get_config_cld()
         except Exception as e:
-            raise ProviderError(e)
+            raise ProviderError("failed to get ssm type "+ssm_type,e)
     return get_config_onprem()
 
 
@@ -133,6 +133,6 @@ def get_app_config(ssm_type):
             from .ssm.aws_ssm import get_app_config as get_app_config_cld
             return get_app_config_cld()
         except Exception as e:
-            raise ProviderError(e)
+            raise ProviderError("failed to get ssm type "+ssm_type,e)
     return get_app_config_onprem()
 

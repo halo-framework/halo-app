@@ -75,7 +75,7 @@ class CircuitBreaker(AbsBaseClass):
         CircuitBreakerMonitor.register(self)
 
         if self.opened:
-            raise CircuitBreakerError(self)
+            raise CircuitBreakerError(str(self))
         try:
             result = func(*args, **kwargs)
         except self._expected_exception:

@@ -63,7 +63,7 @@ class HaloRequest(AbsBaseClass):
         self.context = self.init_ctx(request)
         for i in settings.HALO_CONTEXT_LIST:
             if i not in self.context.keys():
-                raise MissingHaloContextException(i)
+                raise MissingHaloContextException(str(i))
 
     def init_ctx(self, request):
         if settings.HALO_CONTEXT_CLASS:

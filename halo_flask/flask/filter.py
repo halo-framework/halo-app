@@ -120,7 +120,7 @@ class StoreUtil(AbsBaseClass):
             self.cleaner.run(event)
             return True
         except Exception as e:
-            raise StoreException(e)
+            raise StoreException("failed to clear events",e)
 
     def insert_events_to_repository_class(self):
         if settings.REQUEST_FILTER_CLEAR_CLASS:

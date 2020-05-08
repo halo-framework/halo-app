@@ -5,13 +5,12 @@ from abc import ABCMeta, abstractmethod
 
 class HaloException(Exception):
     __metaclass__ = ABCMeta
-    """
-    The abstract exception is used as base class. app expects to handle exception. Accepts the following
-    optional arguments:
-    """
-    def __init__(self, message, detail=None,data=None):
-        super(HaloException,self).__init__()
+    """Generic exception for halo"""
+
+    def __init__(self, message, original_exception=None, detail=None,data=None):
+        super(HaloException, self).__init__()
         self.message = message
+        self.original_exception = original_exception
         self.detail = detail
         self.data = data
 
@@ -27,8 +26,8 @@ class HaloError(HaloException):
     """
     status_code = 400
 
-    def __init__(self, message, detail=None, data=None,status_code=None):
-        super(HaloError, self).__init__(message, detail=None,data=None)
+    def __init__(self, message, original_exception=None,detail=None, data=None,status_code=None):
+        super(HaloError, self).__init__(message, original_exception,detail,data)
         if status_code is not None:
             self.status_code = status_code
 

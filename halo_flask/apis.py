@@ -218,25 +218,25 @@ class AbsBaseApi(AbsBaseClass):
         except requests.ConnectionError as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(e)
+            er = ApiError(msg,e)
             er.status_code = 500
             raise er
         except requests.HTTPError as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(e)
+            er = ApiError(msg,e)
             er.status_code = 500
             raise er
         except requests.Timeout as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(e)
+            er = ApiError(msg,e)
             er.status_code = 500
             raise er
         except requests.RequestException as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(e)
+            er = ApiError(msg,e)
             er.status_code = 500
             raise er
         except ApiError as e:
