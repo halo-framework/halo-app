@@ -226,6 +226,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.p2 = P2()
 
     def test_000_start(self):
+        from halo_flask.const import LOC
+        app.config['ENV_TYPE'] = LOC
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['FUNC_NAME'] = "FUNC_NAME"
+        #app.config['API_CONFIG'] =
+        app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
@@ -234,6 +240,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_00_start(self):
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 HALO_HOST = get_host_name()
