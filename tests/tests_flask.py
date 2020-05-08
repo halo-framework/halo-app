@@ -470,8 +470,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            from halo_flask.ssm import set_app_param_config
-            from halo_flask.providers.ssm.aws_ssm import set_host_param_config
+            from halo_flask.ssm import set_app_param_config,set_host_param_config
             set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
             import time
             print("sleep.")
@@ -508,7 +507,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
                 from halo_flask.ssm import set_app_param_config
-                from halo_flask.providers.ssm.aws_ssm import set_host_param_config
+                from halo_flask.ssm import set_host_param_config
                 set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
                 import time
                 print("sleep.")
@@ -528,7 +527,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
                 from halo_flask.ssm import set_app_param_config
-                from halo_flask.providers.ssm.aws_ssm import set_host_param_config
+                from halo_flask.ssm import set_host_param_config
                 set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
                 import time
                 print("sleep.")

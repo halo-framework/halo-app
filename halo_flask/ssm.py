@@ -14,7 +14,7 @@ from halo_flask.exceptions import NoSSMDefinedError,NotSSMTypeError
 from .providers.providers import set_app_param_config as set_app_param_config_provider
 from .providers.providers import get_config as get_config_provider
 from .providers.providers import get_app_config as get_app_config_provider
-
+from halo_flask.base_util import BaseUtil
 
 from .exceptions import HaloError, CacheKeyError, CacheExpireError
 
@@ -44,7 +44,17 @@ def set_app_param_config(ssm_type, var_name,var_value):
     check_ssm_type(ssm_type)
     return set_app_param_config_provider(ssm_type,var_name,var_value)
 
+def set_host_param_config(host):
+    """
 
+    :param host:
+    :return:
+    """
+    if host:
+        url = "https://" + host + "/" + BaseUtil.get_stage()
+    else:
+        url = host
+    return url
 
 def get_config(ssm_type):
     """

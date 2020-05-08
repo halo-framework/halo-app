@@ -5,7 +5,7 @@ from flask import Flask
 from flask_restful import Api
 from halo_flask.apis import load_api_config
 from halo_flask.flask.viewsx import PerfLinkX,TestLinkX
-from halo_flask.ssm import set_app_param_config
+from halo_flask.ssm import set_app_param_config,set_host_param_config
 from halo_flask.flask.viewsx import load_global_data
 
 #@todo remove aws from code

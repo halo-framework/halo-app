@@ -191,18 +191,6 @@ def set_app_param_config(var_name,var_value):
     #value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
     return set_config(region_name, ssm_parameter_path, value)
 
-def set_host_param_config(host):
-    """
-
-    :param host:
-    :return:
-    """
-    if host:
-        url = "https://" + host + "/" + BaseUtil.get_stage()
-    else:
-        url = host
-    return url
-
 def set_config(region_name, ssm_parameter_path, value):
     """
     Load configparser from config stored in SSM Parameter Store
