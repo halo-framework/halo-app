@@ -19,6 +19,10 @@ from halo_flask.const import HTTPChoice
 from halo_flask.apis import CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
 from halo_flask.request import HaloContext
+from halo_flask.apis import load_api_config
+from halo_flask.ssm import set_app_param_config,set_host_param_config
+from halo_flask.flask.viewsx import load_global_data
+
 import unittest
 
 #6,7,9923,9941 failing
@@ -194,6 +198,12 @@ class CAContext(HaloContext):
 
     HaloContext.items[TESTER] = "x-tester-id"
 
+def get_host_name():
+    if 'HALO_HOST' in os.environ:
+        return os.environ['HALO_HOST']
+    else:
+        return 'HALO_HOST'
+
 class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
@@ -215,6 +225,31 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.p1 = P1()
         self.p2 = P2()
 
+    def test_000_start(self):
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
+                                app.config['API_CONFIG'])
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_00_start(self):
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                HALO_HOST = get_host_name()
+                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config(HALO_HOST))
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_0_start(self):
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
+                    data_map = app.config['INIT_DATA_MAP']
+                    class_name = app.config['INIT_CLASS_NAME']
+                    load_global_data(class_name, data_map)
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_1_get_request_returns_exception(self):
         with app.test_request_context(method='GET', path='/?abc=def'):
