@@ -100,7 +100,7 @@ def set_app_param_config(ssm_type, var_name,var_value):
             from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
             return set_app_param_config_cld(var_name,var_value)
         except Exception as e:
-            raise ProviderError("failed to get ssm type "+ssm_type,e)
+            raise ProviderError("failed to get ssm: "+str(e),e)
     return set_app_param_config_onprem(var_name,var_value)
 
 
