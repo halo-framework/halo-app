@@ -7,6 +7,7 @@ from halo_flask.apis import load_api_config
 from halo_flask.flask.viewsx import PerfLinkX,TestLinkX
 from halo_flask.ssm import set_app_param_config,set_host_param_config
 from halo_flask.flask.viewsx import load_global_data
+from halo_flask.base_util import BaseUtil
 
 #@todo remove aws from code
 
@@ -21,7 +22,7 @@ def create_app(config_object='settings'):
     with app.app_context():
         if app.config['SSM_TYPE'] and app.config['SSM_TYPE'] != 'NONE':
             load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'], app.config['API_CONFIG'])
-            HALO_HOST = get_host_name()
+            HALO_HOST = BaseUtil.get_host_name()
             set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config(HALO_HOST))
         app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
@@ -35,12 +36,6 @@ def create_app(config_object='settings'):
     site_map(app)
 
     return app
-
-def get_host_name():
-    if 'HALO_HOST' in os.environ:
-        return os.environ['HALO_HOST']
-    else:
-        return 'HALO_HOST'
 
 def has_no_empty_params(rule):
     defaults = rule.defaults if rule.defaults is not None else ()

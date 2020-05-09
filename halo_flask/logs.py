@@ -13,7 +13,10 @@ def append_error(params, err):
         stack = None
         if hasattr(err, "stack"):
             stack = err.stack
-        error = {"errorName": str(type(err).__name__), "errorMessage": str(err), "stackTrace": str(stack)}
+        original_exception = None
+        if hasattr(err, "original_exception"):
+            original_exception = str(err.original_exception)
+        error = {"errorName": str(type(err).__name__), "errorMessage": str(err), "stackTrace": str(stack), "original_exception":original_exception}
         dict_items.update(error)
     logMsg = {key: value for (key, value) in (dict_items.items())}
     return logMsg

@@ -72,6 +72,13 @@ class BaseUtil(AbsBaseClass):
             return os.environ['HALO_APP_NAME']
         return settings.APP_NAME
 
+    @staticmethod
+    def get_host_name():
+        if 'HALO_HOST' in os.environ:
+            return os.environ['HALO_HOST']
+        else:
+            return 'HALO_HOST'
+
     @classmethod
     def get_context(cls):
         """
