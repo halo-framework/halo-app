@@ -489,7 +489,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9940_ssm_aws(self):  # @TODO test without HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['HALO_HOST'] = 'halo_flask'
         app.config['SSM_TYPE'] = "AWS"
         #app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
@@ -508,7 +508,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9941_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['HALO_HOST'] = 'halo_flask'
         app.config['SSM_TYPE'] = "AWS"
         app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
@@ -524,7 +524,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9942_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['HALO_HOST'] = 'halo_flask'
         app.config['SSM_TYPE'] = "AWS"
         #app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
@@ -539,11 +539,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             time.sleep(5.4)
             from halo_flask.ssm import get_app_config
             config = get_app_config(app.config['SSM_TYPE'])
-            eq_(config.get_param("halo_flask")["session_id"], uuidx)
+            eq_(config.get_param(app.config['HALO_HOST'])["session_id"], uuidx)
 
     def test_9944_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['HALO_HOST'] = 'halo_flask'
         app.config['SSM_TYPE'] = None
         #app.config['PROVIDER'] = "AWS"
         #app.config['AWS_REGION'] = 'us-east-1'
@@ -551,19 +551,19 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 from halo_flask.ssm import set_app_param_config
                 from halo_flask.ssm import set_host_param_config
-                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
+                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("halo_flask:8000"))
                 import time
                 print("sleep.")
                 time.sleep(5.4)
                 from halo_flask.ssm import get_app_config
                 config = get_app_config(app.config['SSM_TYPE'])
-                eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
+                eq_(config.get_param(app.config['HALO_HOST'])["url"], 'https://127.0.0.1:8000/loc')
             except Exception as e:
                 eq_(e.__class__.__name__, "NoSSMDefinedError")
 
     def test_9945_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = '127.0.0.2'
+        app.config['HALO_HOST'] = 'halo_flask'
         app.config['SSM_TYPE'] = "XYZ"
         #app.config['PROVIDER'] = "AWS"
         #app.config['AWS_REGION'] = 'us-east-1'
@@ -571,13 +571,13 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 from halo_flask.ssm import set_app_param_config
                 from halo_flask.ssm import set_host_param_config
-                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
+                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("halo_flask:8000"))
                 import time
                 print("sleep.")
                 time.sleep(5.4)
                 from halo_flask.ssm import get_app_config
                 config = get_app_config(app.config['SSM_TYPE'])
-                eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
+                eq_(config.get_param("halo_flask")["url"], 'https://halo_flask:8000/loc')
             except Exception as e:
                 eq_(e.__class__.__name__, "NotSSMTypeError")
 

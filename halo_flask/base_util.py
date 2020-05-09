@@ -76,8 +76,7 @@ class BaseUtil(AbsBaseClass):
     def get_host_name():
         if 'HALO_HOST' in os.environ:
             return os.environ['HALO_HOST']
-        else:
-            return 'HALO_HOST'
+        return settings.HALO_HOST
 
     @classmethod
     def get_context(cls):

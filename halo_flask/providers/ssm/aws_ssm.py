@@ -181,7 +181,7 @@ def set_app_param_config(var_name,var_value):
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
     logger.debug("var_name:" + var_name+" var_value:"+var_value)
     app_config = get_app_config()
-    param =  app_config.get_param("halo_flask")
+    param =  app_config.get_param(settings.HALO_HOST)
     param[var_name] = var_value
     value = '{'
     for i in param:

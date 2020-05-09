@@ -86,7 +86,7 @@ print(VERSION)
 APPEND_SLASH = True
 
 SERVER = env('SERVER_NAME')
-HALO_HOST = None
+HALO_HOST = 'halo_flask'
 ALLOWED_HOSTS = ['*','127.0.0.1',SERVER]
 
 ADMINS = (
