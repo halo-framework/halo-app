@@ -181,15 +181,19 @@ def set_app_param_config(var_name,var_value):
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
     logger.debug("var_name:" + var_name+" var_value:"+var_value)
     app_config = get_app_config()
-    param =  app_config.get_param(settings.FUNC_NAME)
-    param[var_name] = var_value
-    value = '{'
-    for i in param:
-        value = value + '"' + str(i) + '":"' + str(param[i]) + '",'
-    value = value[:-1]
-    value = value + '}'
-    #value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
-    return set_config(region_name, ssm_parameter_path, value)
+    try:
+        param =  app_config.get_param(settings.FUNC_NAME)
+        param[var_name] = var_value
+        value = '{'
+        for i in param:
+            value = value + '"' + str(i) + '":"' + str(param[i]) + '",'
+        value = value[:-1]
+        value = value + '}'
+        return set_config(region_name, ssm_parameter_path, value)
+    except CacheKeyError as e:
+        value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
+        return set_config(region_name, ssm_parameter_path, value)
+
 
 def set_config(region_name, ssm_parameter_path, value):
     """
