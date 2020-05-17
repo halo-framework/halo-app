@@ -438,10 +438,12 @@ class Util(AbsBaseClass):
             error_detail = e_msg
         error_data = {}
         if hasattr(e, 'data'):
-            error_data = e.data
-        payload = {"error": {"error_code": error_code, "error_message": message, "error_detail": error_detail,
-                             "data": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}}
+            error_data = json.dumps(e.data)
+        payload = {"error":
+                       {"error_code": error_code, "error_message": message, "error_detail": error_detail,
+                             "data": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}
+                   }
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
-            payload["stack"] = e.stack
-            payload["request"] = Util.get_req_params(request)
-        return error_code, json.dumps(payload)
+            payload["stack"] = json.dumps(e.stack)
+            payload["request"] = json.dumps(Util.get_req_params(request))
+        return payload
