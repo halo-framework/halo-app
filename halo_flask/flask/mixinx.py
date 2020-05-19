@@ -257,7 +257,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             return ret
         return {}
 
-    def create_resp_json(self,halo_request, dict_back_json, matchs=None):
+    def create_resp_json(self, halo_request, dict_back_json, matchs=None):
         logger.debug("in create_resp_json ")
         if matchs:
             js = {}
@@ -268,7 +268,18 @@ class AbsApiMixinX(AbsBaseMixinX):
                     return js
             except Exception as e:
                 pass
+        else:
+            if type(dict_back_json) is dict:
+                if len(dict_back_json) == 1:
+                    if 1 in dict_back_json:
+                        return dict_back_json[1]
+                    return list(dict_back_json.values())[0]
+                else:
+                    return self.dict_to_json(dict_back_json)
         return dict_back_json
+
+    def dict_to_json(self, dict_back_json):
+        json.dumps(dict_back_json)
 
     def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
