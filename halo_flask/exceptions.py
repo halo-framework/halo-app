@@ -31,6 +31,9 @@ class HaloError(HaloException):
         if status_code is not None:
             self.status_code = status_code
 
+class BadRequestError(HaloError):
+    pass
+
 class AuthException(HaloException):
     pass
 
@@ -83,9 +86,6 @@ class HaloHttpError(HaloError):
     def __init__(self, message, detail=None,data=None, http_status=400):
         super(HaloHttpError,self).__init__(message, detail,data)
         self.status = http_status
-
-class BadRequestError(HaloHttpError):
-    pass
 
 class ServerError(HaloHttpError):
     def __init__(self, message, detail=None, data=None, http_status=500):

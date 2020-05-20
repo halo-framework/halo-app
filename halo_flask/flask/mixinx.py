@@ -177,7 +177,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("in validate_req ")
         if halo_request:
             return True
-        raise HaloException("Halo Request not valid")
+        raise BadRequestError("Halo Request not valid")
 
     def validate_pre(self, halo_request):
         if halo_request:
@@ -264,7 +264,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             try:
                 for match in matchs:
                     logger.debug(match.value)
-                    js[match.value] = match.value
+                    js[match.path] = match.value
                     return js
             except Exception as e:
                 pass
@@ -279,7 +279,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         return dict_back_json
 
     def dict_to_json(self, dict_back_json):
-        json.dumps(dict_back_json)
+        return dict_back_json
 
     def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
@@ -305,7 +305,12 @@ class AbsApiMixinX(AbsBaseMixinX):
     def set_resp_headers(self, halo_request, headers):
         logger.debug("in set_resp_headers " + str(headers))
         if headers:
-            return []
+            headersx = {}
+            for h in headers:
+                if h in headers:
+                    headersx[h] = headers[h]
+            headersx['mimetype'] = 'application/json'
+            return headersx
         raise HaloException("no headers")
 
     def validate_post(self, halo_request, halo_response):
@@ -372,7 +377,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                                                                              back_headers, back_auth, back_data)
         # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = getattr(self, 'extract_json_%s' % sub_func)(halo_request, back_response)
-        dict = {1: back_json}
+        dict = {'1': back_json}
         # 8. return json response
         return dict
 
@@ -391,7 +396,7 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_3_bq(self, halo_request,sub_func):  # high maturity - saga transactions
         logger.debug("do_operation_3_bq")
-        sagax = load_saga("test", self.business_event.saga, settings.SAGA_SCHEMA)
+        sagax = load_saga(self.business_event.EVENT_NAME, self.business_event.saga, settings.SAGA_SCHEMA)
         payloads = {}
         apis = {}
         counter = 1
@@ -407,11 +412,8 @@ class AbsApiMixinX(AbsBaseMixinX):
             ret = sagax.execute(halo_request.context, payloads, apis)
             return ret
         except SagaRollBack as e:
-            ret = HaloResponse(halo_request)
-            ret.payload = {"test": "bad"}
-            ret.code = 500
-            ret.headers = []
-            return ret
+            logger.error("error in business_event:EVENT_NAME" + str(self.business_event.EVENT_NAME))
+            raise HaloError("error in processing", original_exception=e,status_code=500)
 
     def do_saga_work_bq(self, api, results, payload):
         logger.debug("do_saga_work_bq=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
@@ -481,7 +483,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                                                    back_data)
         # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = self.extract_json(halo_request, back_response)
-        dict = {1: back_json}
+        dict = {'1': back_json}
         # 8. return json response
         return dict
 
@@ -703,7 +705,7 @@ class TestMixinX(AbsApiMixinX):
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
         back_json = {}
-        dict = {1: back_json}
+        dict = {'1': back_json}
         # 8. return json response
         return dict
 """

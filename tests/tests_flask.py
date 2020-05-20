@@ -270,7 +270,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
             response = self.a1.process_delete(request, {})
-            eq_(response.payload, {1: {"tst_delete":"good"}})
+            eq_(response.payload, {"tst_delete":"good"})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
@@ -450,7 +450,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path="/tst"):
             try:
                 response = self.a2.get()
-                raise False
+                eq_(response.data, b'{"employees": [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}]}')
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 

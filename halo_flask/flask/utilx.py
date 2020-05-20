@@ -278,9 +278,11 @@ class Util(AbsBaseClass):
         :param status_code:
         :return:
         """
+        from flask import jsonify
         if status_code >= 300:
             return Response(data, status=status_code, headers=headers)
-        return Response(json.dumps({"data": data}), status=status_code, headers=headers)
+        return Response(json.dumps(data), status=status_code, headers=headers)
+        #return jsonify(data)
 
     @staticmethod
     def get_req_params(request):
