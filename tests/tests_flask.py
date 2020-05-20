@@ -314,7 +314,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except ApiError as e:
                 #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
-                eq_(e.__class__.__name__,"CircuitBreakerError")
+                eq_(e.__class__.__name__,"ApiError")
 
     def test_8_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
