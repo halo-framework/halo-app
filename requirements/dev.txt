@@ -19,3 +19,4 @@ pep8-naming==0.7.0
 nose==1.3.7
 halo_aws
 boto3
+

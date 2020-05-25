@@ -588,12 +588,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_flask.providers.ssm.onprem_ssm_client'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config
-            set_app_param_config("ONPREM", "url","124")
+            set_app_param_config(app.config['SSM_TYPE'], "url","124")
             from halo_flask.ssm import get_app_config
-            config = get_app_config("ONPREM")
+            config = get_app_config(app.config['SSM_TYPE'])
             t = config.get_param('halo_flask')
             print("t="+str(t))
-            eq_(str(t), '<Section: DEFAULT>')
+            eq_(str(t), '<Section: halo_flask>')#'<Section: DEFAULT>')
 
     def test_996_error_handler(self):
         with app.test_request_context(method='DELETE', path='/perf'):

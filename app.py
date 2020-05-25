@@ -10,6 +10,7 @@ from halo_flask.flask.viewsx import load_global_data
 from halo_flask.base_util import BaseUtil
 
 #@todo remove aws from code
+#@todo enable reflection for major functionality: saga,cache
 
 def create_app(config_object='settings'):
     """
