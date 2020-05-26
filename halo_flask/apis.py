@@ -365,36 +365,36 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
     global SSM_CONFIG
     global SSM_APP_CONFIG
 
-    if stage_type == LOC:
-        # from halo_flask.ssm import get_config as get_config
-        try:
-            from halo_flask.halo_flask.ssm import get_config
-        except:
-            from halo_flask.ssm import get_config
+    #if stage_type == LOC:
+    # from halo_flask.ssm import get_config as get_config
+    try:
+        from halo_flask.halo_flask.ssm import get_config
+    except:
+        from halo_flask.ssm import get_config
 
-        SSM_CONFIG = get_config(ssm_type)
-        # set_param_config(AWS_REGION, 'DEBUG_LOG', '{"val":"false"}')
-        # SSM_CONFIG.get_param("test")
+    SSM_CONFIG = get_config(ssm_type)
+    # set_param_config(AWS_REGION, 'DEBUG_LOG', '{"val":"false"}')
+    # SSM_CONFIG.get_param("test")
 
-        # from halo_flask.ssm import get_config as get_config
-        try:
-            from halo_flask.halo_flask.ssm import get_app_config
-        except:
-            from halo_flask.ssm import get_app_config
+    # from halo_flask.ssm import get_config as get_config
+    try:
+        from halo_flask.halo_flask.ssm import get_app_config
+    except:
+        from halo_flask.ssm import get_app_config
 
-        SSM_APP_CONFIG = get_app_config(ssm_type)
+    SSM_APP_CONFIG = get_app_config(ssm_type)
 
-        # api_config:{'About': {'url': 'http://127.0.0.1:7000/about/', 'type': 'api'}, 'Task': {'url': 'http://127.0.0.1:7000/task/$upcid/', 'type': 'api'}, 'Curr': {'url': 'http://127.0.0.1:7000/curr/', 'type': 'api'}, 'Top': {'url': 'http://127.0.0.1:7000/top/', 'type': 'api'}, 'Rupc': {'url': 'http://127.0.0.1:7000/upc/$upcid/', 'type': 'api'}, 'Upc': {'url': 'http://127.0.0.1:7000/upc/$upcid/', 'type': 'api'}, 'Contact': {'url': 'http://127.0.0.1:7000/contact/', 'type': 'api'}, 'Fail': {'url': 'http://127.0.0.1:7000/fail/', 'type': 'api'}, 'Rtask': {'url': 'http://127.0.0.1:7000/task/$upcid/', 'type': 'api'}, 'Page': {'url': 'http://127.0.0.1:7000/page/$upcid/', 'type': 'api'}, 'Sim': {'url': 'http://127.0.0.1:7000/sim/', 'type': 'api'}, 'Google': {'url': 'http://www.google.com', 'type': 'service'}}
-        for item in SSM_APP_CONFIG.cache.items:
-            if item not in [func_name, 'DEFAULT']:
-                url = SSM_APP_CONFIG.get_param(item)["url"]
-                logger.debug(item + ":" + url)
-                for key in API_CONFIG:
-                    current = API_CONFIG[key]
-                    new_url = current["url"]
-                    if "service://" + item in new_url:
-                        API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
-        logger.debug(str(API_CONFIG))
+    # api_config:{'About': {'url': 'http://127.0.0.1:7000/about/', 'type': 'api'}, 'Task': {'url': 'http://127.0.0.1:7000/task/$upcid/', 'type': 'api'}, 'Curr': {'url': 'http://127.0.0.1:7000/curr/', 'type': 'api'}, 'Top': {'url': 'http://127.0.0.1:7000/top/', 'type': 'api'}, 'Rupc': {'url': 'http://127.0.0.1:7000/upc/$upcid/', 'type': 'api'}, 'Upc': {'url': 'http://127.0.0.1:7000/upc/$upcid/', 'type': 'api'}, 'Contact': {'url': 'http://127.0.0.1:7000/contact/', 'type': 'api'}, 'Fail': {'url': 'http://127.0.0.1:7000/fail/', 'type': 'api'}, 'Rtask': {'url': 'http://127.0.0.1:7000/task/$upcid/', 'type': 'api'}, 'Page': {'url': 'http://127.0.0.1:7000/page/$upcid/', 'type': 'api'}, 'Sim': {'url': 'http://127.0.0.1:7000/sim/', 'type': 'api'}, 'Google': {'url': 'http://www.google.com', 'type': 'service'}}
+    for item in SSM_APP_CONFIG.cache.items:
+        if item not in [func_name, 'DEFAULT']:
+            url = SSM_APP_CONFIG.get_param(item)["url"]
+            logger.debug(item + ":" + url)
+            for key in API_CONFIG:
+                current = API_CONFIG[key]
+                new_url = current["url"]
+                if "service://" + item in new_url:
+                    API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
+    logger.debug(str(API_CONFIG))
 
 
 
