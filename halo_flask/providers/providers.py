@@ -13,7 +13,7 @@ from abc import ABCMeta,abstractmethod
 #@ TODO perf activation will reload SSM if needed and refresh API table
 
 
-from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem
+from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem,get_app_param_config as get_app_param_config_onprem
 from .ssm.onprem_ssm import get_config as get_config_onprem
 from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from ..settingsx import settingsx
@@ -88,6 +88,21 @@ def get_provider():
 
 ################## ssm ###########################
 
+def get_app_param_config(ssm_type, service_name,var_name):
+    """
+
+    :param region_name:
+    :param host:
+    :return:
+    """
+    if ssm_type == AWS:
+        try:
+            from .ssm.aws_ssm import get_app_param_config as get_app_param_config_cld
+            return get_app_param_config_cld(service_name,var_name)
+        except Exception as e:
+            raise ProviderError("failed to get ssm: "+str(e),e)
+    return get_app_param_config_onprem(service_name,var_name)
+
 def set_app_param_config(ssm_type, var_name,var_value):
     """
 
@@ -102,8 +117,6 @@ def set_app_param_config(ssm_type, var_name,var_value):
         except Exception as e:
             raise ProviderError("failed to get ssm: "+str(e),e)
     return set_app_param_config_onprem(var_name,var_value)
-
-
 
 def get_config(ssm_type):
     """

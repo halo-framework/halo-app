@@ -20,7 +20,7 @@ from halo_flask.apis import CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
 from halo_flask.request import HaloContext
 from halo_flask.apis import load_api_config
-from halo_flask.ssm import set_app_param_config,set_host_param_config
+from halo_flask.ssm import set_app_param_config,get_app_param_config,set_host_param_config
 from halo_flask.flask.viewsx import load_global_data
 
 import unittest
@@ -246,6 +246,17 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 HALO_HOST = get_host_name()
                 set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config(HALO_HOST))
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_01_start(self):
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['AWS_REGION'] = 'us-east-1'
+        app.config['FUNC_NAME'] = "halo_flask"
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'],"url")
+                print("val="+str(val))
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 

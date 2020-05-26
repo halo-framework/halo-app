@@ -8,6 +8,7 @@ DEV = 'dev'
 TST = 'tst'
 PRD = 'prd'
 
+
 class HTTPChoice(Enum):  # A subclass of Enum
     get = "GET"
     post = "POST"

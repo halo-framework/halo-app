@@ -11,7 +11,7 @@ from halo_flask.exceptions import NoSSMDefinedError,NotSSMTypeError
 #@ TODO put_parameter should be activated only is current value is different then the existing one
 #@ TODO perf activation will reload SSM if needed and refresh API table
 
-from .providers.providers import set_app_param_config as set_app_param_config_provider
+from .providers.providers import set_app_param_config as set_app_param_config_provider,get_app_param_config as get_app_param_config_provider
 from .providers.providers import get_config as get_config_provider
 from .providers.providers import get_app_config as get_app_config_provider
 from halo_flask.base_util import BaseUtil
@@ -33,6 +33,16 @@ def check_ssm_type(ssm_type):
     if ssm_type not in ["AWS","ONPREM"]:
         raise NotSSMTypeError(ssm_type)
     return
+
+def get_app_param_config(ssm_type,service_name,var_name):
+    """
+
+    :param region_name:
+    :param host:
+    :return:
+    """
+    check_ssm_type(ssm_type)
+    return get_app_param_config_provider(ssm_type,service_name,var_name)
 
 def set_app_param_config(ssm_type, var_name,var_value):
     """

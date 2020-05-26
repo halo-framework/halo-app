@@ -190,6 +190,14 @@ def set_param_config(region_name, key, value):
     ssm_parameter_path = full_config_path + '/' + key
     return set_config(region_name, ssm_parameter_path, value)
 
+def get_app_param_config(service_name,var_name):
+    """
+
+    :param region_name:
+    :param host:
+    :return:
+    """
+    return None
 
 def set_app_param_config(var_name,var_value):
     """
