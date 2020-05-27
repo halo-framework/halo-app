@@ -429,15 +429,19 @@ class Util(AbsBaseClass):
         my_class = getattr(module, 'ErrorMessages')
         msgs = my_class()
         error_code, message = msgs.get_code(e)
-        if hasattr(e, 'message'):
-            e_msg = e.message
-        else:
-            e_msg = str(e)
         error_detail = ""
+        e_msg = ""
         if hasattr(e, 'detail'):
             error_detail = e.detail
-        elif e_msg is not None and e_msg != 'None' and e_msg != "":
-            error_detail = e_msg
+        elif hasattr(e, 'original_exception'):
+            error_detail = str(e.original_exception)
+        else:
+            if hasattr(e, 'message'):
+                e_msg = e.message
+            else:
+                e_msg = str(e)
+            if e_msg is not None and e_msg != 'None' and e_msg != "":
+                error_detail = e_msg
         error_data = {}
         if hasattr(e, 'data'):
             error_data = json.dumps(e.data)

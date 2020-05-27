@@ -374,5 +374,7 @@ CIRCUIT_BREAKER = False
 PROVIDER="ONPREM"
 ONPREM_PROVIDER_CLASS_NAME="ONPREMProvider"
 ONPREM_PROVIDER_MODULE_NAME="halo_flask.providers.providers"
+ONPREM_SSM_CLASS_NAME='OnPremClient'
+ONPREM_SSM_MODULE_NAME='halo_flask.providers.ssm.onprem_ssm_client'
 
 print('The settings file has been loaded.')
