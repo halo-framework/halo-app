@@ -44,7 +44,7 @@ def get_app_param_config(ssm_type,service_name,var_name):
     check_ssm_type(ssm_type)
     return get_app_param_config_provider(ssm_type,service_name,var_name)
 
-def set_app_param_config(ssm_type, var_name,var_value):
+def set_app_param_config(ssm_type, params):
     """
 
     :param region_name:
@@ -52,7 +52,7 @@ def set_app_param_config(ssm_type, var_name,var_value):
     :return:
     """
     check_ssm_type(ssm_type)
-    return set_app_param_config_provider(ssm_type,var_name,var_value)
+    return set_app_param_config_provider(ssm_type,params)
 
 def set_host_param_config(host):
     """

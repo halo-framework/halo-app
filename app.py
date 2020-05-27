@@ -24,7 +24,9 @@ def create_app(config_object='settings'):
         if app.config['SSM_TYPE'] and app.config['SSM_TYPE'] != 'NONE':
             load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'], app.config['API_CONFIG'])
             HALO_HOST = BaseUtil.get_host_name()
-            set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config(HALO_HOST))
+            params = {}
+            params["url"] = set_host_param_config(HALO_HOST)
+            set_app_param_config(app.config['SSM_TYPE'], params )
             val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'], "url")
             print("val=" + str(val))
         app.add_url_rule("/", view_func=TestLinkX.as_view("member"))

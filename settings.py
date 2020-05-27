@@ -303,6 +303,7 @@ ERR_MSG_CLASS = 'halo_flask.mixin_err_msg'
 
 SSM_TYPE = env.str('SSM_TYPE',default='NONE')
 print('SSM_TYPE='+SSM_TYPE)
+AWS_REGION = env.str('AWS_REGION',default='NONE')
 
 EVENTS_INGESTED = env.int('EVENTS_INGESTED',default=50)
 
@@ -369,5 +370,7 @@ HALO_CONTEXT_CLASS = None
 REQUEST_FILTER_CLASS = None
 REQUEST_FILTER_CLEAR_CLASS = None
 CIRCUIT_BREAKER = False
+
+
 
 print('The settings file has been loaded.')

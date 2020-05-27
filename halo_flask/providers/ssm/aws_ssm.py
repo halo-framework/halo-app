@@ -179,7 +179,7 @@ def get_app_param_config(service_name,var_name):
         pass
     return None
 
-def set_app_param_config(var_name,var_value):
+def set_app_param_config(params):
     """
 
     :param var_name:
@@ -189,11 +189,11 @@ def set_app_param_config(var_name,var_value):
 
     region_name = get_region()
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
-    logger.debug("var_name:" + var_name+" var_value:"+var_value)
     app_config = get_app_config()
     try:
         param =  app_config.get_param(settings.FUNC_NAME)
-        param[var_name] = var_value
+        for var_name in params.keys():
+            param[var_name] = params[var_name]
         value = '{'
         for i in param:
             value = value + '"' + str(i) + '":"' + str(param[i]) + '",'
@@ -201,7 +201,11 @@ def set_app_param_config(var_name,var_value):
         value = value + '}'
         return set_config(region_name, ssm_parameter_path, value)
     except CacheKeyError as e:
-        value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
+        value = '{'
+        for var_name in params.keys():
+            value = value + '"' + str(var_name) + '":"' + str(params[var_name]) + '",'
+        value = value[:-1]
+        value = value + '}'
         return set_config(region_name, ssm_parameter_path, value)
 
 

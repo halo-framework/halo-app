@@ -245,7 +245,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 HALO_HOST = get_host_name()
-                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config(HALO_HOST))
+                params = {}
+                params["url"] = set_host_param_config(HALO_HOST)
+                set_app_param_config(app.config['SSM_TYPE'],params)
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 
@@ -507,7 +509,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
                 from halo_flask.ssm import set_app_param_config
-                set_app_param_config(app.config['SSM_TYPE'],"id", "124")
+                params = {}
+                params["id"] = "124"
+                set_app_param_config(app.config['SSM_TYPE'],params )
                 import time
                 print("sleep.")
                 time.sleep(5.4)
@@ -525,7 +529,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config,set_host_param_config
-            set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("127.0.0.1:8000"))
+            params = {}
+            params["url"] = set_host_param_config("127.0.0.1:8000")
+            set_app_param_config(app.config['SSM_TYPE'], params)
             import time
             print("sleep.")
             time.sleep(5.4)
@@ -544,7 +550,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             import uuid
             uuidx = uuid.uuid4().__str__()
             print(uuidx)
-            set_app_param_config(app.config['SSM_TYPE'], "session_id",uuidx)
+            params = {}
+            params["session_id"] = uuidx
+            set_app_param_config(app.config['SSM_TYPE'], params)
             import time
             print("sleep.")
             time.sleep(5.4)
@@ -562,7 +570,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 from halo_flask.ssm import set_app_param_config
                 from halo_flask.ssm import set_host_param_config
-                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("halo_flask:8000"))
+                params = {}
+                params["url"] = set_host_param_config("halo_flask:8000")
+                set_app_param_config(app.config['SSM_TYPE'], params)
                 import time
                 print("sleep.")
                 time.sleep(5.4)
@@ -582,7 +592,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 from halo_flask.ssm import set_app_param_config
                 from halo_flask.ssm import set_host_param_config
-                set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config("halo_flask:8000"))
+                params = {}
+                params["url"] = set_host_param_config("halo_flask:8000")
+                set_app_param_config(app.config['SSM_TYPE'], params)
                 import time
                 print("sleep.")
                 time.sleep(5.4)
@@ -599,7 +611,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_flask.providers.ssm.onprem_ssm_client'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config
-            set_app_param_config(app.config['SSM_TYPE'], "url","124")
+            params = {}
+            params["url"] = "124"
+            set_app_param_config(app.config['SSM_TYPE'], params)
             from halo_flask.ssm import get_app_config
             config = get_app_config(app.config['SSM_TYPE'])
             t = config.get_param('halo_flask')

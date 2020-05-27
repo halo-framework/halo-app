@@ -103,7 +103,7 @@ def get_app_param_config(ssm_type, service_name,var_name):
             raise ProviderError("failed to get ssm: "+str(e),e)
     return get_app_param_config_onprem(service_name,var_name)
 
-def set_app_param_config(ssm_type, var_name,var_value):
+def set_app_param_config(ssm_type, params):
     """
 
     :param region_name:
@@ -113,10 +113,10 @@ def set_app_param_config(ssm_type, var_name,var_value):
     if ssm_type == AWS:
         try:
             from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
-            return set_app_param_config_cld(var_name,var_value)
+            return set_app_param_config_cld(params)
         except Exception as e:
             raise ProviderError("failed to get ssm: "+str(e),e)
-    return set_app_param_config_onprem(var_name,var_value)
+    return set_app_param_config_onprem(params)
 
 def get_config(ssm_type):
     """

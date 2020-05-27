@@ -199,7 +199,7 @@ def get_app_param_config(service_name,var_name):
     """
     return None
 
-def set_app_param_config(var_name,var_value):
+def set_app_param_config(params):
     """
 
     :param region_name:
@@ -208,8 +208,11 @@ def set_app_param_config(var_name,var_value):
     """
     full_config_path,short_config_path = BaseUtil.get_env()
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
-    value = '{"' + str(var_name) + '":"' + str(var_value) + '"}'
-    logger.debug("var_name:" + var_name+" var_value:"+var_value)
+    value = '{'
+    for var_name in params.keys():
+        value = value + '"' + str(var_name) + '":"' + str(params[var_name]) + '",'
+    value = value[:-1]
+    value = value + '}'
     return set_config(ssm_parameter_path, value)
 
 
