@@ -371,6 +371,8 @@ REQUEST_FILTER_CLASS = None
 REQUEST_FILTER_CLEAR_CLASS = None
 CIRCUIT_BREAKER = False
 
-
+PROVIDER="ONPREM"
+ONPREM_PROVIDER_CLASS_NAME="ONPREMProvider"
+ONPREM_PROVIDER_MODULE_NAME="halo_flask.providers.providers"
 
 print('The settings file has been loaded.')

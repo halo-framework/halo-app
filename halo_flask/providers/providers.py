@@ -17,10 +17,11 @@ from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem
 from .ssm.onprem_ssm import get_config as get_config_onprem
 from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from ..settingsx import settingsx
-from halo_flask.exceptions import ProviderError
+from halo_flask.exceptions import ProviderError,NoONPREMProviderClassError,NoONPREMProviderModuleError,ProviderInitError
 from halo_flask.classes import AbsBaseClass
 from halo_flask.logs import log_json
 from halo_flask.sys_util import SysUtil
+from halo_flask.reflect import Reflect
 
 settings = settingsx()
 #current_milli_time = lambda: int(round(time.time() * 1000))
@@ -66,7 +67,16 @@ class ONPREMProvider(AbsBaseClass):
         return uuid.uuid4().__str__()
 
 
-
+def get_onprem_provider():
+    if settings.ONPREM_PROVIDER_CLASS_NAME:
+        class_name = settings.ONPREM_PROVIDER_CLASS_NAME
+    else:
+        raise NoONPREMProviderClassError("no ONPREM_PROVIDER_CLASS_NAME")
+    if settings.ONPREM_PROVIDER_MODULE_NAME:
+        module = settings.ONPREM_PROVIDER_MODULE_NAME
+    else:
+        raise NoONPREMProviderModuleError("no ONPREM_PROVIDER_MODULE_NAME")
+    return Reflect.do_instantiate(module,class_name, None)
 
 provider = None
 def get_provider():
@@ -80,9 +90,13 @@ def get_provider():
             from halo_aws.providers.cloud.aws.aws import AWSProvider
             provider = AWSProvider()
         except Exception as e:
-            raise ProviderError("failed to get provider "+provider_name,e)
+            raise ProviderInitError("failed to get provider "+provider_name,e)
     else:
-        provider = ONPREMProvider()
+        if provider_name == ONPREM:
+            try:
+                provider = get_onprem_provider()
+            except Exception as e:
+                raise ProviderInitError("failed to get provider " + provider_name, e)
     return provider
 
 
@@ -129,6 +143,8 @@ def get_config(ssm_type):
         try:
             from .ssm.aws_ssm import get_config as get_config_cld
             return get_config_cld()
+        except ProviderInitError as e:
+            raise e
         except Exception as e:
             raise ProviderError("failed to get ssm type "+ssm_type,e)
     return get_config_onprem()

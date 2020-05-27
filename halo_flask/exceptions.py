@@ -15,8 +15,10 @@ class HaloException(Exception):
         self.data = data
 
     def __str__(self):
-        return str(
-            self.message)  # __str__() obviously expects a string to be returned, so make sure not to send any other data types
+        msg = str(self.message)
+        if self.original_exception:
+            msg = msg + " ,original:" +str(self.original_exception)
+        return msg  # __str__() obviously expects a string to be returned, so make sure not to send any other data types
 
 class HaloError(HaloException):
     __metaclass__ = ABCMeta
@@ -145,4 +147,13 @@ class NoSSMDefinedError(HaloError):
     pass
 
 class NotSSMTypeError(HaloError):
+    pass
+
+class NoONPREMProviderClassError(HaloError):
+    pass
+
+class NoONPREMProviderModuleError(HaloError):
+    pass
+
+class ProviderInitError(HaloError):
     pass

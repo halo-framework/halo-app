@@ -9,7 +9,7 @@ import time
 from environs import Env
 
 
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError, NoSSMRegionError
+from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError, NoSSMRegionError,ProviderInitError
 from halo_flask.classes import AbsBaseClass
 # from .logs import log_json
 from halo_flask.base_util import BaseUtil
@@ -42,6 +42,8 @@ def get_region():
     logger.debug("get_region")
     try:
         return Util.get_func_region()
+    except ProviderInitError as e:
+        raise e
     except HaloError:
         if settings.AWS_REGION:
             return settings.AWS_REGION
