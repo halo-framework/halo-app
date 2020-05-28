@@ -25,7 +25,7 @@ from ..settingsx import settingsx
 
 
 import flask_restful as restful
-from ..flask.mixinx import PerfMixinX,TestMixinX
+from ..flask.mixinx import PerfMixinX,TestMixinX,HealthMixinX
 from flask import request
 
 from halo_flask.const import HTTPChoice
@@ -290,6 +290,9 @@ class TestLinkX(Resource, TestMixinX, AbsBaseLinkX):
     pass
 
 class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
+    pass
+
+class HealthLinkX(Resource, HealthMixinX, AbsBaseLinkX):
     pass
 
 class GlobalService():

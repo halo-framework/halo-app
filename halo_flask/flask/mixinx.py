@@ -698,13 +698,22 @@ class PerfMixinX(AbsBaseMixinX):
         return 'db access: ' + str(total)
 
     def process_delete(self, request, vars):
-        return HaloResponse(request,{}, 500, [])
+        return HaloResponse(request,{"test":"good"}, 500, [])
+
+class HealthMixinX(AbsBaseMixinX):
+    now = None
+
+    def process_get(self, request, vars):
+        self.now = datetime.datetime.now()
+        return HaloResponse(request, {"msg": 'heslth page - timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}, 200, [])
+
 
 class TestMixinX(AbsApiMixinX):
     def do_operation_1(self, halo_request):  # basic maturity - single request
         logger.debug("do_operation_1")
+        self.now = datetime.datetime.now()
         # 1. get api definition to access the BANK API  - url + vars dict
-        back_json = {}
+        back_json = {"msg": 'test page - timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}
         dict = {'1': back_json}
         # 8. return json response
         return dict

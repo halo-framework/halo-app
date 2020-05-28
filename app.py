@@ -4,7 +4,7 @@ import os
 from flask import Flask
 from flask_restful import Api
 from halo_flask.apis import load_api_config
-from halo_flask.flask.viewsx import PerfLinkX,TestLinkX
+from halo_flask.flask.viewsx import PerfLinkX,TestLinkX,HealthLinkX
 from halo_flask.ssm import set_app_param_config,set_host_param_config,get_app_param_config
 from halo_flask.flask.viewsx import load_global_data
 from halo_flask.base_util import BaseUtil
@@ -31,6 +31,7 @@ def create_app(config_object='settings'):
             print("val=" + str(val))
         app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
+        app.add_url_rule("/health", view_func=HealthLinkX.as_view("Health"))
         if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']
