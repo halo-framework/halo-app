@@ -707,6 +707,16 @@ class HealthMixinX(AbsBaseMixinX):
         self.now = datetime.datetime.now()
         return HaloResponse(request, {"msg": 'heslth page - timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}, 200, [])
 
+class InfoMixinX(AbsBaseMixinX):
+    now = None
+
+    def process_get(self, request, vars):
+        self.now = datetime.datetime.now()
+        info = AbsBaseClass()
+        if settings.SERVICE_INFO_CLASS:
+            info = Reflect.instantiate(settings.SERVICE_INFO_CLASS,AbsBaseClass)
+        msg = info.toJSON()
+        return HaloResponse(request,{ {"data":msg}, 'timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}, 200, [])
 
 class TestMixinX(AbsApiMixinX):
     def do_operation_1(self, halo_request):  # basic maturity - single request
