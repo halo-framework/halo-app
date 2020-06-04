@@ -716,7 +716,7 @@ class InfoMixinX(AbsBaseMixinX):
         if settings.SERVICE_INFO_CLASS:
             info = Reflect.instantiate(settings.SERVICE_INFO_CLASS,AbsBaseClass)
         msg = info.toJSON()
-        return HaloResponse(request,{ {"data":msg}, 'timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}, 200, [])
+        return HaloResponse(request,{"data":msg, 'timing for process' : str(datetime.datetime.now() - self.now) ,"version": settings.VERSION}, 200, [])
 
 class TestMixinX(AbsApiMixinX):
     def do_operation_1(self, halo_request):  # basic maturity - single request
