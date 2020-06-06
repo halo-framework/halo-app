@@ -22,7 +22,7 @@ from ..request import HaloRequest
 from ..response import HaloResponse
 from ..settingsx import settingsx
 from ..logs import log_json
-from ..classes import AbsBaseClass
+from ..classes import AbsBaseClass,ServiceInfo
 from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
 from ..apis import AbsBaseApi
 from .filter import RequestFilter,FilterEvent
@@ -712,9 +712,9 @@ class InfoMixinX(AbsBaseMixinX):
 
     def process_get(self, request, vars):
         self.now = datetime.datetime.now()
-        info = AbsBaseClass()
+        info = ServiceInfo(settings.FUNC_NAME)
         if settings.SERVICE_INFO_CLASS:
-            info = Reflect.instantiate(settings.SERVICE_INFO_CLASS,AbsBaseClass)
+            info = Reflect.instantiate(settings.SERVICE_INFO_CLASS,ServiceInfo)
         msg = info.toJSON()
         return HaloResponse(request,{"data":msg, 'timing for process' : str(datetime.datetime.now() - self.now) ,"version": settings.VERSION}, 200, [])
 

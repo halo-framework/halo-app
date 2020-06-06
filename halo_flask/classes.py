@@ -20,9 +20,11 @@ logger = logging.getLogger(__name__)
 class AbsBaseClass(object):
     __metaclass__ = ABCMeta
 
+    ver = "1.0"
+
     @classmethod
     def version(self):
-        return "1.0"
+        return self.ver
 
     @abstractmethod
     def show(self):
@@ -44,5 +46,9 @@ class AbsBaseClass(object):
         return json.dumps(self.__dict__, default = myconverter)
 
 
+class ServiceInfo(AbsBaseClass):
+    name = None
 
+    def __init__(self, name):
+        self.name = name
 

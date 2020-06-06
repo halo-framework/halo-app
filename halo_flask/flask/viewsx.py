@@ -299,9 +299,12 @@ class InfoLinkX(Resource, InfoMixinX, AbsBaseLinkX):
     pass
 
 class GlobalService():
+
     data_map = None
+
     def __init__(self, data_map):
         self.data_map = data_map
+
     @abstractmethod
     def load_global_data(self):
         pass
