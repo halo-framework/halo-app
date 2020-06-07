@@ -271,14 +271,13 @@ class Util(AbsBaseClass):
     """
 
     @staticmethod
-    def json_data_response(data, status_code=200, headers=[]):
+    def json_data_response(data, status_code=200, headers={}):
         """
 
         :param data:
         :param status_code:
         :return:
         """
-        from flask import jsonify
         if status_code >= 300:
             return Response(data, status=status_code, headers=headers)
         return Response(json.dumps(data), status=status_code, headers=headers)

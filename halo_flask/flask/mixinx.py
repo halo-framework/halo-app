@@ -81,7 +81,7 @@ class AbsBaseMixinX(AbsBaseClass):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process get on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_post(self, request, vars):
@@ -94,7 +94,7 @@ class AbsBaseMixinX(AbsBaseClass):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process post on '  # + self.get_view_name()
         ret.code = 201
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_put(self, request, vars):
@@ -107,7 +107,7 @@ class AbsBaseMixinX(AbsBaseClass):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process put on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_patch(self, request, vars):
@@ -120,7 +120,7 @@ class AbsBaseMixinX(AbsBaseClass):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process patch on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_delete(self, request, vars):
@@ -133,7 +133,7 @@ class AbsBaseMixinX(AbsBaseClass):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process delete on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def check_author(self, request, vars, json):
@@ -196,7 +196,7 @@ class AbsApiMixinX(AbsBaseMixinX):
     def set_api_headers(self,halo_request, seq=None, dict=None):
         logger.debug("in set_api_headers ")
         if halo_request:
-            return []
+            return {}
         raise HaloException("no headers")
 
     def set_api_vars(self,halo_request, seq=None, dict=None):
@@ -689,7 +689,7 @@ class PerfMixinX(AbsBaseMixinX):
         total = datetime.datetime.now() - self.now
         # return HttpResponse('performance page: timing for process: ' + str(total) + " " + str(urls) + " " + ret + " " + settings.VERSION)
         return HaloResponse(request,{"msg": 'performance page: timing for process: ' + str(total) + " " + str(
-            urls) + " " + ret + " " + settings.VERSION}, 200, [])
+            urls) + " " + ret + " " + settings.VERSION}, 200, {})
 
 
     def process_db(self, request, vars):
@@ -698,14 +698,14 @@ class PerfMixinX(AbsBaseMixinX):
         return 'db access: ' + str(total)
 
     def process_delete(self, request, vars):
-        return HaloResponse(request,{"test":"good"}, 500, [])
+        return HaloResponse(request,{"test":"good"}, 500, {})
 
 class HealthMixinX(AbsBaseMixinX):
     now = None
 
     def process_get(self, request, vars):
         self.now = datetime.datetime.now()
-        return HaloResponse(request, {"msg": 'heslth page - timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}, 200, [])
+        return HaloResponse(request, {"msg": 'heslth page - timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}, 200, {})
 
 class InfoMixinX(AbsBaseMixinX):
     now = None
@@ -716,7 +716,8 @@ class InfoMixinX(AbsBaseMixinX):
         if settings.SERVICE_INFO_CLASS:
             info = Reflect.instantiate(settings.SERVICE_INFO_CLASS,ServiceInfo)
         msg = info.toJSON()
-        return HaloResponse(request,{"data":msg, 'timing for process' : str(datetime.datetime.now() - self.now) ,"version": settings.VERSION}, 200, [])
+        msg = json.loads(msg)
+        return HaloResponse(request,{"data":msg, 'timing for process' : str(datetime.datetime.now() - self.now) ,"version": settings.VERSION}, 200, {'mimetype':"application/json"})
 
 class TestMixinX(AbsApiMixinX):
     def do_operation_1(self, halo_request):  # basic maturity - single request

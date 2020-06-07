@@ -157,3 +157,6 @@ class NoONPREMProviderModuleError(HaloError):
 
 class ProviderInitError(HaloError):
     pass
+
+class NoSuchPathException(HaloException):
+    pass

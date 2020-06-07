@@ -162,7 +162,7 @@ class AbsBaseLinkX(MethodView):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process get on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_post(self,request, args):
@@ -176,7 +176,7 @@ class AbsBaseLinkX(MethodView):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process post on '  # + self.get_view_name()
         ret.code = 201
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_put(self,request, args):
@@ -190,7 +190,7 @@ class AbsBaseLinkX(MethodView):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process put on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_patch(self,request, args):
@@ -204,7 +204,7 @@ class AbsBaseLinkX(MethodView):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process patch on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def process_delete(self,request, args):
@@ -218,7 +218,7 @@ class AbsBaseLinkX(MethodView):
         ret = HaloResponse(HaloRequest(request))
         ret.payload = 'this is process delete on '  # + self.get_view_name()
         ret.code = 200
-        ret.headers = []
+        ret.headers = {}
         return ret
 
     def get_client_ip(self, request):

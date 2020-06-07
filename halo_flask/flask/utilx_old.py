@@ -271,7 +271,7 @@ class Util(AbsBaseClass):
     """
 
     @staticmethod
-    def json_data_response(data, status_code=200, headers=[]):
+    def json_data_response(data, status_code=200, headers={}):
         """
 
         :param data:
