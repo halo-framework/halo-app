@@ -169,6 +169,9 @@ class Saga(AbsBaseClass):
         for action_index in range(len(self.actions)):
             try:
                 logger.debug("execute=" + tname)
+                if tname == "Fail":
+                    logger.debug("Failed")
+                    break
                 kwargs['halo_context'] = halo_context
                 kwargs['payload'] = payloads[tname]
                 kwargs['exec_api'] = apis[tname]
