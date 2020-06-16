@@ -10,7 +10,7 @@ from abc import ABCMeta
 import requests
 
 from .classes import AbsBaseClass
-from .exceptions import MaxTryHttpException, ApiError,NoApiDefinitionError
+from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException
 from .logs import log_json
 from .reflect import Reflect
 from .settingsx import settingsx
@@ -20,13 +20,11 @@ from .const import HTTPChoice,SYSTEMChoice,LOGChoice
 
 settings = settingsx()
 
-# DRF
-
-
+Rest = "Rest"
+Soap = "Soap"
+Rpc = "Rpc"
 
 logger = logging.getLogger(__name__)
-
-
 
 from halo_flask.circuitbreaker import CircuitBreaker
 class MyCircuitBreaker(CircuitBreaker):
@@ -195,7 +193,34 @@ class AbsBaseApi(AbsBaseClass):
         self.url = strx
         return self.url
 
-    def process(self, method, url, timeout, data=None, headers=None,auth=None):
+    def process(self, method, url, timeout, data=None, headers=None,auth=None,type=Rest):
+        """
+
+        :param method:
+        :param url:
+        :param timeout:
+        :param data:
+        :param headers:
+        :return:
+        """
+        if type and type == Rest:
+            return self.processRest(method, url, timeout, data, headers,auth)
+        return self.processsOAP(method, url, timeout, data, headers, auth)
+
+    def processSoap(self, method, url, timeout, data=None, headers=None, auth=None):
+        from zeep import Client
+        try:
+            client = Client(url)
+            return self.exec_soap(client,timeout, data, headers, auth)
+        except ApiError as e:
+            msg = str(e)
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
+            raise e
+
+    def exec_soap(self,client,timeout, data=None, headers=None, auth=None):
+        raise HaloMethodNotImplementedException("exec_soap")
+
+    def processRest(self, method, url, timeout, data=None, headers=None,auth=None):
         """
 
         :param method:
