@@ -193,7 +193,7 @@ class AbsBaseApi(AbsBaseClass):
         self.url = strx
         return self.url
 
-    def process(self, method, url, timeout, data=None, headers=None,auth=None,type=Rest):
+    def process(self, method, url, timeout, data=None, headers=None,auth=None):
         """
 
         :param method:
@@ -203,7 +203,7 @@ class AbsBaseApi(AbsBaseClass):
         :param headers:
         :return:
         """
-        if type and type == Rest:
+        if self.api_type and self.api_type == Rest:
             return self.processRest(method, url, timeout, data, headers,auth)
         return self.processsOAP(method, url, timeout, data, headers, auth)
 
