@@ -1,10 +1,10 @@
 {
   "1": {
-    "name":"halo_flask.apis.CnnApi",
+    "name":"tests.tests_flask.CnnApi",
     "op":"GET"
   },
   "2":{
-    "name":"halo_flask.apis.GoogleApi",
+    "name":"tests.tests_flask.GoogleApi",
     "op":"GET"
   }
 }

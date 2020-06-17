@@ -16,7 +16,7 @@ from halo_flask.exceptions import ApiError
 from halo_flask.logs import log_json
 from halo_flask import saga
 from halo_flask.const import HTTPChoice
-from halo_flask.apis import CnnApi,GoogleApi,TstApi
+from halo_flask.apis import AbsBaseApi,ApiMngr#CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
 from halo_flask.request import HaloContext
 from halo_flask.apis import load_api_config
@@ -34,6 +34,35 @@ api = Api(app)
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 
+
+##################################### test #########################
+
+class CnnApi(AbsBaseApi):
+    name = 'Cnn'
+
+class GoogleApi(AbsBaseApi):
+    name = 'Google'
+
+class TstApi(AbsBaseApi):
+    name = 'Tst'
+
+class Tst2Api(AbsBaseApi):
+    name = 'Tst2'
+
+    def exec_soap(self,timeout, data=None, headers=None, auth=None):
+        ret = self.client.service.Method1(data["first"], data['second'])
+        print(str(ret))
+        return {"msg":ret}
+
+class Tst3Api(AbsBaseApi):
+    name = 'Tst3'
+
+class Tst4Api(AbsBaseApi):
+    name = 'Tst4'
+
+API_LIST = {"Google": 'tests.tests_flask.GoogleApi', "Cnn": "tests.tests_flask.CnnApi","Tst":"tests.tests_flask.TstApi","Tst2":"tests.tests_flask.Tst2Api","Tst3":"tests.tests_flask.Tst3Api","Tst4":"tests.tests_flask.Tst4Api"}
+
+ApiMngr.set_api_list(API_LIST)
 
 class A1(AbsApiMixinX):
 
@@ -329,10 +358,47 @@ class TestUserDetailTestCase(unittest.TestCase):
                 #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
                 eq_(e.__class__.__name__,"ApiError")
 
-    def test_8_api_request_returns_a_fail(self):
+    def test_80_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             api = CnnApi(Util.get_halo_context(request))
             api.url = api.url + "/lgkmlgkhm??l,mhb&&,g,hj "
+            timeout = Util.get_timeout(request)
+            try:
+                response = api.get(timeout)
+                assert False
+            except ApiError as e:
+                eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                #eq_(e.__class__.__name__,"CircuitBreakerError")
+
+    def test_81_api_request_soap_returns(self):
+        with app.test_request_context(method='GET', path='/'):
+            api = Tst2Api(Util.get_halo_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                data = {}
+                data['first'] = 'start'
+                data['second'] = 'end'
+                response = api.post(data,timeout)
+                print("response=" + str(response.payload))
+                eq_(response.payload['msg'],'Your input parameters are start and end')
+            except ApiError as e:
+                #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                eq_(response.payload['first'],'start')
+
+    def test_82_api_request_rpc_returns(self):
+        with app.test_request_context(method='GET', path='/?a=b'):
+            api = Tst3Api(Util.get_halo_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                response = api.get(timeout)
+                assert False
+            except ApiError as e:
+                eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                #eq_(e.__class__.__name__,"CircuitBreakerError")
+
+    def test_83_api_request_event_returns(self):
+        with app.test_request_context(method='GET', path='/?a=b'):
+            api = Tst4Api(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
@@ -701,3 +767,4 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
             "C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\env\\config\\flask_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
+

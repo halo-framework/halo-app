@@ -62,5 +62,19 @@
   "Tst1": {
     "url": "http://127.0.0.1",
     "type": "api"
+  },
+  "Tst2": {
+    "url": "http://www.soapclient.com/xml/soapresponder.wsdl",
+    "type": "api",
+    "protocol": "soap"
+  },
+  "Tst3": {
+    "url": "http://127.0.0.1",
+    "type": "api",
+    "protocol": "rpc"
+  },
+  "Tst4": {
+    "url": "http://127.0.0.1",
+    "type": "event"
   }
 }

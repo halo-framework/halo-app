@@ -20,9 +20,9 @@ from .const import HTTPChoice,SYSTEMChoice,LOGChoice
 
 settings = settingsx()
 
-Rest = "Rest"
-Soap = "Soap"
-Rpc = "Rpc"
+Rest = "rest"
+Soap = "soap"
+Rpc = "rpc"
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,10 @@ class MyCircuitBreaker(CircuitBreaker):
             RECOVERY_TIMEOUT = settings.HTTP_RETRY_SLEEP
         return RECOVERY_TIMEOUT
 
+class SoapResponse(AbsBaseClass):
+    payload = None
+    headers = None
+    status_code = None
 
 class AbsBaseApi(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -55,6 +59,7 @@ class AbsBaseApi(AbsBaseClass):
     op = HTTPChoice.get.value
     url = None
     api_type = None
+    protocol = None
     halo_context = None
     cb = MyCircuitBreaker()
 
@@ -62,7 +67,7 @@ class AbsBaseApi(AbsBaseClass):
         self.halo_context = halo_context
         if method:
             self.op = method
-        self.url, self.api_type = self.get_url_str()
+        self.url, self.api_type,self.protocol = self.get_url_str()
         if settings.CIRCUIT_BREAKER:
             self.cb._name = self.name
 
@@ -129,7 +134,13 @@ class AbsBaseApi(AbsBaseClass):
         api_config = settings.API_CONFIG
         logger.debug("api_config: " + str(api_config), extra=log_json(self.halo_context))
         if api_config and self.name in api_config:
-            return api_config[self.name]["url"], api_config[self.name]["type"]
+            url = api_config[self.name]["url"]
+            type = api_config[self.name]["type"]
+            protocol = "rest"
+            if "protocol" in api_config[self.name]:
+                protocol = api_config[self.name]["protocol"]
+            return url,type,protocol
+
         raise NoApiDefinitionError(self.name)
 
     def set_api_url(self, key, val):
@@ -203,24 +214,48 @@ class AbsBaseApi(AbsBaseClass):
         :param headers:
         :return:
         """
-        if self.api_type and self.api_type == Rest:
-            return self.processRest(method, url, timeout, data, headers,auth)
-        return self.processsOAP(method, url, timeout, data, headers, auth)
+        if self.protocol and self.protocol == Soap:
+            return self.process_soap(method, url, timeout, data, headers, auth)
+        if self.protocol and self.protocol == Rpc:
+            return self.process_soap(method, url, timeout, data, headers, auth)
+        return self.process_rest(method, url, timeout, data, headers,auth)
 
-    def processSoap(self, method, url, timeout, data=None, headers=None, auth=None):
+    def get_vars_from_url(self,url):
+        import urllib.parse as urlparse
+        from urllib.parse import parse_qs
+        parsed = urlparse.urlparse(url)
+        return parse_qs(parsed.query)
+
+    def process_soap(self, method, url, timeout, data=None, headers=None, auth=None):
         from zeep import Client
         try:
-            client = Client(url)
-            return self.exec_soap(client,timeout, data, headers, auth)
+            logger.debug(
+                "Api name: " + self.name + " method: " + str(method) + " url: " + str(url) + " headers:" + str(headers),
+                extra=log_json(self.halo_context))
+            now = datetime.datetime.now()
+            self.client = Client(url)
+            soap_ret = self.exec_soap(timeout, data, headers, auth)
+            total = datetime.datetime.now() - now
+            logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
+                                                                         {LOGChoice.type.value: SYSTEMChoice.api.value,
+                                                                          LOGChoice.milliseconds.value: int(
+                                                                              total.total_seconds() * 1000),
+                                                                          LOGChoice.url.value: str(url)}))
+            logger.debug("ret: " + str(soap_ret), extra=log_json(self.halo_context))
+            ret = SoapResponse()
+            ret.payload = soap_ret
+            ret.status_code = 200
+            ret.headers = {}
+            return ret
         except ApiError as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
             raise e
 
-    def exec_soap(self,client,timeout, data=None, headers=None, auth=None):
+    def exec_soap(self,timeout, data=None, headers=None, auth=None):
         raise HaloMethodNotImplementedException("exec_soap")
 
-    def processRest(self, method, url, timeout, data=None, headers=None,auth=None):
+    def process_rest(self, method, url, timeout, data=None, headers=None,auth=None):
         """
 
         :param method:
@@ -381,7 +416,7 @@ class ApiMngr(AbsBaseClass):
         return None
 
     def get_api_instance(self, class_name, *args):
-        return Reflect.do_instantiate(__name__,class_name,AbsBaseApi,self.halo_context)
+        return Reflect.instantiate(class_name,AbsBaseApi,self.halo_context)
 
 
 SSM_CONFIG = None
@@ -426,16 +461,3 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
 
 
 ##################################### test #########################
-
-class CnnApi(AbsBaseApi):
-    name = 'Cnn'
-
-class GoogleApi(AbsBaseApi):
-    name = 'Google'
-
-class TstApi(AbsBaseApi):
-    name = 'Tst'
-
-API_LIST = {"Google": 'GoogleApi', "Cnn": "CnnApi","Tst":"TstApi"}
-
-ApiMngr.set_api_list(API_LIST)
