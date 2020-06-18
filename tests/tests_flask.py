@@ -16,7 +16,7 @@ from halo_flask.exceptions import ApiError
 from halo_flask.logs import log_json
 from halo_flask import saga
 from halo_flask.const import HTTPChoice
-from halo_flask.apis import AbsBaseApi,ApiMngr#CnnApi,GoogleApi,TstApi
+from halo_flask.apis import AbsRestApi,AbsSoapApi,ApiMngr#CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
 from halo_flask.request import HaloContext
 from halo_flask.apis import load_api_config
@@ -37,16 +37,16 @@ from halo_flask.response import HaloResponse
 
 ##################################### test #########################
 
-class CnnApi(AbsBaseApi):
+class CnnApi(AbsRestApi):
     name = 'Cnn'
 
-class GoogleApi(AbsBaseApi):
+class GoogleApi(AbsRestApi):
     name = 'Google'
 
-class TstApi(AbsBaseApi):
+class TstApi(AbsRestApi):
     name = 'Tst'
 
-class Tst2Api(AbsBaseApi):
+class Tst2Api(AbsSoapApi):
     name = 'Tst2'
 
     def exec_soap(self,timeout, data=None, headers=None, auth=None):
@@ -54,15 +54,15 @@ class Tst2Api(AbsBaseApi):
         print(str(ret))
         return {"msg":ret}
 
-class Tst3Api(AbsBaseApi):
+class Tst3Api(AbsRestApi):
     name = 'Tst3'
 
-class Tst4Api(AbsBaseApi):
+class Tst4Api(AbsRestApi):
     name = 'Tst4'
 
-API_LIST = {"Google": 'tests.tests_flask.GoogleApi', "Cnn": "tests.tests_flask.CnnApi","Tst":"tests.tests_flask.TstApi","Tst2":"tests.tests_flask.Tst2Api","Tst3":"tests.tests_flask.Tst3Api","Tst4":"tests.tests_flask.Tst4Api"}
+#API_LIST = {"Google": 'tests.tests_flask.GoogleApi', "Cnn": "tests.tests_flask.CnnApi","Tst":"tests.tests_flask.TstApi","Tst2":"tests.tests_flask.Tst2Api","Tst3":"tests.tests_flask.Tst3Api","Tst4":"tests.tests_flask.Tst4Api"}
 
-ApiMngr.set_api_list(API_LIST)
+#ApiMngr.set_api_list(API_LIST)
 
 class A1(AbsApiMixinX):
 
@@ -70,7 +70,8 @@ class A1(AbsApiMixinX):
         if not foi:#not in seq
             if not halo_request.sub_func:#not in bq
                 if halo_request.request.method == HTTPChoice.delete.value:
-                    return CnnApi(halo_request.context,HTTPChoice.delete.value)
+                    return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
+                    #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
 
     def extract_json(self,halo_request, back_response, seq=None):
@@ -237,6 +238,19 @@ class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
     """
+    def start(self):
+        from halo_flask.const import LOC
+        app.config['ENV_TYPE'] = LOC
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['FUNC_NAME'] = "FUNC_NAME"
+        #app.config['API_CONFIG'] =
+        app.config['AWS_REGION'] = 'us-east-1'
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
+                                app.config['API_CONFIG'])
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
 
     def setUp(self):
         #self.url = 'http://127.0.0.1:8000/?abc=def'
@@ -253,6 +267,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.a3 = A3()
         self.p1 = P1()
         self.p2 = P2()
+        self.start()
 
     def test_000_start(self):
         from halo_flask.const import LOC
@@ -378,7 +393,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 data = {}
                 data['first'] = 'start'
                 data['second'] = 'end'
-                response = api.post(data,timeout)
+                response = api.run(data,timeout)
                 print("response=" + str(response.payload))
                 eq_(response.payload['msg'],'Your input parameters are start and end')
             except ApiError as e:
@@ -502,10 +517,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_991_load_saga(self):
-        with open("../env/config/saga.json") as f:
-            jsonx = json.load(f)
-        sagax = saga.load_saga("test", jsonx, app.config['SAGA_SCHEMA'])
-        eq_(len(sagax.actions), 6)
+        with app.test_request_context(method='POST', path="/"):
+            with open("../env/config/saga.json") as f:
+                jsonx = json.load(f)
+            sagax = saga.load_saga("test",HaloRequest(request), jsonx, app.config['SAGA_SCHEMA'])
+            eq_(len(sagax.actions), 6)
 
     def test_9920_run_saga(self):
         with app.test_request_context(method='POST', path="/"):
@@ -684,7 +700,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             config = get_app_config(app.config['SSM_TYPE'])
             t = config.get_param('halo_flask')
             print("t="+str(t))
-            eq_(str(t), '<Section: halo_flask>')#'<Section: DEFAULT>')
+            eq_(str(t), '<Section: FUNC_NAME>')#'<Section: DEFAULT>')
 
     def test_996_error_handler(self):
         with app.test_request_context(method='DELETE', path='/perf'):

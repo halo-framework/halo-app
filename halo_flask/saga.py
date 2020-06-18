@@ -269,7 +269,7 @@ class SagaBuilder(AbsBaseClass):
         return Saga(self.name, self.actions, start)
 
 
-def load_saga(name, jsonx, schema):
+def load_saga(name,halo_request, jsonx, schema):
     """
 
     :param name:
@@ -296,8 +296,8 @@ def load_saga(name, jsonx, schema):
                 result_path = jsonx["States"][state]["ResultPath"]
                 # action = lambda req_context, payload, api=api_instance_name: ApiMngr(req_context).get_api_instance(api).post(payload)
                 do_run = lambda key, x: {key: x}
-                action = lambda halo_context, payload, exec_api, results, result_path=result_path, api=api_instance_name: \
-                    do_run(result_path, exec_api(ApiMngr(halo_context).get_api_instance(api), results, payload))
+                action = lambda halo_context, payload, exec_api, results, result_path=result_path, api=api_name: \
+                    do_run(result_path, exec_api(ApiMngr.get_api_instance(api,halo_context), results, payload))
                 comps = []
                 if "Catch" in jsonx["States"][state]:
                     for item in jsonx["States"][state]["Catch"]:

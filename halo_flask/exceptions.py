@@ -160,3 +160,6 @@ class ProviderInitError(HaloError):
 
 class NoSuchPathException(HaloException):
     pass
+
+class MissingClassConfigError(HaloError):
+    pass

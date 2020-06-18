@@ -45,11 +45,13 @@
   },
   "Google": {
     "url": "http://www.yahoo.com",
-    "type": "api"
+    "type": "api",
+    "class": "tests.tests_flask.GoogleApi"
   },
   "Cnn": {
     "url": "http://www.cnn.com",
-    "type": "api"
+    "type": "api",
+    "class": "tests.tests_flask.CnnApi"
   },
   "Cnn1": {
     "url": "http://www.cnn.com",
@@ -57,16 +59,19 @@
   },
   "Tst": {
     "url": "http://www.cnddmfgkkn.com",
-    "type": "api"
+    "type": "api",
+    "class": "tests.tests_flask.TstApi"
   },
   "Tst1": {
     "url": "http://127.0.0.1",
-    "type": "api"
+    "type": "api",
+    "class": "tests.tests_flask.Tst1Api"
   },
   "Tst2": {
     "url": "http://www.soapclient.com/xml/soapresponder.wsdl",
     "type": "api",
-    "protocol": "soap"
+    "protocol": "soap",
+    "class": "tests.tests_flask.Tst2Api"
   },
   "Tst3": {
     "url": "http://127.0.0.1",

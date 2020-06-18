@@ -10,7 +10,7 @@ from abc import ABCMeta
 import requests
 
 from .classes import AbsBaseClass
-from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException
+from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError
 from .logs import log_json
 from .reflect import Reflect
 from .settingsx import settingsx
@@ -71,7 +71,27 @@ class AbsBaseApi(AbsBaseClass):
         if settings.CIRCUIT_BREAKER:
             self.cb._name = self.name
 
-    @cb
+    def get_url_str(self):
+        """
+
+        :return:
+        """
+        api_config = settings.API_CONFIG
+        logger.debug("api_config: " + str(api_config), extra=log_json(self.halo_context))
+        if api_config and self.name in api_config:
+            url = api_config[self.name]["url"]
+            type = api_config[self.name]["type"]
+            protocol = "rest"
+            if "protocol" in api_config[self.name]:
+                protocol = api_config[self.name]["protocol"]
+            return url,type,protocol
+
+        raise NoApiDefinitionError(self.name)
+
+class AbsRestApi(AbsBaseApi):
+    __metaclass__ = ABCMeta
+
+    @AbsBaseApi.cb
     def do_cb_request(self,method, url, timeout, data=None, headers=None, auth=None):
         print("do MyCircuitBreaker")
         return requests.request(method, url, data=data, headers=headers,
@@ -125,23 +145,6 @@ class AbsBaseApi(AbsBaseClass):
                              extra=log_json(halo_context))
                 continue
         raise MaxTryHttpException(msg)
-
-    def get_url_str(self):
-        """
-
-        :return:
-        """
-        api_config = settings.API_CONFIG
-        logger.debug("api_config: " + str(api_config), extra=log_json(self.halo_context))
-        if api_config and self.name in api_config:
-            url = api_config[self.name]["url"]
-            type = api_config[self.name]["type"]
-            protocol = "rest"
-            if "protocol" in api_config[self.name]:
-                protocol = api_config[self.name]["protocol"]
-            return url,type,protocol
-
-        raise NoApiDefinitionError(self.name)
 
     def set_api_url(self, key, val):
         """
@@ -214,8 +217,6 @@ class AbsBaseApi(AbsBaseClass):
         :param headers:
         :return:
         """
-        if self.protocol and self.protocol == Soap:
-            return self.process_soap(method, url, timeout, data, headers, auth)
         if self.protocol and self.protocol == Rpc:
             return self.process_soap(method, url, timeout, data, headers, auth)
         return self.process_rest(method, url, timeout, data, headers,auth)
@@ -225,35 +226,6 @@ class AbsBaseApi(AbsBaseClass):
         from urllib.parse import parse_qs
         parsed = urlparse.urlparse(url)
         return parse_qs(parsed.query)
-
-    def process_soap(self, method, url, timeout, data=None, headers=None, auth=None):
-        from zeep import Client
-        try:
-            logger.debug(
-                "Api name: " + self.name + " method: " + str(method) + " url: " + str(url) + " headers:" + str(headers),
-                extra=log_json(self.halo_context))
-            now = datetime.datetime.now()
-            self.client = Client(url)
-            soap_ret = self.exec_soap(timeout, data, headers, auth)
-            total = datetime.datetime.now() - now
-            logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
-                                                                         {LOGChoice.type.value: SYSTEMChoice.api.value,
-                                                                          LOGChoice.milliseconds.value: int(
-                                                                              total.total_seconds() * 1000),
-                                                                          LOGChoice.url.value: str(url)}))
-            logger.debug("ret: " + str(soap_ret), extra=log_json(self.halo_context))
-            ret = SoapResponse()
-            ret.payload = soap_ret
-            ret.status_code = 200
-            ret.headers = {}
-            return ret
-        except ApiError as e:
-            msg = str(e)
-            logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            raise e
-
-    def exec_soap(self,timeout, data=None, headers=None, auth=None):
-        raise HaloMethodNotImplementedException("exec_soap")
 
     def process_rest(self, method, url, timeout, data=None, headers=None,auth=None):
         """
@@ -384,16 +356,61 @@ class AbsBaseApi(AbsBaseClass):
             data = request.data
         return self.process(verb, self.url, Util.get_timeout(request), data=data, headers=headers,auth=auth)
 
+class AbsSoapApi(AbsBaseApi):
+    __metaclass__ = ABCMeta
+
+    def run(self, data, timeout, headers=None,auth=None):
+        """
+
+        :param data:
+        :param timeout:
+        :param headers:
+        :return:
+        """
+        if headers is None:
+            headers = headers
+        return self.process(self.url, timeout, data=data, headers=headers,auth=auth)
+
+    def process(self, url, timeout, data=None, headers=None, auth=None):
+        from zeep import Client
+        try:
+            logger.debug(
+                "Api name: " + self.name  + " url: " + str(url) + " headers:" + str(headers),
+                extra=log_json(self.halo_context))
+            now = datetime.datetime.now()
+            self.client = Client(url)
+            soap_ret = self.exec_soap(timeout, data, headers, auth)
+            total = datetime.datetime.now() - now
+            logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
+                                                                         {LOGChoice.type.value: SYSTEMChoice.api.value,
+                                                                          LOGChoice.milliseconds.value: int(
+                                                                              total.total_seconds() * 1000),
+                                                                          LOGChoice.url.value: str(url)}))
+            logger.debug("ret: " + str(soap_ret), extra=log_json(self.halo_context))
+            ret = SoapResponse()
+            ret.payload = soap_ret
+            ret.status_code = 200
+            ret.headers = {}
+            return ret
+        except ApiError as e:
+            msg = str(e)
+            logger.debug("error: " + msg, extra=log_json(self.halo_context))
+            raise e
+
+    def exec_soap(self,timeout, data=None, headers=None, auth=None):
+        raise HaloMethodNotImplementedException("exec_soap")
+
+
+
 class ApiMngr(AbsBaseClass):
-    API_LIST = []
 
+    global HALO_API_LIST
 
-    def __init__(self, halo_context):
+    def __init__1(self, halo_context):
         logger.debug("ApiMngr=" + str(halo_context))
         self.halo_context = halo_context
 
-    @staticmethod
-    def set_api_list(list):
+    def set_api_list1(self,list):
         """
 
         :param name:
@@ -401,9 +418,8 @@ class ApiMngr(AbsBaseClass):
         """
         logger.debug("set_api_list")
         if list:
-            ApiMngr.API_LIST = list
+            self.API_LIST = list
 
-    @staticmethod
     def get_api(name):
         """
 
@@ -411,17 +427,34 @@ class ApiMngr(AbsBaseClass):
         :return:
         """
         logger.debug("get_api=" + name)
-        if name in ApiMngr.API_LIST:
-            return ApiMngr.API_LIST[name]
-        return None
+        if name in HALO_API_LIST:
+            class_name = HALO_API_LIST[name]
+            if class_name:
+                return class_name
+            #else:
 
-    def get_api_instance(self, class_name, *args):
+        raise NoApiDefinitionError(name)
+
+    def get_api_instance(name, *args):
+        if name in HALO_API_LIST:
+            class_name = HALO_API_LIST[name]
+            if class_name:
+                return Reflect.instantiate(class_name, AbsBaseApi, *args)
+        raise NoApiDefinitionError(name)
+
+
+    def get_api_instance2(name, *args):
+        class_name = HALO_API_LIST[name]
+        return Reflect.instantiate(class_name,AbsBaseApi,*args)
+
+    def get_api_instance1(self, class_name, *args):
         return Reflect.instantiate(class_name,AbsBaseApi,self.halo_context)
 
-
+HALO_API_LIST = None
 SSM_CONFIG = None
 SSM_APP_CONFIG = None
 def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
+    global HALO_API_LIST
     global SSM_CONFIG
     global SSM_APP_CONFIG
 
@@ -455,8 +488,57 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
                 if "service://" + item in new_url:
                     API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
     logger.debug(str(API_CONFIG))
+    api_list = {}
+    for key in API_CONFIG:
+        if "class" in API_CONFIG[key]:
+            class_name = API_CONFIG[key]["class"]
+            api_list[key] = class_name
+        #else:
+            #raise MissingClassConfigError(key)
+    HALO_API_LIST = api_list
+    #ApiMngr.instance().set_api_list(api_list)
 
+"""
+def fullname(o):
+  # o.__module__ + "." + o.__class__.__qualname__ is an example in
+  # this context of H.L. Mencken's "neat, plausible, and wrong."
+  # Python makes no guarantees as to whether the __module__ special
+  # attribute is defined, so we take a more circumspect approach.
+  # Alas, the module name is explicitly excluded from __qualname__
+  # in Python 3.
 
+  module = o.__class__.__module__
+  if module is None or module == str.__class__.__module__:
+    return o.__class__.__name__  # Avoid reporting __builtin__
+  else:
+    return module + '.' + o.__class__.__name__
+
+def get_rest_api_instance(class_name,*args):
+    ApiClass = create_api_class(class_name,(AbsRestApi, ),None)
+    instance = ApiClass(*args)
+    return instance
+
+def get_rest_api_class(name,attributes=None):
+    ApiClass = create_api_class(name,(AbsRestApi, ),attributes)
+    return "halo_flask.apis."+ApiClass.__name__
+
+def create_api_class(name,bases,attributes=None):
+    ApiClass = type(name+"Api", bases, {
+        # constructor
+        #"__init__": constructor,
+
+        # data members
+        #"string_attribute": "Geeks 4 geeks !",
+        #"int_attribute": 1706256,
+        "name" : name,
+
+        # member functions
+        #"func_arg": displayMethod,
+        #"class_func": classMethod
+    })
+    return ApiClass
+
+"""
 
 
 

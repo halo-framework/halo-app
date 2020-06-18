@@ -24,7 +24,7 @@ from ..settingsx import settingsx
 from ..logs import log_json
 from ..classes import AbsBaseClass,ServiceInfo
 from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
-from ..apis import AbsBaseApi
+from ..apis import AbsBaseApi,ApiMngr
 from .filter import RequestFilter,FilterEvent
 from halo_flask.saga import Saga, SagaRollBack, load_saga
 from halo_flask.models import AbsDbMixin
@@ -188,7 +188,9 @@ class AbsApiMixinX(AbsBaseMixinX):
         if foi:
             foi_name = foi["name"]
             foi_op = foi["op"]
-            instance = Reflect.instantiate(foi_name, AbsBaseApi, halo_request.context)
+            #api = ApiMngr.get_api(foi_name)
+            #instance = Reflect.instantiate(api, AbsBaseApi, halo_request.context)
+            instance = ApiMngr.get_api_instance(foi_name, halo_request.context)
             instance.op = foi_op
             return instance
         raise NoApiClassException("api class not defined")
@@ -396,7 +398,7 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_3_bq(self, halo_request,sub_func):  # high maturity - saga transactions
         logger.debug("do_operation_3_bq")
-        sagax = load_saga(self.business_event.EVENT_NAME, self.business_event.saga, settings.SAGA_SCHEMA)
+        sagax = load_saga(self.business_event.EVENT_NAME,halo_request, self.business_event.saga, settings.SAGA_SCHEMA)
         payloads = {}
         apis = {}
         counter = 1
@@ -545,7 +547,7 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_3(self, halo_request):  # high maturity - saga transactions
         logger.debug("do_operation_3")
-        sagax = load_saga("test", self.business_event.saga, settings.SAGA_SCHEMA)
+        sagax = load_saga("test",halo_request, self.business_event.saga, settings.SAGA_SCHEMA)
         payloads = {}
         apis = {}
         counter = 1

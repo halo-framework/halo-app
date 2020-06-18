@@ -1,10 +1,10 @@
 {
   "1": {
-    "name":"tests.tests_flask.CnnApi",
+    "name":"Cnn",
     "op":"GET"
   },
   "2":{
-    "name":"tests.tests_flask.GoogleApi",
+    "name":"Google",
     "op":"GET"
   }
 }
