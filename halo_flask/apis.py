@@ -217,8 +217,6 @@ class AbsRestApi(AbsBaseApi):
         :param headers:
         :return:
         """
-        if self.protocol and self.protocol == Rpc:
-            return self.process_soap(method, url, timeout, data, headers, auth)
         return self.process_rest(method, url, timeout, data, headers,auth)
 
     def get_vars_from_url(self,url):
@@ -359,7 +357,18 @@ class AbsRestApi(AbsBaseApi):
 class AbsSoapApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
-    def run(self, data, timeout, headers=None,auth=None):
+    @AbsBaseApi.cb
+    def do_cb_request(self,method, timeout, data=None, headers=None, auth=None):
+        print("do MyCircuitBreaker")
+        return self.exec_soap(method,timeout, data, headers, auth)
+
+    def do_request(self,method,timeout, data=None, headers=None, auth=None):
+        if settings.CIRCUIT_BREAKER:
+            return self.do_cb_request(method,timeout, data, headers, auth)
+        return self.exec_soap(method,timeout, data, headers, auth)
+
+
+    def run(self,method, timeout,data ,headers=None,auth=None):
         """
 
         :param data:
@@ -369,9 +378,9 @@ class AbsSoapApi(AbsBaseApi):
         """
         if headers is None:
             headers = headers
-        return self.process(self.url, timeout, data=data, headers=headers,auth=auth)
+        return self.process(self.url, method,timeout, data=data, headers=headers,auth=auth)
 
-    def process(self, url, timeout, data=None, headers=None, auth=None):
+    def process(self, url, method,timeout, data=None, headers=None, auth=None):
         from zeep import Client
         try:
             logger.debug(
@@ -379,7 +388,8 @@ class AbsSoapApi(AbsBaseApi):
                 extra=log_json(self.halo_context))
             now = datetime.datetime.now()
             self.client = Client(url)
-            soap_ret = self.exec_soap(timeout, data, headers, auth)
+            soap_ret = self.do_request(method,timeout, data, headers, auth)
+            #soap_ret = self.exec_soap(timeout, data, headers, auth)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.api.value,

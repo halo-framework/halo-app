@@ -49,8 +49,9 @@ class TstApi(AbsRestApi):
 class Tst2Api(AbsSoapApi):
     name = 'Tst2'
 
-    def exec_soap(self,timeout, data=None, headers=None, auth=None):
-        ret = self.client.service.Method1(data["first"], data['second'])
+    def exec_soap(self,method,timeout, data=None, headers=None, auth=None):
+        if method == 'method1':
+            ret = self.client.service.Method1(data["first"], data['second'])
         print(str(ret))
         return {"msg":ret}
 
@@ -385,7 +386,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 
-    def test_81_api_request_soap_returns(self):
+    def test_810_api_request_soap_returns(self):
         with app.test_request_context(method='GET', path='/'):
             api = Tst2Api(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
@@ -393,7 +394,23 @@ class TestUserDetailTestCase(unittest.TestCase):
                 data = {}
                 data['first'] = 'start'
                 data['second'] = 'end'
-                response = api.run(data,timeout)
+                response = api.run('method1',timeout,data)
+                print("response=" + str(response.payload))
+                eq_(response.payload['msg'],'Your input parameters are start and end')
+            except ApiError as e:
+                #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                eq_(response.payload['first'],'start')
+
+    def test_811_api_request_soap_returns(self):
+        app.config['CIRCUIT_BREAKER'] = True
+        with app.test_request_context(method='GET', path='/'):
+            api = Tst2Api(Util.get_halo_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                data = {}
+                data['first'] = 'start'
+                data['second'] = 'end'
+                response = api.run('method1',timeout,data)
                 print("response=" + str(response.payload))
                 eq_(response.payload['msg'],'Your input parameters are start and end')
             except ApiError as e:
