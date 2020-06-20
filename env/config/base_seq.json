@@ -1,10 +1,12 @@
 {
   "1": {
     "name":"Cnn",
-    "op":"GET"
+    "op":"GET",
+    "conn":"sync"
   },
   "2":{
     "name":"Google",
-    "op":"GET"
+    "op":"GET",
+    "conn":"sync"
   }
 }

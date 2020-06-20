@@ -24,5 +24,10 @@
     "type": "api",
     "protocol": "soap",
     "class": "tests.tests_flask.Tst2Api"
+  },
+  "Outbound": {
+    "url": "https://base_url/$ID",
+    "type": "api",
+    "class": "tests.tests_bian.Outbound"
   }
 }
