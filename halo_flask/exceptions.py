@@ -163,3 +163,6 @@ class NoSuchPathException(HaloException):
 
 class MissingClassConfigError(HaloError):
     pass
+
+class IllegalMethodException(HaloException):
+    pass

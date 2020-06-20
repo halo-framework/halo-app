@@ -10,7 +10,7 @@ from abc import ABCMeta
 import requests
 
 from .classes import AbsBaseClass
-from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError
+from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError,IllegalMethodException
 from .logs import log_json
 from .reflect import Reflect
 from .settingsx import settingsx
@@ -388,29 +388,30 @@ class AbsSoapApi(AbsBaseApi):
                 extra=log_json(self.halo_context))
             now = datetime.datetime.now()
             self.client = Client(url)
-            soap_ret = self.do_request(method,timeout, data, headers, auth)
-            #soap_ret = self.exec_soap(timeout, data, headers, auth)
+            soap_response = self.do_request(method,timeout, data, headers, auth)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.api.value,
                                                                           LOGChoice.milliseconds.value: int(
                                                                               total.total_seconds() * 1000),
                                                                           LOGChoice.url.value: str(url)}))
-            logger.debug("ret: " + str(soap_ret), extra=log_json(self.halo_context))
-            ret = SoapResponse()
-            ret.payload = soap_ret
-            ret.status_code = 200
-            ret.headers = {}
-            return ret
+            logger.debug("ret: " + str(soap_response), extra=log_json(self.halo_context))
+            return soap_response
         except ApiError as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
             raise e
 
-    def exec_soap(self,timeout, data=None, headers=None, auth=None):
-        raise HaloMethodNotImplementedException("exec_soap")
-
-
+    def exec_soap(self,method,timeout, data=None, headers=None, auth=None):
+        if method is None:
+            raise IllegalMethodException("missing method value")
+        logger.debug("method="+str(method))
+        try:
+            soap_response = getattr(self, 'do_%s' % method)(timeout, data, headers, auth)
+            if type(soap_response) == SoapResponse:
+                return soap_response
+        except AttributeError as ex:
+            raise HaloMethodNotImplementedException("function for "+str(method),ex)
 
 class ApiMngr(AbsBaseClass):
 

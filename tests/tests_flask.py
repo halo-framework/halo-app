@@ -12,11 +12,11 @@ from halo_flask.base_util import BaseUtil
 from halo_flask.flask.utilx import Util, status
 from halo_flask.flask.mixinx import AbsApiMixinX,PerfMixinX
 from halo_flask.flask.viewsx import PerfLinkX
-from halo_flask.exceptions import ApiError
+from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_flask.logs import log_json
 from halo_flask import saga
 from halo_flask.const import HTTPChoice
-from halo_flask.apis import AbsRestApi,AbsSoapApi,ApiMngr#CnnApi,GoogleApi,TstApi
+from halo_flask.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
 from halo_flask.request import HaloContext
 from halo_flask.apis import load_api_config
@@ -49,11 +49,14 @@ class TstApi(AbsRestApi):
 class Tst2Api(AbsSoapApi):
     name = 'Tst2'
 
-    def exec_soap(self,method,timeout, data=None, headers=None, auth=None):
-        if method == 'method1':
-            ret = self.client.service.Method1(data["first"], data['second'])
-        print(str(ret))
-        return {"msg":ret}
+    def do_method1(self,timeout, data=None, headers=None, auth=None):
+        soap_ret = self.client.service.Method1(data["first"], data['second'])
+        print(str(soap_ret))
+        response = SoapResponse()
+        response.payload = {"msg":soap_ret}
+        response.status_code = 200
+        response.headers = {}
+        return response
 
 class Tst3Api(AbsRestApi):
     name = 'Tst3'
@@ -416,6 +419,22 @@ class TestUserDetailTestCase(unittest.TestCase):
             except ApiError as e:
                 #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 eq_(response.payload['first'],'start')
+
+    def test_812_api_request_soap_returns(self):
+        app.config['CIRCUIT_BREAKER'] = True
+        with app.test_request_context(method='GET', path='/'):
+            api = Tst2Api(Util.get_halo_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                data = {}
+                data['first'] = 'start'
+                data['second'] = 'end'
+                response = api.run('method2',timeout,data)
+                print("response=" + str(response.payload))
+                eq_(response.payload['msg'],'Your input parameters are start and end')
+            except HaloMethodNotImplementedException as e:
+                #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                eq_(e.__class__.__name__,"HaloMethodNotImplementedException")
 
     def test_82_api_request_rpc_returns(self):
         with app.test_request_context(method='GET', path='/?a=b'):
