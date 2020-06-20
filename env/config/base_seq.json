@@ -7,6 +7,6 @@
   "2":{
     "name":"Google",
     "op":"GET",
-    "conn":"sync"
+    "conn":"async"
   }
 }
