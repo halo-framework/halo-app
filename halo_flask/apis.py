@@ -503,8 +503,8 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
         if "class" in API_CONFIG[key]:
             class_name = API_CONFIG[key]["class"]
             api_list[key] = class_name
-        #else:
-            #raise MissingClassConfigError(key)
+        else:
+            raise MissingClassConfigError(key)
     HALO_API_LIST = api_list
     #ApiMngr.instance().set_api_list(api_list)
 
