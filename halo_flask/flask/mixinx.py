@@ -159,8 +159,8 @@ class AbsBaseMixinX(AbsBaseClass):
         return True, None
 
     @abstractmethod
-    def get_dbaccess(self, halo_request):
-        return Reflect.instantiate(settings.DBACCESS_CLASS, AbsDbMixin, halo_request.context)
+    def get_dbaccess(self, halo_request,read):
+        return Reflect.instantiate(settings.DBACCESS_CLASS, AbsDbMixin, halo_request.context,read)
 
 class AbsApiMixinX(AbsBaseMixinX):
     __metaclass__ = ABCMeta

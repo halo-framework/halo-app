@@ -64,6 +64,12 @@ class Tst3Api(AbsRestApi):
 class Tst4Api(AbsRestApi):
     name = 'Tst4'
 
+from halo_flask.flask.mixinx import AbsBaseMixinX,AbsApiMixinX,AbsDbMixin
+class DbTest(AbsApiMixinX):
+    pass
+class DbMixin(AbsDbMixin):
+    pass
+
 #API_LIST = {"Google": 'tests.tests_flask.GoogleApi', "Cnn": "tests.tests_flask.CnnApi","Tst":"tests.tests_flask.TstApi","Tst2":"tests.tests_flask.Tst2Api","Tst3":"tests.tests_flask.Tst3Api","Tst4":"tests.tests_flask.Tst4Api"}
 
 #ApiMngr.set_api_list(API_LIST)
@@ -820,3 +826,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             "C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\env\\config\\flask_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
 
+    def test_9997_db(self):
+        app.config['DBACCESS_CLASS'] = 'tests_flask.DbMixin'
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            db = DbTest()
+            req = HaloRequest(request)
+            db.get_dbaccess(req,True)

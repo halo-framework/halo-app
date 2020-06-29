@@ -13,11 +13,11 @@ from .settingsx import settingsx
 
 settings = settingsx()
 
-
 logger = logging.getLogger(__name__)
 
 ver = settings.DB_VER
-uri = settings.DB_URL
+read_uri = settings.DB_READ_URL
+write_uri = settings.DB_WRITE_URL
 tbl = False
 page_size = settings.PAGE_SIZE
 
@@ -27,9 +27,16 @@ class AbsDbMixin(AbsBaseClass):
     # intercept db calls
 
     halo_context = None
+    read = None
+    uri = None
 
-    def __init__(self, halo_context):
+    def __init__(self, halo_context,read):
         self.halo_context = halo_context
+        self.read = read
+        if read:
+            self.uri = read_uri
+        else:
+            self.uri = write_uri
 
     def __getattribute__(self, name):
         attr = object.__getattribute__(self, name)
