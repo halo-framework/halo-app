@@ -832,3 +832,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             db = DbTest()
             req = HaloRequest(request)
             db.get_dbaccess(req,True)
+
+    def test_9998_db(self):
+        app.config['DBACCESS_CLASS'] = 'tests_flask.DbMixin'
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            db = DbTest()
+            req = HaloRequest(request)
+            db.get_dbaccess(req,False)

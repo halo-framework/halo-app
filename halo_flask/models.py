@@ -37,6 +37,7 @@ class AbsDbMixin(AbsBaseClass):
             self.uri = read_uri
         else:
             self.uri = write_uri
+        logger.info("uri:"+str(self.uri))
 
     def __getattribute__(self, name):
         attr = object.__getattribute__(self, name)
