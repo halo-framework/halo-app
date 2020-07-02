@@ -5,10 +5,11 @@ import datetime
 import importlib
 import logging
 import time
+import json
 from abc import ABCMeta
-
+from flask import jsonify
 import requests
-
+from halo_flask.providers.providers import get_provider,ProviderError
 from .classes import AbsBaseClass
 from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError,IllegalMethodException
 from .logs import log_json
@@ -88,6 +89,27 @@ class AbsBaseApi(AbsBaseClass):
 
         raise NoApiDefinitionError(self.name)
 
+    def provider_invoke(self,halo_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
+
+        try:
+            service_name = self.name #self.target_service_name[settings.ENV_TYPE]
+            logger.debug("send invoke to target_service:" + service_name, extra=log_json(halo_context))
+            x = str(data.decode('utf8').replace("'", '"'))
+            if x != "":
+                datax = json.loads(x)
+                datay = jsonify(datax)
+            else:
+                datay = ""
+            messageDict = {"method":method,"url":url,"data":datay,"headers":headers,"auth":auth}
+            version = '$LATEST'
+            #@todo add version to config api
+            ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=version)
+            return ret
+        except ProviderError as e:
+            logger.error("Unexpected Provider Error", extra=log_json(halo_context, messageDict, e))
+            raise e
+
+
 class AbsRestApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
@@ -115,6 +137,9 @@ class AbsRestApi(AbsBaseApi):
         :param headers:
         :return:
         """
+
+        if url and url.startswith('service://'):
+            return self.provider_invoke(halo_context, method, url, api_type, timeout, data, headers, auth)
 
         msg = "Max Try for url: ("+str(settings.HTTP_MAX_RETRY)+") " + str(url)
         for i in range(0, settings.HTTP_MAX_RETRY):
@@ -368,7 +393,7 @@ class AbsSoapApi(AbsBaseApi):
         return self.exec_soap(method,timeout, data, headers, auth)
 
 
-    def run(self,method, timeout,data ,headers=None,auth=None):
+    def run(self,timeout,data ,headers=None,auth=None):
         """
 
         :param data:
@@ -378,9 +403,9 @@ class AbsSoapApi(AbsBaseApi):
         """
         if headers is None:
             headers = headers
-        return self.process(self.url, method,timeout, data=data, headers=headers,auth=auth)
+        return self.process(self.op,self.url,timeout, data=data, headers=headers,auth=auth)
 
-    def process(self, url, method,timeout, data=None, headers=None, auth=None):
+    def process(self,method,url, timeout, data=None, headers=None, auth=None):
         from zeep import Client
         try:
             logger.debug(

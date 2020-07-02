@@ -1,6 +1,6 @@
 {
   "Google": {
-    "url": "http://www.yahoo.com",
+    "url": "service://www.yahoo.com",
     "type": "api",
     "class": "tests.tests_flask.GoogleApi"
   },

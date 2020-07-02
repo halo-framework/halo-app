@@ -50,6 +50,8 @@ class Tst2Api(AbsSoapApi):
     name = 'Tst2'
 
     def do_method1(self,timeout, data=None, headers=None, auth=None):
+        if not data:
+            data = {"first":"one",'second':"two"}
         soap_ret = self.client.service.Method1(data["first"], data['second'])
         print(str(soap_ret))
         response = SoapResponse()
@@ -130,6 +132,16 @@ class A3(AbsApiMixinX):
         request_filter.do_filter(halo_request, halo_response)
 
 class A2(Resource, A1, AbsBaseLinkX):
+
+    def set_api_data(self,halo_request, seq=None, dict=None):
+        if halo_request.request.method == HTTPChoice.post.value:
+            if seq == '1':
+                return {}
+            if seq == '3':
+                return {}
+        ret = super(A2,self).set_api_data(halo_request, seq, dict)
+        return ret
+
     def set_api_headers_deposit(self,halo_request, seq=None, dict=None):
         return super(A2,self).set_api_headers(halo_request, seq, dict)
 
@@ -140,7 +152,8 @@ class A2(Resource, A1, AbsBaseLinkX):
         return super(A2,self).set_api_auth(halo_request, seq, dict)
 
     def set_api_data_deposit(self,halo_request, seq=None, dict=None):
-        return super(A2,self).set_api_data(halo_request, seq, dict)
+        ret = super(A2,self).set_api_data(halo_request, seq, dict)
+        return ret
 
     def execute_api_deposit(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         return super(A2,self).execute_api(halo_request, back_api, back_vars, back_headers, back_auth, back_data, seq, dict)
@@ -252,6 +265,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         from halo_flask.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
+        app.config['PROVIDER'] = "AWS"
         app.config['FUNC_NAME'] = "FUNC_NAME"
         #app.config['API_CONFIG'] =
         app.config['AWS_REGION'] = 'us-east-1'
@@ -478,10 +492,20 @@ class TestUserDetailTestCase(unittest.TestCase):
             print("event response " + str(response))
             eq_(response, 'sent event')
 
+    def test_900_event_filter(self):
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['AWS_REGION'] = 'us-east-1'
+        app.config['PROVIDER'] = "AWS"
+        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        with app.test_request_context(method='POST', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
+            response = self.a2.process_post(request,{})
+            eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
+
     def test_901_event_filter(self):
         app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
+            eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
         app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'

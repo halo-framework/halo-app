@@ -22,8 +22,8 @@
         "type": "seq"
       },
       "POST": {
-        "url": "tst_saga.json",
-        "type": "saga"
+        "url": "base_seq.json",
+        "type": "seq"
       },
       "PUT": {
         "url": "saga_rlbk.json",
