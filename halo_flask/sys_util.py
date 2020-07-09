@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 from halo_flask.classes import AbsBaseClass
 from halo_flask.const import LOC

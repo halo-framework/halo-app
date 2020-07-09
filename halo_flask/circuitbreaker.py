@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 # -*- coding: utf-8 -*-
 #
 # from project CircuitBreaker : https://github.com/fabfuel/circuitbreaker

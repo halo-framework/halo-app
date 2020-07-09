@@ -9,7 +9,8 @@ from flask_restful import Api
 from nose.tools import eq_
 from jsonpath_ng import jsonpath, parse
 from halo_flask.base_util import BaseUtil
-from halo_flask.flask.utilx import Util, status
+from halo_flask.flask.utilx import Util
+from halo_flask.errors import status
 from halo_flask.flask.mixinx import AbsApiMixinX,PerfMixinX
 from halo_flask.flask.viewsx import PerfLinkX
 from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
@@ -72,7 +73,7 @@ class DbTest(AbsApiMixinX):
 class DbMixin(AbsDbMixin):
     pass
 
-#API_LIST = {"Google": 'tests.tests_flask.GoogleApi', "Cnn": "tests.tests_flask.CnnApi","Tst":"tests.tests_flask.TstApi","Tst2":"tests.tests_flask.Tst2Api","Tst3":"tests.tests_flask.Tst3Api","Tst4":"tests.tests_flask.Tst4Api"}
+#API_LIST = {"Google": 'tests.test_flask.GoogleApi', "Cnn": "tests.test_flask.CnnApi","Tst":"tests.test_flask.TstApi","Tst2":"tests.test_flask.Tst2Api","Tst3":"tests.test_flask.Tst3Api","Tst4":"tests.test_flask.Tst4Api"}
 
 #ApiMngr.set_api_list(API_LIST)
 
@@ -356,7 +357,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             response = self.a1.process_put(request, {})
-            eq_(response.payload, {'1': {'tst_put': 'good1'}, '2': {'tst_put': 'good2'}})
+            eq_(response.payload, {'1': {'tst_put': 'good1'}, '2': {'tst_put': 'good2'}, '3': None})
 
     def test_4_post_request_returns_a_given_string(self):
         with app.test_request_context(method='POST', path='/?abc=def'):
@@ -411,13 +412,13 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_810_api_request_soap_returns(self):
         with app.test_request_context(method='GET', path='/'):
-            api = Tst2Api(Util.get_halo_context(request))
+            api = Tst2Api(Util.get_halo_context(request),method='method1')
             timeout = Util.get_timeout(request)
             try:
                 data = {}
                 data['first'] = 'start'
                 data['second'] = 'end'
-                response = api.run('method1',timeout,data)
+                response = api.run(timeout,data)
                 print("response=" + str(response.payload))
                 eq_(response.payload['msg'],'Your input parameters are start and end')
             except ApiError as e:
@@ -427,13 +428,13 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_811_api_request_soap_returns(self):
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/'):
-            api = Tst2Api(Util.get_halo_context(request))
+            api = Tst2Api(Util.get_halo_context(request),method='method1')
             timeout = Util.get_timeout(request)
             try:
                 data = {}
                 data['first'] = 'start'
                 data['second'] = 'end'
-                response = api.run('method1',timeout,data)
+                response = api.run(timeout,data)
                 print("response=" + str(response.payload))
                 eq_(response.payload['msg'],'Your input parameters are start and end')
             except ApiError as e:
@@ -496,26 +497,26 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SSM_TYPE'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             response = self.a2.process_post(request,{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_901_event_filter(self):
-        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
-        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests_flask.TestRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
 
     def test_903_event_filter(self):
-        app.config['REQUEST_FILTER_CLASS'] = 'tests_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests_flask.TestRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.do_process(HTTPChoice.get,request.args)
 
@@ -828,7 +829,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9994_CORR(self):
         headers = {'HTTP_HOST': '127.0.0.2','x-tester-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
-        app.config['HALO_CONTEXT_CLASS'] = 'tests_flask.CAContext'
+        app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             response = self.a2.get()
             eq_(response.status_code, status.HTTP_200_OK)
@@ -836,7 +837,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9995_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
-        app.config['HALO_CONTEXT_CLASS'] = 'tests_flask.CAContext'
+        app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             try:
                 response = self.a2.get()
@@ -851,14 +852,29 @@ class TestUserDetailTestCase(unittest.TestCase):
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
 
     def test_9997_db(self):
-        app.config['DBACCESS_CLASS'] = 'tests_flask.DbMixin'
+        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             db = DbTest()
             req = HaloRequest(request)
             db.get_dbaccess(req,True)
 
     def test_9998_db(self):
-        app.config['DBACCESS_CLASS'] = 'tests_flask.DbMixin'
+        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            db = DbTest()
+            req = HaloRequest(request)
+            db.get_dbaccess(req,False)
+
+
+    def test_99991_security(self):
+        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            db = DbTest()
+            req = HaloRequest(request)
+            db.get_dbaccess(req,False)
+
+    def test_99992_aws(self):
+        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             db = DbTest()
             req = HaloRequest(request)

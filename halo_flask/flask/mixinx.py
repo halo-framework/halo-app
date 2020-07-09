@@ -14,8 +14,9 @@ from jsonpath_ng import jsonpath, parse
 # flask
 from flask import Response as HttpResponse
 
-from .utilx import Util, status
-from ..const import HTTPChoice
+from .utilx import Util
+from ..errors import status
+from ..const import HTTPChoice,ASYNC
 from ..exceptions import *
 from ..reflect import Reflect
 from ..request import HaloRequest
@@ -26,6 +27,7 @@ from ..classes import AbsBaseClass,ServiceInfo
 from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
 from ..apis import AbsBaseApi,ApiMngr
 from .filter import RequestFilter,FilterEvent
+from halo_flask.providers.providers import get_provider
 from halo_flask.saga import Saga, SagaRollBack, load_saga
 from halo_flask.models import AbsDbMixin
 
@@ -166,6 +168,8 @@ class AbsApiMixinX(AbsBaseMixinX):
     __metaclass__ = ABCMeta
 
     business_event = None
+    secure = False
+    method_roles = None
 
     def create_response(self,halo_request, payload, headers):
         code = status.HTTP_200_OK
@@ -188,10 +192,12 @@ class AbsApiMixinX(AbsBaseMixinX):
         if foi:
             foi_name = foi["name"]
             foi_op = foi["op"]
+            foi_conn = foi["conn"]
             #api = ApiMngr.get_api(foi_name)
             #instance = Reflect.instantiate(api, AbsBaseApi, halo_request.context)
             instance = ApiMngr.get_api_instance(foi_name, halo_request.context)
             instance.op = foi_op
+            instance.conn = foi_conn
             return instance
         raise NoApiClassException("api class not defined")
 
@@ -497,11 +503,32 @@ class AbsApiMixinX(AbsBaseMixinX):
             foi = self.business_event.get(seq)
             # 2. get api definition to access the BANK API  - url + vars dict
             back_api = self.set_back_api(halo_request, foi)
-            # 2. do api work
-            back_json = self.do_api_work(halo_request, back_api, seq, dict)
+            if back_api.conn == ASYNC:
+                # 2.1 do async api work
+                back_json = self.do_api_async_work(halo_request, back_api, seq, dict)
+            else:
+                # 2.2 do api work
+                back_json = self.do_api_work(halo_request, back_api, seq, dict)
             # 3. store in dict
             dict[seq] = back_json
         return dict
+
+    def do_api_async_work(self, halo_request, back_api, seq, dict=None):
+        # 3. array to store the headers required for the API Access
+        back_headers = self.set_api_headers(halo_request, seq, dict)
+        # 4. set vars
+        back_vars = self.set_api_vars(halo_request, seq, dict)
+        # 5. auth
+        back_auth = self.set_api_auth(halo_request, seq, dict)
+        # 6. set request data
+        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
+            back_data = self.set_api_data(halo_request, seq, dict)
+        else:
+            back_data = None
+        # 7. Sending the request to the BANK API with params
+        status = get_provider().add_to_queue(halo_request, back_api, back_vars, back_headers, back_auth,
+                                         back_data, seq, dict)
+        return {}
 
     def do_api_work(self,halo_request, back_api, seq, dict=None):
         # 3. array to store the headers required for the API Access
@@ -616,35 +643,35 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def process_get(self, request, vars):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(request, bq)
+        halo_request = HaloRequest(request, bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret
 
     def process_post(self, request, vars):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(request, bq)
+        halo_request = HaloRequest(request, bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret
 
     def process_put(self, request, vars):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(request, bq)
+        halo_request = HaloRequest(request, bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret
 
     def process_patch(self, request, vars):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(request, bq)
+        halo_request = HaloRequest(request, bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret
 
     def process_delete(self, request, vars):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(request,bq)
+        halo_request = HaloRequest(request,bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret

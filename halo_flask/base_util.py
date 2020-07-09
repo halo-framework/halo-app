@@ -7,11 +7,13 @@ import logging
 import os
 import random
 import uuid
-
+import datetime
+import jwt
 from jsonschema import validate
 from .exceptions import CacheError, ApiTimeOutExpired
 from halo_flask.const import LOC,DEV,TST,PRD
-from halo_flask.request import HaloContext
+from halo_flask.request import HaloContext,HaloRequest
+from halo_flask.response import HaloResponse
 from halo_flask.classes import AbsBaseClass
 from .settingsx import settingsx
 settings = settingsx()
@@ -170,3 +172,17 @@ class BaseUtil(AbsBaseClass):
         # @TODO get all data for request context
         cls.event_req_context = ret
         return cls.event_req_context
+
+    def user_token(self,halo_request, public_id):
+
+        minutes = settings.SESSION_MINUTES
+
+        token = jwt.encode(
+            {'public_id': public_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=minutes)},
+            settings.SECRET_KEY)
+        ret = HaloResponse(halo_request)
+        ret.payload = {'token': token.decode('UTF-8')}
+        ret.code = 200
+        ret.headers = {}
+        return ret
+

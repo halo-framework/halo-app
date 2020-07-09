@@ -1,29 +1,34 @@
 {
   "Google": {
-    "url": "service://www.yahoo.com",
+    "url": "http://www.yahoo.com",
     "type": "api",
-    "class": "tests.tests_flask.GoogleApi"
+    "class": "tests.test_flask.GoogleApi"
+  },
+  "Aws": {
+    "url": "service://service",
+    "type": "api",
+    "class": "tests.test_flask.AwsApi"
   },
   "Cnn": {
     "url": "http://www.cnn.com",
     "type": "api",
-    "class": "tests.tests_flask.CnnApi"
+    "class": "tests.test_flask.CnnApi"
   },
   "Tst": {
     "url": "http://www.cnddmfgkkn.com",
     "type": "api",
-    "class": "tests.tests_flask.TstApi"
+    "class": "tests.test_flask.TstApi"
   },
   "Tst1": {
     "url": "http://127.0.0.1",
     "type": "api",
-    "class": "tests.tests_flask.Tst1Api"
+    "class": "tests.test_flask.Tst1Api"
   },
   "Tst2": {
     "url": "http://www.soapclient.com/xml/soapresponder.wsdl",
     "type": "api",
     "protocol": "soap",
-    "class": "tests.tests_flask.Tst2Api"
+    "class": "tests.test_flask.Tst2Api"
   },
   "Outbound": {
     "url": "https://base_url/$ID",

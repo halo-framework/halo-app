@@ -33,3 +33,6 @@ class LOGChoice(Enum):  # A subclass of Enum
     circuit_breaker = "circuit_breaker"
     saga = "saga"
     url = "url"
+
+
+ASYNC = "async"
