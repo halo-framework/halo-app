@@ -173,16 +173,4 @@ class BaseUtil(AbsBaseClass):
         cls.event_req_context = ret
         return cls.event_req_context
 
-    def user_token(self,halo_request, public_id):
-
-        minutes = settings.SESSION_MINUTES
-
-        token = jwt.encode(
-            {'public_id': public_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=minutes)},
-            settings.SECRET_KEY)
-        ret = HaloResponse(halo_request)
-        ret.payload = {'token': token.decode('UTF-8')}
-        ret.code = 200
-        ret.headers = {}
-        return ret
 

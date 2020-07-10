@@ -3,8 +3,9 @@ from __future__ import print_function
 import os
 import jwt
 import logging
+import datetime
 from halo_flask.classes import AbsBaseClass
-from halo_flask.exceptions import MissingHaloContextException
+from halo_flask.exceptions import MissingHaloContextException,MissingRoleError
 from halo_flask.context import HaloContext
 from .settingsx import settingsx
 
@@ -21,18 +22,23 @@ class HaloSecurity(AbsBaseClass):
     def __init__(self, request):
         token = None
 
-        if HaloContext.ACCESS in request.headers:
-            token = request.headers[HaloContext.ACCESS]
+        if HaloContext.items[HaloContext.ACCESS] in request.headers:
+            token = request.headers[HaloContext.items[HaloContext.ACCESS]]
 
         if not token:
             raise MissingHaloContextException('a valid token is missing')
 
+        secret = self.get_secret()
+
         try:
-            self.token_data = jwt.decode(token, settings.SECRET_KEY)
+            self.token_data = jwt.decode(token, secret)
             self.current_user = self.getUser(public_id=self.token_data['public_id'])
             self.user_roles = self.get_user_roles(self.current_user)
-        except:
-            raise MissingHaloContextException('token is invalid')
+        except Exception as e:
+            raise MissingHaloContextException('token is invalid',e)
+
+    def get_secret(self):
+        return settings.SECRET_KEY
 
     def getUser(self,public_id):
         return None
@@ -46,5 +52,19 @@ class HaloSecurity(AbsBaseClass):
                 for r in method_roles:
                     if r in self.user_roles:
                         return True
-            return False
+            raise MissingRoleError(str(method_roles))
         return True
+
+    @classmethod
+    def user_token(cls, halo_request, public_id, minutes=None,secret=None):
+
+        if not minutes:
+            minutes = settings.SESSION_MINUTES
+
+        if not secret:
+            secret = settings.SECRET_KEY
+
+        token = jwt.encode(
+            {'public_id': public_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=minutes)},
+            secret)
+        return {'token': token.decode('UTF-8')}

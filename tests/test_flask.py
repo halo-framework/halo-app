@@ -23,7 +23,7 @@ from halo_flask.request import HaloContext
 from halo_flask.apis import load_api_config
 from halo_flask.ssm import set_app_param_config,get_app_param_config,set_host_param_config
 from halo_flask.flask.viewsx import load_global_data
-
+from halo_flask.security import HaloSecurity
 import unittest
 
 #6,7,9923,9941 failing
@@ -72,6 +72,13 @@ class DbTest(AbsApiMixinX):
     pass
 class DbMixin(AbsDbMixin):
     pass
+
+
+class Sec(HaloSecurity):
+    def get_secret(self):
+        return '12345'
+    def get_user_roles(self,user):
+        return ['tst']
 
 #API_LIST = {"Google": 'tests.test_flask.GoogleApi', "Cnn": "tests.test_flask.CnnApi","Tst":"tests.test_flask.TstApi","Tst2":"tests.test_flask.Tst2Api","Tst3":"tests.test_flask.Tst3Api","Tst4":"tests.test_flask.Tst4Api"}
 
@@ -229,6 +236,8 @@ class A2(Resource, A1, AbsBaseLinkX):
 }
             return  super(A2,self).create_resp_payload(halo_request, dict_back_json)
 
+class A4(A2):
+    secure = True
 
 class P1(PerfMixinX):
     pass
@@ -270,6 +279,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['FUNC_NAME'] = "FUNC_NAME"
         #app.config['API_CONFIG'] =
         app.config['AWS_REGION'] = 'us-east-1'
+        #app.config['CIRCUIT_BREAKER'] = False
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
@@ -290,6 +300,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.a1 = A1()
         self.a2 = A2()
         self.a3 = A3()
+        self.a4 = A4()
         self.p1 = P1()
         self.p2 = P2()
         self.start()
@@ -866,14 +877,91 @@ class TestUserDetailTestCase(unittest.TestCase):
             db.get_dbaccess(req,False)
 
 
-    def test_99991_security(self):
-        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
+    def test_99991_security_need_token(self):
+        app.config['CIRCUIT_BREAKER'] = False
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            db = DbTest()
-            req = HaloRequest(request)
-            db.get_dbaccess(req,False)
+            try:
+                response = self.a4.get()
+            except Exception as e:
+                eq_(e.data['errors']['error']["error_code"], 10107)
 
-    def test_99992_aws(self):
+    def test_99992_security_bad_token(self):
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['SESSION_MINUTES'] = 30
+        public_id = '12345'
+        secret = '123456'#different token
+        hdr = HaloSecurity.user_token(None, public_id,30,secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
+            try:
+                response = self.a4.get()
+            except Exception as e:
+                eq_(e.data['errors']['error']["error_code"], 10107)
+
+    def test_99992_security_good_token(self):
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['SESSION_MINUTES'] = 30
+        secret = '123456'
+        app.config['SECRET_KEY'] = secret
+        public_id = '12345'
+        hdr = HaloSecurity.user_token(None, public_id,30,secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
+            try:
+                response = self.a4.get()
+            except Exception as e:
+                eq_(e.data['errors']['error']["error_code"], 10107)
+
+    def test_99993_security_good_token_no_role_needed(self):
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['SESSION_MINUTES'] = 30
+        secret = '12345'
+        app.config['SECRET_KEY'] = secret
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        public_id = '12345'
+        hdr = HaloSecurity.user_token(None, public_id, 30, secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            try:
+                self.a4.method_roles = []
+                response = self.a4.get()
+            except Exception as e:
+                eq_(e.data['errors']['error']["error_code"], 500)
+
+    def test_99994_security_good_token_role_needed_missing(self):
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['SESSION_MINUTES'] = 30
+        secret = '12345'
+        app.config['SECRET_KEY'] = secret
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        public_id = '12345'
+        hdr = HaloSecurity.user_token(None, public_id, 30, secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            try:
+                self.a4.method_roles = ['tst1']
+                response = self.a4.get()
+            except Exception as e:
+                eq_(e.data['errors']['error']["error_code"], 500)
+
+    def test_99995_security_good_token_role_needed_exist(self):
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['SESSION_MINUTES'] = 30
+        secret = '12345'
+        app.config['SECRET_KEY'] = secret
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        public_id = '12345'
+        hdr = HaloSecurity.user_token(None, public_id, 30, secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            try:
+                self.a4.method_roles = ['tst']
+                response = self.a4.get()
+                eq_(response.status_code,200)
+            except Exception as e:
+                eq_(e.data['errors']['error']["error_code"], 5000)
+
+    def test_99996_aws(self):
         app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             db = DbTest()

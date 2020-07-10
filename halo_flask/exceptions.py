@@ -166,3 +166,6 @@ class MissingClassConfigError(HaloError):
 
 class IllegalMethodException(HaloException):
     pass
+
+class MissingRoleError(HaloError):
+    pass
