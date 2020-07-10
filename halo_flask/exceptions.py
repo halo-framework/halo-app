@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 
 class HaloException(Exception):
     __metaclass__ = ABCMeta
-    """Generic exception for halo"""
+    """The abstract Generic exception for halo"""
 
     def __init__(self, message, original_exception=None, detail=None,data=None):
         super(HaloException, self).__init__()
@@ -23,10 +23,10 @@ class HaloException(Exception):
 class HaloError(HaloException):
     __metaclass__ = ABCMeta
     """
-    The abstract error is used as base class. app does not expect to handle error. Accepts the following
+    The abstract error is used as base class for server error with status code. app does not expect to handle error. Accepts the following
     optional arguments:
     """
-    status_code = 400
+    status_code = 500
 
     def __init__(self, message, original_exception=None,detail=None, data=None,status_code=None):
         super(HaloError, self).__init__(message, original_exception,detail,data)
@@ -168,4 +168,7 @@ class IllegalMethodException(HaloException):
     pass
 
 class MissingRoleError(HaloError):
+    pass
+
+class MissingSecurityTokenException(HaloException):
     pass

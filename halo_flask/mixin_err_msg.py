@@ -22,6 +22,7 @@ class ErrorMessages(AbsBaseClass):
     hashx["TypeError"] = {"code": 10106, "message": "Server Type Error"}
     hashx["MissingHaloContextException"] = {"code": 10107, "message": "Missing Halo Context"}
 
+
     def get_code(self,ex):
         """
         get the proper status code and error msg for exception

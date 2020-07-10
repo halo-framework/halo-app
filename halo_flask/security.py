@@ -26,7 +26,7 @@ class HaloSecurity(AbsBaseClass):
             token = request.headers[HaloContext.items[HaloContext.ACCESS]]
 
         if not token:
-            raise MissingHaloContextException('a valid token is missing')
+            raise MissingSecurityTokenException('a valid token is missing')
 
         secret = self.get_secret()
 
