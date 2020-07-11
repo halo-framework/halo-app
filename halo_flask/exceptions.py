@@ -172,3 +172,6 @@ class MissingRoleError(HaloError):
 
 class MissingSecurityTokenException(HaloException):
     pass
+
+class BadSecurityTokenException(HaloException):
+    pass

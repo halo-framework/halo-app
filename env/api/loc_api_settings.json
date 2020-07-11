@@ -9,6 +9,11 @@
     "type": "api",
     "class": "tests.test_flask.AwsApi"
   },
+  "PrimoService-dev-hello": {
+    "url": "service://service",
+    "type": "api",
+    "class": "tests.test_flask.PrimoServiceApi"
+  },
   "Cnn": {
     "url": "http://www.cnn.com",
     "type": "api",

@@ -45,6 +45,22 @@
       }
     }
   },
+  "A5": {
+    "base": {
+      "GET": {
+        "url": "base_seq_provider.json",
+        "type": "seq"
+      },
+      "POST": {
+        "url": "base_seq_provider_good.json",
+        "type": "seq"
+      },
+      "PATCH": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      }
+    }
+  },
   "T3":{
     "base": {
       "GET": {

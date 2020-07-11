@@ -365,7 +365,7 @@ class Util(AbsBaseClass):
         if hasattr(e, 'detail'):
             error_detail = e.detail
         elif hasattr(e, 'original_exception'):
-            error_detail = str(e.original_exception)
+            error_detail = Util.get_detail(e.original_exception)
         else:
             if hasattr(e, 'message'):
                 e_msg = e.message
@@ -384,3 +384,12 @@ class Util(AbsBaseClass):
             payload["stack"] = json.dumps(e.stack)
             payload["request"] = json.dumps(Util.get_req_params(request))
         return payload
+
+    @staticmethod
+    def get_detail(e):
+        detail = None
+        if e.original_exception:
+            detail = Util.get_detail(e.original_exception)
+        if detail:
+            return str(e)+':'+detail
+        return str(e)

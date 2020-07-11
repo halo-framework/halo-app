@@ -499,6 +499,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         logger.debug("do_operation_2")
         dict = {}
         for seq in self.business_event.keys():
+            print("seq="+str(seq))
             # 1. get get first order interaction
             foi = self.business_event.get(seq)
             # 2. get api definition to access the BANK API  - url + vars dict

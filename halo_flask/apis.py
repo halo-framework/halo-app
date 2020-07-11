@@ -48,10 +48,21 @@ class MyCircuitBreaker(CircuitBreaker):
             RECOVERY_TIMEOUT = settings.HTTP_RETRY_SLEEP
         return RECOVERY_TIMEOUT
 
-class SoapResponse(AbsBaseClass):
-    payload = None
+class AbsResponse(AbsBaseClass):
+    content = None
     headers = None
     status_code = None
+
+    def __init__(self, content, headers={},status_code=200):
+        self.content = content
+        self.headers = headers
+        self.status_code = status_code
+
+class SoapResponse(AbsResponse):
+    pass
+
+class ProviderResponse(SoapResponse):
+    pass
 
 class AbsBaseApi(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -94,17 +105,21 @@ class AbsBaseApi(AbsBaseClass):
         try:
             service_name = self.name #self.target_service_name[settings.ENV_TYPE]
             logger.debug("send invoke to target_service:" + service_name, extra=log_json(halo_context))
-            x = str(data.decode('utf8').replace("'", '"'))
-            if x != "":
-                datax = json.loads(x)
-                datay = jsonify(datax)
+            if data:
+                x = str(data.decode('utf8').replace("'", '"'))
+                if x != "":
+                    datax = json.loads(x)
+                    datay = jsonify(datax)
+                else:
+                    datay = ""
             else:
                 datay = ""
             messageDict = {"method":method,"url":url,"data":datay,"headers":headers,"auth":auth}
             version = '$LATEST'
             #@todo add version to config api
             ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=version)
-            return ret
+            provider_response = ProviderResponse(ret['Payload'].read(),ret['ResponseMetadata']["HTTPHeaders"],ret['StatusCode'])
+            return provider_response
         except ProviderError as e:
             logger.error("Unexpected Provider Error", extra=log_json(halo_context, messageDict, e))
             raise e

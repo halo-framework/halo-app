@@ -5,7 +5,7 @@ import jwt
 import logging
 import datetime
 from halo_flask.classes import AbsBaseClass
-from halo_flask.exceptions import MissingHaloContextException,MissingRoleError
+from halo_flask.exceptions import MissingHaloContextException,MissingRoleError,MissingSecurityTokenException,BadSecurityTokenException
 from halo_flask.context import HaloContext
 from .settingsx import settingsx
 
@@ -35,7 +35,7 @@ class HaloSecurity(AbsBaseClass):
             self.current_user = self.getUser(public_id=self.token_data['public_id'])
             self.user_roles = self.get_user_roles(self.current_user)
         except Exception as e:
-            raise MissingHaloContextException('token is invalid',e)
+            raise BadSecurityTokenException('token is invalid',e)
 
     def get_secret(self):
         return settings.SECRET_KEY

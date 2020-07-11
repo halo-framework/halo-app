@@ -21,6 +21,8 @@ class ErrorMessages(AbsBaseClass):
     hashx["ConnectionError"] = {"code": 10105, "message": "Api Connection Error"}
     hashx["TypeError"] = {"code": 10106, "message": "Server Type Error"}
     hashx["MissingHaloContextException"] = {"code": 10107, "message": "Missing Halo Context"}
+    hashx["MissingSecurityTokenException"] = {"code": 10108, "message": "Missing Halo token"}
+    hashx["BadSecurityTokenException"] = {"code": 10109, "message": "Bad Halo token"}
 
 
     def get_code(self,ex):
