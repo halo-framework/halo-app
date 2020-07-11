@@ -118,7 +118,8 @@ class AbsBaseApi(AbsBaseClass):
             version = '$LATEST'
             #@todo add version to config api
             ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=version)
-            provider_response = ProviderResponse(ret['Payload'].read(),ret['ResponseMetadata']["HTTPHeaders"],ret['StatusCode'])
+            content = json.loads(ret['Payload'].read())
+            provider_response = ProviderResponse(content["body"],ret['ResponseMetadata']["HTTPHeaders"],ret['StatusCode'])
             return provider_response
         except ProviderError as e:
             logger.error("Unexpected Provider Error", extra=log_json(halo_context, messageDict, e))
