@@ -997,7 +997,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
-        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a5.method_roles = ['tst']

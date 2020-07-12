@@ -74,12 +74,14 @@ class AbsBaseApi(AbsBaseClass):
     protocol = None
     halo_context = None
     cb = MyCircuitBreaker()
+    session = None
 
-    def __init__(self, halo_context, method=None):
+    def __init__(self, halo_context,session, method=None):
         self.halo_context = halo_context
         if method:
             self.op = method
         self.url, self.api_type,self.protocol = self.get_url_str()
+        self.session = session
         if settings.CIRCUIT_BREAKER:
             self.cb._name = self.name
 
@@ -99,6 +101,10 @@ class AbsBaseApi(AbsBaseClass):
             return url,type,protocol
 
         raise NoApiDefinitionError(self.name)
+
+    def terminate(self):
+        if self.session:
+            self.session.close()
 
     def provider_invoke(self,halo_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
 
@@ -454,6 +460,10 @@ class AbsSoapApi(AbsBaseApi):
         except AttributeError as ex:
             raise HaloMethodNotImplementedException("function for "+str(method),ex)
 
+from threading import RLock
+from .context import HaloContext
+lock = RLock()
+api_dict = {}
 class ApiMngr(AbsBaseClass):
 
     global HALO_API_LIST
@@ -488,10 +498,25 @@ class ApiMngr(AbsBaseClass):
         raise NoApiDefinitionError(name)
 
     def get_api_instance(name, *args):
+        global api_dict
+        ctx = args[0]
+        id = ctx.get(HaloContext.CORRELATION)
+        print("ctx:"+str(ctx.get(HaloContext.CORRELATION)))
         if name in HALO_API_LIST:
             class_name = HALO_API_LIST[name]
-            if class_name:
-                return Reflect.instantiate(class_name, AbsBaseApi, *args)
+            if class_name+id in api_dict:
+                return api_dict[class_name+id]
+            else:
+                session = requests.Session()
+                params = [x for x in args]
+                params.append(session)
+                api = Reflect.instantiate(class_name, AbsBaseApi, *params)
+                lock.acquire()
+                try:
+                    api_dict[class_name+id] = api
+                finally:
+                    lock.release()
+                return api
         raise NoApiDefinitionError(name)
 
 

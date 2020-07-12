@@ -497,6 +497,7 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_2(self, halo_request):  # medium maturity - foi
         logger.debug("do_operation_2")
+        api_list = []
         dict = {}
         for seq in self.business_event.keys():
             print("seq="+str(seq))
@@ -504,6 +505,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             foi = self.business_event.get(seq)
             # 2. get api definition to access the BANK API  - url + vars dict
             back_api = self.set_back_api(halo_request, foi)
+            api_list.append(back_api)
             if back_api.conn == ASYNC:
                 # 2.1 do async api work
                 back_json = self.do_api_async_work(halo_request, back_api, seq, dict)
@@ -512,6 +514,8 @@ class AbsApiMixinX(AbsBaseMixinX):
                 back_json = self.do_api_work(halo_request, back_api, seq, dict)
             # 3. store in dict
             dict[seq] = back_json
+        for api in api_list:
+            api.terminate()
         return dict
 
     def do_api_async_work(self, halo_request, back_api, seq, dict=None):
