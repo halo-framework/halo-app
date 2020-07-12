@@ -561,6 +561,9 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
             logger.debug(item + ":" + url)
             for key in API_CONFIG:
                 current = API_CONFIG[key]
+                type = current["type"]
+                if type == "service":
+                    continue
                 new_url = current["url"]
                 if "service://" + item in new_url:
                     API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
@@ -572,6 +575,7 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
             api_list[key] = class_name
         else:
             raise MissingClassConfigError(key)
+
     HALO_API_LIST = api_list
     #ApiMngr.instance().set_api_list(api_list)
 

@@ -6,12 +6,12 @@
   },
   "Aws": {
     "url": "service://service",
-    "type": "api",
+    "type": "service",
     "class": "tests.test_flask.AwsApi"
   },
   "PrimoService-dev-hello": {
     "url": "service://service",
-    "type": "api",
+    "type": "service",
     "class": "tests.test_flask.PrimoServiceApi"
   },
   "Cnn": {
