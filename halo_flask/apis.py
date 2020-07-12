@@ -138,13 +138,13 @@ class AbsRestApi(AbsBaseApi):
     @AbsBaseApi.cb
     def do_cb_request(self,method, url, timeout, data=None, headers=None, auth=None):
         print("do MyCircuitBreaker")
-        return requests.request(method, url, data=data, headers=headers,
+        return self.session.request(method, url, data=data, headers=headers,
                          timeout=timeout, auth=auth)
 
     def do_request(self, method, url, timeout, data=None, headers=None, auth=None):
         if settings.CIRCUIT_BREAKER:
             return self.do_cb_request(method, url, timeout, data, headers, auth)
-        return requests.request(method, url, data=data, headers=headers,
+        return self.session.request(method, url, data=data, headers=headers,
                                 timeout=timeout, auth=auth)
 
     def exec_client(self, halo_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
