@@ -49,16 +49,25 @@
     "base": {
       "GET": {
         "url": "base_seq_provider.json",
-        "type": "seq"
+        "type": "seq",
+        "name": "get loan",
+        "desc": "this is the get event"
       },
       "POST": {
         "url": "base_seq_provider_good.json",
-        "type": "seq"
+        "type": "seq",
+        "name": "update loan",
+        "desc": "this is the post event"
       },
       "PATCH": {
         "url": "tst_saga.json",
-        "type": "saga"
+        "type": "saga",
+        "name": "update loan",
+        "desc": "this is the patch event"
       }
+    },
+    "bq1": {
+
     }
   },
   "T3":{

@@ -104,7 +104,9 @@ class AbsBaseApi(AbsBaseClass):
 
     def terminate(self):
         if self.session:
+            print("terminate session:"+str(self.session))
             self.session.close()
+            self.session = None
 
     def provider_invoke(self,halo_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
 
@@ -428,13 +430,14 @@ class AbsSoapApi(AbsBaseApi):
         return self.process(self.op,self.url,timeout, data=data, headers=headers,auth=auth)
 
     def process(self,method,url, timeout, data=None, headers=None, auth=None):
-        from zeep import Client
+        from zeep import Client,Transport
         try:
             logger.debug(
                 "Api name: " + self.name  + " url: " + str(url) + " headers:" + str(headers),
                 extra=log_json(self.halo_context))
             now = datetime.datetime.now()
-            self.client = Client(url)
+            transport = Transport(session=self.session, timeout=timeout, operation_timeout=timeout)
+            self.client = Client(url,transport=transport)
             soap_response = self.do_request(method,timeout, data, headers, auth)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,

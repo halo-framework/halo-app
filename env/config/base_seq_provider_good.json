@@ -18,5 +18,15 @@
     "name":"PrimoService-dev-hello",
     "op":"GET",
     "conn":"sync"
+  },
+  "5":{
+    "name":"Google",
+    "op":"GET",
+    "conn":"sync"
+  },
+  "6":{
+    "name":"Tst2",
+    "op":"method1",
+    "conn":"sync"
   }
 }

@@ -37,6 +37,26 @@ from halo_flask.response import HaloResponse
 
 
 ##################################### test #########################
+"""
+###performance testing###
+npm install -g artillery
+artillery -V
+artillery quick --count 10 -n 20 http://127.0.0.1:5000/loc/info
+artillery run artilery.yml
+config:
+  target: 'http://127.0.0.1:5000'
+  phases:
+    - duration: 60
+      arrivalRate: 20
+  defaults:
+    headers:
+      x-my-service-auth: '987401838271002188298567'
+scenarios:
+  - flow:
+    - get:
+        url: "/loc/info"
+
+"""
 
 class CnnApi(AbsRestApi):
     name = 'Cnn'
@@ -346,7 +366,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'],"url")
-                print("val="+str(val))
+                print("get_app_param_config="+str(val))
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 

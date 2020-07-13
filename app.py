@@ -21,6 +21,7 @@ def create_app(config_object='settings'):
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_object)
     with app.app_context():
+        stage = '/' + app.config['ENV_NAME']
         if app.config['SSM_TYPE'] and app.config['SSM_TYPE'] != 'NONE':
             load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'], app.config['API_CONFIG'])
             HALO_HOST = BaseUtil.get_host_name()
@@ -28,11 +29,11 @@ def create_app(config_object='settings'):
             params["url"] = set_host_param_config(HALO_HOST)
             set_app_param_config(app.config['SSM_TYPE'], params )
             val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'], "url")
-            print("val=" + str(val))
-        app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
-        app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
-        app.add_url_rule("/health", view_func=HealthLinkX.as_view("Health"))
-        app.add_url_rule("/info", view_func=InfoLinkX.as_view("Info"))
+            print("get_app_param_config=" + str(val))
+        app.add_url_rule(stage, view_func=TestLinkX.as_view("member"))
+        app.add_url_rule(stage+"/perf", view_func=PerfLinkX.as_view("perf"))
+        app.add_url_rule(stage+"/health", view_func=HealthLinkX.as_view("Health"))
+        app.add_url_rule(stage+"/info", view_func=InfoLinkX.as_view("Info"))
         if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']
