@@ -5,6 +5,7 @@ import datetime
 import importlib
 import logging
 import time
+import uuid
 import json
 from abc import ABCMeta
 from flask import jsonify
@@ -503,8 +504,11 @@ class ApiMngr(AbsBaseClass):
     def get_api_instance(name, *args):
         global api_dict
         ctx = args[0]
-        id = ctx.get(HaloContext.CORRELATION)
-        print("ctx:"+str(ctx.get(HaloContext.CORRELATION)))
+        if HaloContext.items[HaloContext.CORRELATION] in ctx.keys():
+            id = ctx.get(HaloContext.items[HaloContext.CORRELATION])
+            print("ctx:"+str(id))
+        else:
+            id = str(uuid.uuid4())[:8]
         if name in HALO_API_LIST:
             class_name = HALO_API_LIST[name]
             if class_name+id in api_dict:

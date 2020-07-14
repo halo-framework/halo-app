@@ -266,6 +266,9 @@ class A4(A2):
 class A5(AbsApiMixinX):
     secure = True
 
+class A6(Resource, A5, AbsBaseLinkX):
+    pass
+
 class P1(PerfMixinX):
     pass
 
@@ -329,6 +332,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.a3 = A3()
         self.a4 = A4()
         self.a5 = A5()
+        self.a6 = A6()
         self.p1 = P1()
         self.p2 = P2()
         self.start()
@@ -862,6 +866,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             try:
                 response = self.a2.get()
+                return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
@@ -880,6 +885,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             try:
                 response = self.a2.get()
+                return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
@@ -910,6 +916,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             try:
                 response = self.a4.get()
+                eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10108)
 
@@ -923,6 +930,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             try:
                 response = self.a4.get()
+                eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10109)
 
@@ -937,6 +945,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             try:
                 response = self.a4.get()
+                eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
 
@@ -953,6 +962,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 self.a4.method_roles = []
                 response = self.a4.get()
+                eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
 
@@ -969,6 +979,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 self.a4.method_roles = ['tst1']
                 response = self.a4.get()
+                eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
 
@@ -1008,9 +1019,28 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
 
-    def test_99997_aws_invoke_sync_success(self):
+    def test_99997_aws_invoke_sync_fail(self):
         app.config['CIRCUIT_BREAKER'] = False
         app.config['CIRCUIT_BREAKER'] = False
+        app.config['SESSION_MINUTES'] = 30
+        secret = '12345'
+        app.config['SECRET_KEY'] = secret
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        public_id = '12345'
+        hdr = HaloSecurity.user_token(None, public_id, 30, secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
+        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            try:
+                self.a6.method_roles = ['tst']
+                response = self.a6.get(request,{})
+                eq_(1,2)
+            except Exception as e:
+                eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
+
+    def test_99998_aws_invoke_sync_success(self):
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
@@ -1023,6 +1053,27 @@ class TestUserDetailTestCase(unittest.TestCase):
                 self.a5.method_roles = ['tst']
                 response = self.a5.process_post(request, {})
                 eq_(response.code, 201)
+            except Exception as e:
+                print(str(e))
+                eq_(1,2)
+
+    def test_99999_aws_invoke_sync_success(self):
+        app.config['DEBUG'] = True
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['CIRCUIT_BREAKER'] = False
+        app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
+        app.config['SESSION_MINUTES'] = 30
+        secret = '12345'
+        app.config['SECRET_KEY'] = secret
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        public_id = '12345'
+        hdr = HaloSecurity.user_token(None, public_id, 30, secret)
+        headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
+        with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            try:
+                self.a6.method_roles = ['tst']
+                response = self.a6.post()
+                eq_(response.status_code, 201)
             except Exception as e:
                 print(str(e))
                 eq_(1,2)

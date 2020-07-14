@@ -365,7 +365,7 @@ with open(file_path, 'r') as fi:
     print("mapping:" + str(MAPPING))
 
 
-HALO_CONTEXT_LIST = ["CORRELATION"]
+HALO_CONTEXT_LIST = []#["CORRELATION"]
 HALO_CONTEXT_CLASS = None
 REQUEST_FILTER_CLASS = None
 REQUEST_FILTER_CLEAR_CLASS = None

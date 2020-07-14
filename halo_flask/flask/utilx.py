@@ -12,7 +12,7 @@ from flask import Response
 from ..settingsx import settingsx
 from halo_flask.classes import AbsBaseClass
 from halo_flask.const import HTTPChoice,LOC
-from halo_flask.request import HaloContext
+from halo_flask.context import HaloContext
 from halo_flask.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
 from halo_flask.providers.providers import get_provider,ONPREM
 from halo_flask.exceptions import NoCorrelationIdException
