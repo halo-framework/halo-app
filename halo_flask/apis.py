@@ -77,12 +77,15 @@ class AbsBaseApi(AbsBaseClass):
     cb = MyCircuitBreaker()
     session = None
 
-    def __init__(self, halo_context,session, method=None):
+    def __init__(self, halo_context, method=None,session=None):
         self.halo_context = halo_context
         if method:
             self.op = method
         self.url, self.api_type,self.protocol = self.get_url_str()
-        self.session = session
+        if session:
+            self.session = session
+        else:
+            self.session = requests.session()
         if settings.CIRCUIT_BREAKER:
             self.cb._name = self.name
 
@@ -514,7 +517,7 @@ class ApiMngr(AbsBaseClass):
             if class_name+id in api_dict:
                 return api_dict[class_name+id]
             else:
-                session = requests.Session()
+                session = requests.session()
                 params = [x for x in args]
                 params.append(session)
                 api = Reflect.instantiate(class_name, AbsBaseApi, *params)

@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import logging
-
+import requests
 from .apis import ApiMngr
 from .base_util import BaseUtil
 from .exceptions import ApiError,HaloException, HaloError
@@ -280,6 +280,9 @@ def load_saga(name,halo_request, jsonx, schema):
     # validate saga json
     if schema:
         BaseUtil.assert_valid_schema(jsonx, schema)
+    # saga engine
+    #if saga_type == "provider":
+    #    return provider_saga()
     # process saga
     try:
         if "StartAt" in jsonx:
@@ -295,10 +298,13 @@ def load_saga(name,halo_request, jsonx, schema):
                 api_instance_name = ApiMngr.get_api(api_name)
                 logger.debug("api_instance_name=" + str(api_instance_name))
                 result_path = jsonx["States"][state]["ResultPath"]
+                method = "GET"
+                if "Op" in jsonx["States"][state]:
+                    method = jsonx["States"][state]["Op"]
                 # action = lambda req_context, payload, api=api_instance_name: ApiMngr(req_context).get_api_instance(api).post(payload)
                 do_run = lambda key, x: {key: x}
                 action = lambda halo_context, payload, exec_api, results, result_path=result_path, api=api_name: \
-                    do_run(result_path, exec_api(ApiMngr.get_api_instance(api,halo_context), results, payload))
+                    do_run(result_path, exec_api(ApiMngr.get_api_instance(api,halo_context,method), results, payload))
                 comps = []
                 if "Catch" in jsonx["States"][state]:
                     for item in jsonx["States"][state]["Catch"]:

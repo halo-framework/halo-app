@@ -462,8 +462,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 data['first'] = 'start'
                 data['second'] = 'end'
                 response = api.run(timeout,data)
-                print("response=" + str(response.payload))
-                eq_(response.payload['msg'],'Your input parameters are start and end')
+                print("response=" + str(response.content))
+                eq_(json.loads(response.content)['msg'],'Your input parameters are start and end')
             except ApiError as e:
                 #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 eq_(response.payload['first'],'start')
@@ -478,8 +478,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 data['first'] = 'start'
                 data['second'] = 'end'
                 response = api.run(timeout,data)
-                print("response=" + str(response.payload))
-                eq_(response.payload['msg'],'Your input parameters are start and end')
+                print("response=" + str(response.content))
+                eq_(json.loads(response.content)['msg'],'Your input parameters are start and end')
             except ApiError as e:
                 #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 eq_(response.payload['first'],'start')
@@ -494,8 +494,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 data['first'] = 'start'
                 data['second'] = 'end'
                 response = api.run('method2',timeout,data)
-                print("response=" + str(response.payload))
-                eq_(response.payload['msg'],'Your input parameters are start and end')
+                print("response=" + str(response.content))
+                eq_(json.loads(response.content)['msg'],'Your input parameters are start and end')
             except HaloMethodNotImplementedException as e:
                 #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 eq_(e.__class__.__name__,"HaloMethodNotImplementedException")
