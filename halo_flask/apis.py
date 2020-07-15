@@ -15,10 +15,10 @@ from .classes import AbsBaseClass
 from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError,IllegalMethodException
 from .logs import log_json
 from .reflect import Reflect
-from .settingsx import settingsx
 from halo_flask.const import LOC,DEV,TST,PRD
 from .flask.utilx import Util
 from .const import HTTPChoice,SYSTEMChoice,LOGChoice
+from .settingsx import settingsx
 
 settings = settingsx()
 
@@ -76,12 +76,14 @@ class AbsBaseApi(AbsBaseClass):
     halo_context = None
     cb = MyCircuitBreaker()
     session = None
+    version = None
 
     def __init__(self, halo_context, method=None,session=None):
         self.halo_context = halo_context
         if method:
             self.op = method
         self.url, self.api_type,self.protocol = self.get_url_str()
+        self.version = self.get_version()
         if session:
             self.session = session
         else:
@@ -106,6 +108,18 @@ class AbsBaseApi(AbsBaseClass):
 
         raise NoApiDefinitionError(self.name)
 
+    def get_version(self):
+        """
+
+        :return:
+        """
+        api_config = settings.API_CONFIG
+        version = '$LATEST'
+        if api_config and self.name in api_config:
+            if  "version" in api_config[self.name]:
+                version = api_config[self.name]["version"]
+        return version
+
     def terminate(self):
         if self.session:
             print("terminate session:"+str(self.session))
@@ -115,7 +129,7 @@ class AbsBaseApi(AbsBaseClass):
     def provider_invoke(self,halo_context, method, url, api_type, timeout, data=None, headers=None, auth=None):
 
         try:
-            service_name = self.name #self.target_service_name[settings.ENV_TYPE]
+            service_name = self.name
             logger.debug("send invoke to target_service:" + service_name, extra=log_json(halo_context))
             if data:
                 x = str(data.decode('utf8').replace("'", '"'))
@@ -127,10 +141,11 @@ class AbsBaseApi(AbsBaseClass):
             else:
                 datay = ""
             messageDict = {"method":method,"url":url,"data":datay,"headers":headers,"auth":auth}
-            version = '$LATEST'
-            #@todo add version to config api
-            ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=version)
+            print("messageDict="+str(messageDict)+" version:"+self.version)
+            ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=self.version)
+            print("ret:"+str(ret))
             content = json.loads(ret['Payload'].read())
+            print("content:" + str(content))
             provider_response = ProviderResponse(content["body"],ret['ResponseMetadata']["HTTPHeaders"],ret['StatusCode'])
             return provider_response
         except ProviderError as e:
@@ -166,7 +181,7 @@ class AbsRestApi(AbsBaseApi):
         :return:
         """
 
-        if url and url.startswith('service://'):
+        if api_type == 'service':
             return self.provider_invoke(halo_context, method, url, api_type, timeout, data, headers, auth)
 
         msg = "Max Try for url: ("+str(settings.HTTP_MAX_RETRY)+") " + str(url)

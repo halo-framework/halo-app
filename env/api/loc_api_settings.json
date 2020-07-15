@@ -4,13 +4,14 @@
     "type": "api",
     "class": "tests.test_flask.GoogleApi"
   },
-  "Aws": {
-    "url": "service://service",
+  "halo-webapp-service-dev-halo_webapp": {
+    "url": "http://htzc5syuhj.execute-api.us-east-1.amazonaws.com/info",
     "type": "service",
+    "version": "1",
     "class": "tests.test_flask.AwsApi"
   },
   "PrimoService-dev-hello": {
-    "url": "service://service",
+    "url": "https://htzc5syuhj.execute-api.us-east-1.amazonaws.com/",
     "type": "service",
     "class": "tests.test_flask.PrimoServiceApi"
   },

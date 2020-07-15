@@ -86,7 +86,7 @@ class Tst4Api(AbsRestApi):
     name = 'Tst4'
 
 class AwsApi(AbsRestApi):
-    name = 'Aws'
+    name = 'halo-webapp-service-dev-halo_webapp'
 
 class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
@@ -118,7 +118,7 @@ class A1(AbsApiMixinX):
                     #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
 
-    def extract_json(self,halo_request, back_response, seq=None):
+    def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
             if halo_request.request.method == HTTPChoice.get.value:#method type
                 return {"tst_get":"good"}
@@ -165,32 +165,32 @@ class A3(AbsApiMixinX):
 
 class A2(Resource, A1, AbsBaseLinkX):
 
-    def set_api_data(self,halo_request, seq=None, dict=None):
+    def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.request.method == HTTPChoice.post.value:
             if seq == '1':
                 return {}
             if seq == '3':
                 return {}
-        ret = super(A2,self).set_api_data(halo_request, seq, dict)
+        ret = super(A2,self).set_api_data(halo_request,api, seq, dict)
         return ret
 
-    def set_api_headers_deposit(self,halo_request, seq=None, dict=None):
-        return super(A2,self).set_api_headers(halo_request, seq, dict)
+    def set_api_headers_deposit(self,halo_request,api, seq=None, dict=None):
+        return super(A2,self).set_api_headers(halo_request,api, seq, dict)
 
-    def set_api_vars_deposit(self,halo_request, seq=None, dict=None):
-        return super(A2,self).set_api_vars(halo_request, seq, dict)
+    def set_api_vars_deposit(self,halo_request,api, seq=None, dict=None):
+        return super(A2,self).set_api_vars(halo_request,api, seq, dict)
 
-    def set_api_auth_deposit(self,halo_request, seq=None, dict=None):
-        return super(A2,self).set_api_auth(halo_request, seq, dict)
+    def set_api_auth_deposit(self,halo_request,api, seq=None, dict=None):
+        return super(A2,self).set_api_auth(halo_request,api, seq, dict)
 
-    def set_api_data_deposit(self,halo_request, seq=None, dict=None):
-        ret = super(A2,self).set_api_data(halo_request, seq, dict)
+    def set_api_data_deposit(self,halo_request,api, seq=None, dict=None):
+        ret = super(A2,self).set_api_data(halo_request,api, seq, dict)
         return ret
 
     def execute_api_deposit(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         return super(A2,self).execute_api(halo_request, back_api, back_vars, back_headers, back_auth, back_data, seq, dict)
 
-    def extract_json_deposit(self,halo_request, back_response, seq=None):
+    def extract_json_deposit(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
             if halo_request.request.method == HTTPChoice.get.value:#method type
                 return {"tst_get_deposit":"good"}
@@ -487,13 +487,13 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_812_api_request_soap_returns(self):
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/'):
-            api = Tst2Api(Util.get_halo_context(request))
+            api = Tst2Api(Util.get_halo_context(request),method='method2')
             timeout = Util.get_timeout(request)
             try:
                 data = {}
                 data['first'] = 'start'
                 data['second'] = 'end'
-                response = api.run('method2',timeout,data)
+                response = api.run(timeout,data)
                 print("response=" + str(response.content))
                 eq_(json.loads(response.content)['msg'],'Your input parameters are start and end')
             except HaloMethodNotImplementedException as e:
@@ -1032,13 +1032,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.get(request,{})
+                response = self.a6.get()
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
 
     def test_99998_aws_invoke_sync_success(self):
-        app.config['CIRCUIT_BREAKER'] = False
         app.config['CIRCUIT_BREAKER'] = False
         app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
         app.config['SESSION_MINUTES'] = 30
@@ -1059,7 +1058,6 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_99999_aws_invoke_sync_success(self):
         app.config['DEBUG'] = True
-        app.config['CIRCUIT_BREAKER'] = False
         app.config['CIRCUIT_BREAKER'] = False
         app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
         app.config['SESSION_MINUTES'] = 30

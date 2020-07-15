@@ -20,7 +20,7 @@
     "conn":"sync"
   },
   "5":{
-    "name":"Google",
+    "name":"halo-webapp-service-dev-halo_webapp",
     "op":"GET",
     "conn":"sync"
   },
