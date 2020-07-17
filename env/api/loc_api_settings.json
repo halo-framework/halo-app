@@ -36,6 +36,16 @@
     "protocol": "soap",
     "class": "tests.test_flask.Tst2Api"
   },
+  "Tst3": {
+    "url": "http://127.0.0.1",
+    "type": "api",
+    "class": "tests.test_flask.Tst3Api"
+  },
+  "Tst4": {
+    "url": "https://base_url/$ID",
+    "type": "api",
+    "class": "tests.test_flask.Tst4Api"
+  },
   "Outbound": {
     "url": "https://base_url/$ID",
     "type": "api",

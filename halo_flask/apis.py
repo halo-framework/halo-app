@@ -10,6 +10,7 @@ import json
 from abc import ABCMeta
 from flask import jsonify
 import requests
+from requests import RequestException
 from halo_flask.providers.providers import get_provider,ProviderError
 from .classes import AbsBaseClass
 from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError,IllegalMethodException
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 from halo_flask.circuitbreaker import CircuitBreaker
 class MyCircuitBreaker(CircuitBreaker):
     def __init__(self):
-        print("init MyCircuitBreaker")
+        print("init MyCircuitBreaker:")
         FAILURE_THRESHOLD =  self.get_failure_threshold()
         RECOVERY_TIMEOUT = self.get_recovery_timeout()
         EXPECTED_EXCEPTION = Exception
@@ -74,7 +75,7 @@ class AbsBaseApi(AbsBaseClass):
     api_type = None
     protocol = None
     halo_context = None
-    cb = MyCircuitBreaker()
+    #cb = MyCircuitBreaker()
     session = None
     version = None
 
@@ -88,8 +89,8 @@ class AbsBaseApi(AbsBaseClass):
             self.session = session
         else:
             self.session = requests.session()
-        if settings.CIRCUIT_BREAKER:
-            self.cb._name = self.name
+        #if settings.CIRCUIT_BREAKER:
+            #self.cb._name = self.name
 
     def get_url_str(self):
         """
@@ -156,9 +157,7 @@ class AbsBaseApi(AbsBaseClass):
 class AbsRestApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
-    @AbsBaseApi.cb
     def do_cb_request(self,method, url, timeout, data=None, headers=None, auth=None):
-        print("do MyCircuitBreaker")
         return self.session.request(method, url, data=data, headers=headers,
                          timeout=timeout, auth=auth)
 
@@ -425,9 +424,7 @@ class AbsRestApi(AbsBaseApi):
 class AbsSoapApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
-    @AbsBaseApi.cb
     def do_cb_request(self,method, timeout, data=None, headers=None, auth=None):
-        print("do MyCircuitBreaker")
         return self.exec_soap(method,timeout, data, headers, auth)
 
     def do_request(self,method,timeout, data=None, headers=None, auth=None):

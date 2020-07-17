@@ -14,41 +14,32 @@ from functools import wraps
 from datetime import datetime, timedelta
 from typing import AnyStr, Iterable
 
-import logging
-import threading
-import uuid
-from halo_flask.exceptions import ApiError
-from halo_flask.classes import AbsBaseClass
-from halo_flask.const import LOGChoice
-logger = logging.getLogger(__name__)
-
-#manage monitor in a multi thread env
-sem = threading.Semaphore()
-
-
 STATE_CLOSED = 'closed'
 STATE_OPEN = 'open'
 STATE_HALF_OPEN = 'half_open'
 
 
-class CircuitBreaker(AbsBaseClass):
+class CircuitBreaker(object):
     FAILURE_THRESHOLD = 5
     RECOVERY_TIMEOUT = 30
     EXPECTED_EXCEPTION = Exception
+    FALLBACK_FUNCTION = None
 
     def __init__(self,
                  failure_threshold=None,
                  recovery_timeout=None,
                  expected_exception=None,
-                 name=None):
+                 name=None,
+                 fallback_function=None):
+        self._last_failure = None
         self._failure_count = 0
         self._failure_threshold = failure_threshold or self.FAILURE_THRESHOLD
         self._recovery_timeout = recovery_timeout or self.RECOVERY_TIMEOUT
         self._expected_exception = expected_exception or self.EXPECTED_EXCEPTION
+        self._fallback_function = fallback_function or self.FALLBACK_FUNCTION
         self._name = name
         self._state = STATE_CLOSED
         self._opened = datetime.utcnow()
-        self._uuid = str(uuid.uuid4())
 
     def __call__(self, wrapped):
         return self.decorate(wrapped)
@@ -58,9 +49,9 @@ class CircuitBreaker(AbsBaseClass):
         Applies the circuit breaker to a function
         """
         if self._name is None:
-            self._name = function.__name__
+            self._name = function.__qualname__
 
-        #CircuitBreakerMonitor.register(self)
+        CircuitBreakerMonitor.register(self)
 
         @wraps(function)
         def wrapper(*args, **kwargs):
@@ -74,13 +65,14 @@ class CircuitBreaker(AbsBaseClass):
         rules on success or failure
         :param func: Decorated function
         """
-        CircuitBreakerMonitor.register(self)
-
         if self.opened:
-            raise CircuitBreakerError(str(self))
+            if self.fallback_function:
+                return self.fallback_function(*args, **kwargs)
+            raise CircuitBreakerError(self)
         try:
             result = func(*args, **kwargs)
-        except self._expected_exception:
+        except self._expected_exception as e:
+            self._last_failure = e
             self.__call_failed()
             raise
 
@@ -92,8 +84,8 @@ class CircuitBreaker(AbsBaseClass):
         Close circuit after successful execution and reset failure count
         """
         self._state = STATE_CLOSED
+        self._last_failure = None
         self._failure_count = 0
-        logger.info(LOGChoice.performance_data.value+" : call_succeeded-Close circuit " + str(self.name)+ " : "+self._uuid)
 
     def __call_failed(self):
         """
@@ -103,7 +95,6 @@ class CircuitBreaker(AbsBaseClass):
         if self._failure_count >= self._failure_threshold:
             self._state = STATE_OPEN
             self._opened = datetime.utcnow()
-            logger.debug("call_failed-Open circuit " + str(self.name)+ " : "+self._uuid)
 
     @property
     def state(self):
@@ -143,11 +134,19 @@ class CircuitBreaker(AbsBaseClass):
     def name(self):
         return self._name
 
+    @property
+    def last_failure(self):
+        return self._last_failure
+
+    @property
+    def fallback_function(self):
+        return self._fallback_function
+
     def __str__(self, *args, **kwargs):
         return self._name
 
 
-class CircuitBreakerError(ApiError):
+class CircuitBreakerError(Exception):
     def __init__(self, circuit_breaker, *args, **kwargs):
         """
         :param circuit_breaker:
@@ -155,27 +154,25 @@ class CircuitBreakerError(ApiError):
         :param kwargs:
         :return:
         """
-        super(CircuitBreakerError, self).__init__("msg",*args, **kwargs)
+        super(CircuitBreakerError, self).__init__(*args, **kwargs)
         self._circuit_breaker = circuit_breaker
 
     def __str__(self, *args, **kwargs):
-        return 'Circuit "%s" OPEN until %s (%d failures, %d sec remaining)' % (
+        return 'Circuit "%s" OPEN until %s (%d failures, %d sec remaining) (last_failure: %r)' % (
             self._circuit_breaker.name,
             self._circuit_breaker.open_until,
             self._circuit_breaker.failure_count,
-            round(self._circuit_breaker.open_remaining)
+            round(self._circuit_breaker.open_remaining),
+            self._circuit_breaker.last_failure,
         )
 
 
-class CircuitBreakerMonitor(AbsBaseClass):
+class CircuitBreakerMonitor(object):
     circuit_breakers = {}
 
     @classmethod
     def register(cls, circuit_breaker):
-        if circuit_breaker.name not in cls.circuit_breakers:
-            sem.acquire()
-            cls.circuit_breakers[circuit_breaker.name] = circuit_breaker
-            sem.release()
+        cls.circuit_breakers[circuit_breaker.name] = circuit_breaker
 
     @classmethod
     def all_closed(cls):
@@ -211,6 +208,7 @@ def circuit(failure_threshold=None,
             recovery_timeout=None,
             expected_exception=None,
             name=None,
+            fallback_function=None,
             cls=CircuitBreaker):
 
     # if the decorator is used without parameters, the
@@ -222,4 +220,6 @@ def circuit(failure_threshold=None,
             failure_threshold=failure_threshold,
             recovery_timeout=recovery_timeout,
             expected_exception=expected_exception,
-            name=name)
+            name=name,
+            fallback_function=fallback_function)
+

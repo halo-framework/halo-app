@@ -9,6 +9,7 @@ from flask_restful import Api
 from nose.tools import eq_
 from jsonpath_ng import jsonpath, parse
 from halo_flask.base_util import BaseUtil
+from halo_flask.circuitbreaker import CircuitBreakerError
 from halo_flask.flask.utilx import Util
 from halo_flask.errors import status
 from halo_flask.flask.mixinx import AbsApiMixinX,PerfMixinX
@@ -57,15 +58,29 @@ scenarios:
         url: "/loc/info"
 
 """
+from halo_flask.circuitbreaker import CircuitBreaker,CircuitBreakerMonitor
+from requests.exceptions import RequestException
+class MyCircuitBreaker(CircuitBreaker):
+    FAILURE_THRESHOLD = 3
+    RECOVERY_TIMEOUT = 60
+    EXPECTED_EXCEPTION = RequestException
 
 class CnnApi(AbsRestApi):
     name = 'Cnn'
+
+    @MyCircuitBreaker()
+    def do_cb_request(self, method, url, timeout, data=None, headers=None, auth=None):
+        return super(CnnApi,self).do_cb_request(method, url, timeout, data=None, headers=None, auth=None)
 
 class GoogleApi(AbsRestApi):
     name = 'Google'
 
 class TstApi(AbsRestApi):
     name = 'Tst'
+
+    @MyCircuitBreaker()
+    def do_cb_request(self, method, url, timeout, data=None, headers=None, auth=None):
+        return super(TstApi, self).do_cb_request(method, url, timeout, data=None, headers=None, auth=None)
 
 class Tst2Api(AbsSoapApi):
     name = 'Tst2'
@@ -305,9 +320,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         from halo_flask.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
-        app.config['PROVIDER'] = "AWS"
+        #app.config['PROVIDER'] = "AWS"
         app.config['FUNC_NAME'] = "FUNC_NAME"
-        #app.config['API_CONFIG'] =
+        #app.config['API_CONFIG'] = None
         app.config['AWS_REGION'] = 'us-east-1'
         #app.config['CIRCUIT_BREAKER'] = False
         with app.test_request_context(method='GET', path='/?abc=def'):
@@ -417,29 +432,63 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.payload, {'$.BookHotelResult': {'tst_patch': 'good'}, '$.BookFlightResult': {'tst_patch': 'good'}, '$.BookRentalResult': {'tst_patch': 'good'}})
 
     def test_6_api_request_returns_a_CircuitBreakerError(self):
-        app.config['CIRCUIT_BREAKER'] = True
-        with app.test_request_context(method='GET', path='/?a=b'):
-            api = CnnApi(Util.get_halo_context(request))
-            timeout = Util.get_timeout(request)
-            try:
-                response = api.get(timeout)
-                assert False
-            except ApiError as e:
-                #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
-                eq_(e.__class__.__name__,"CircuitBreakerError")
-
-
-    def test_7_api_request_returns_a_given_CircuitBreakerError2(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/?a=b'):
             api = TstApi(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
-                assert False
             except ApiError as e:
-                #eq_(e.status_code, status.HTTP_403_NOT_FOUND)
-                eq_(e.__class__.__name__,"ApiError")
+                pass
+            try:
+                response = api.get(timeout)
+            except ApiError as e:
+                pass
+            try:
+                response = api.get(timeout)
+            except ApiError as e:
+                pass
+            try:
+                response = api.get(timeout)
+            except CircuitBreakerError as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "CircuitBreakerError")
+
+    def test_7_api_request_returns_success(self):
+        app.config['PROVIDER'] = "AWS"
+        app.config['CIRCUIT_BREAKER'] = True
+        #self.test_6_api_request_returns_a_CircuitBreakerError()
+        with app.test_request_context(method='GET', path='/?a=b'):
+            api = TstApi(Util.get_halo_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                response = api.get(timeout)
+            except ApiError as e:
+                print(str(e))
+            try:
+                response = api.get(timeout)
+            except ApiError as e:
+                print(str(e))
+            try:
+                response = api.get(timeout)
+            except ApiError as e:
+                print(str(e))
+            try:
+                response = api.get(timeout)
+            except Exception as e:
+                print(str(e))
+            for c in CircuitBreakerMonitor.get_open():
+                print(str(c))
+            api = CnnApi(Util.get_halo_context(request))
+            timeout = Util.get_timeout(request)
+            try:
+                response = api.get(timeout)
+                for c in CircuitBreakerMonitor.get_circuits():
+                    print(str(c))
+                eq_(response.status_code, status.HTTP_200_OK)
+            except ApiError as e:
+                eq_(1,2)
 
     def test_80_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
@@ -501,6 +550,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__,"HaloMethodNotImplementedException")
 
     def test_82_api_request_rpc_returns(self):
+        app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
             api = Tst3Api(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
@@ -512,6 +562,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 
     def test_83_api_request_event_returns(self):
+        app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
             api = Tst4Api(Util.get_halo_context(request))
             timeout = Util.get_timeout(request)
@@ -546,18 +597,21 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_901_event_filter(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.process_get(request,{})
 
     def test_903_event_filter(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
@@ -575,15 +629,17 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(flag, 'true')
 
     def test_92_debug_enabled(self):
-        header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
-        with app.test_request_context(method='GET', path='/?a=b', headers=header):
+        app.config['PROVIDER'] = "AWS"
+        headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
+        with app.test_request_context(method='GET', path='/?a=b', headers=headers):
             ret = Util.get_halo_context(request)
             eq_(ret.dict[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
     def test_93_json_log(self):
         import traceback
-        header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
-        with app.test_request_context(method='GET', path='/?a=b', headers=header):
+        app.config['PROVIDER'] = "AWS"
+        headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
+        with app.test_request_context(method='GET', path='/?a=b', headers=headers):
             halo_context = Util.get_halo_context(request)
             try:
                 raise Exception("test it")
@@ -594,8 +650,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(ret[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
     def test_94_get_request_with_debug(self):
-        header = {'X_HALO_DEBUG_LOG_ENABLED': 'true'}
-        with app.test_request_context(method='GET', path='/?a=b', headers=header):
+        app.config['PROVIDER'] = 'ONPREM'
+        headers = {'x-halo-debug-log-enabled': 'true'}
+        with app.test_request_context(method='GET', path='/?a=b', headers=headers):
             ret = Util.get_debug_enabled(request)
             eq_(ret, 'true')
 
@@ -735,7 +792,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['HALO_HOST'] = 'halo_flask'
         app.config['SSM_TYPE'] = "AWS"
-        #app.config['PROVIDER'] = "AWS"
+        app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_flask.ssm import set_app_param_config
@@ -871,6 +928,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_9994_CORR(self):
+        app.config['PROVIDER'] = "AWS"
         headers = {'HTTP_HOST': '127.0.0.2','x-tester-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
@@ -984,6 +1042,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.data['errors']['error']["error_code"], 500)
 
     def test_99995_security_good_token_role_needed_exist(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['CIRCUIT_BREAKER'] = False
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
@@ -1002,7 +1061,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(1,2)
 
     def test_99996_aws_invoke_sync_fail(self):
-        app.config['CIRCUIT_BREAKER'] = False
+        app.config['PROVIDER'] = "AWS"
         app.config['CIRCUIT_BREAKER'] = False
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
@@ -1020,7 +1079,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
 
     def test_99997_aws_invoke_sync_fail(self):
-        app.config['CIRCUIT_BREAKER'] = False
+        app.config['PROVIDER'] = "AWS"
         app.config['CIRCUIT_BREAKER'] = False
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
@@ -1038,6 +1097,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
 
     def test_99998_aws_invoke_sync_success(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['CIRCUIT_BREAKER'] = False
         app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
         app.config['SESSION_MINUTES'] = 30
@@ -1057,6 +1117,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(1,2)
 
     def test_99999_aws_invoke_sync_success(self):
+        app.config['PROVIDER'] = "AWS"
         app.config['DEBUG'] = True
         app.config['CIRCUIT_BREAKER'] = False
         app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
