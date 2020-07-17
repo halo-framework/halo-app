@@ -320,7 +320,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         from halo_flask.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
-        #app.config['PROVIDER'] = "AWS"
+        app.config['PROVIDER'] = "AWS"
         app.config['FUNC_NAME'] = "FUNC_NAME"
         #app.config['API_CONFIG'] = None
         app.config['AWS_REGION'] = 'us-east-1'
@@ -464,15 +464,15 @@ class TestUserDetailTestCase(unittest.TestCase):
             timeout = Util.get_timeout(request)
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except Exception as e:
                 print(str(e))
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except Exception as e:
                 print(str(e))
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except Exception as e:
                 print(str(e))
             try:
                 response = api.get(timeout)
@@ -558,8 +558,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = api.get(timeout)
                 assert False
             except ApiError as e:
-                eq_(e.status_code, status.HTTP_404_NOT_FOUND)
-                #eq_(e.__class__.__name__,"CircuitBreakerError")
+                #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                eq_(e.__class__.__name__,"ApiError")
 
     def test_83_api_request_event_returns(self):
         app.config['PROVIDER'] = "AWS"
@@ -570,7 +570,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = api.get(timeout)
                 assert False
             except ApiError as e:
-                eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                eq_(e.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 
     def test_9_send_event(self):
