@@ -280,9 +280,6 @@ def load_saga(name,halo_request, jsonx, schema):
     # validate saga json
     if schema:
         BaseUtil.assert_valid_schema(jsonx, schema)
-    # saga engine
-    #if saga_type == "provider":
-    #    return provider_saga()
     # process saga
     try:
         if "StartAt" in jsonx:

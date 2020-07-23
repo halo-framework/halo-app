@@ -405,6 +405,10 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def do_operation_3_bq(self, halo_request,sub_func):  # high maturity - saga transactions
         logger.debug("do_operation_3_bq")
+        # saga engine
+        #@todo implement provider saga
+        #if saga_type == "provider":
+        #    return get_provider().provider_saga(self.business_event.EVENT_NAME,halo_request, self.business_event.saga)
         sagax = load_saga(self.business_event.EVENT_NAME,halo_request, self.business_event.saga, settings.SAGA_SCHEMA)
         payloads = {}
         apis = {}
