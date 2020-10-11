@@ -10,7 +10,7 @@ with open("README.md", "r") as h:
     long_description = h.read()
 
 setup(
-    name='halo_flask',
+    name='halo-flask',
     version='0.16.1',
     packages=['halo_flask', 'halo_flask.flask', 'halo_flask.schema','halo_flask.providers', 'halo_flask.providers.cloud', 'halo_flask.providers.cloud.aws', 'halo_flask.providers.onprem', 'halo_flask.providers.ssm'],
     data_files=[('schema', ['halo_flask/schema/saga_schema.json'])],
