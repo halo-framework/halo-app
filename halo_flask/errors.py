@@ -18,18 +18,23 @@ from halo_flask.const import LOC
 
 class status(AbsBaseClass):
 
+    @staticmethod
     def is_informational(code):
         return 100 <= code <= 199
 
+    @staticmethod
     def is_success(code):
         return 200 <= code <= 299
 
+    @staticmethod
     def is_redirect(code):
         return 300 <= code <= 399
 
+    @staticmethod
     def is_client_error(code):
         return 400 <= code <= 499
 
+    @staticmethod
     def is_server_error(code):
         return 500 <= code <= 599
 

@@ -12,14 +12,15 @@ from flask import jsonify
 import requests
 from requests import RequestException
 from halo_flask.providers.providers import get_provider,ProviderError
-from .classes import AbsBaseClass
-from .exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, HaloMethodNotImplementedException,MissingClassConfigError,IllegalMethodException
-from .logs import log_json
-from .reflect import Reflect
+from halo_flask.classes import AbsBaseClass
+from halo_flask.exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, \
+    HaloMethodNotImplementedException, MissingClassConfigError, IllegalMethodException
+from halo_flask.logs import log_json
+from halo_flask.reflect import Reflect
 from halo_flask.const import LOC,DEV,TST,PRD
-from .flask.utilx import Util
-from .const import HTTPChoice,SYSTEMChoice,LOGChoice
-from .settingsx import settingsx
+from halo_flask.flask.utilx import Util
+from halo_flask.const import HTTPChoice, SYSTEMChoice, LOGChoice
+from halo_flask.settingsx import settingsx
 
 settings = settingsx()
 
@@ -479,6 +480,17 @@ class AbsSoapApi(AbsBaseApi):
         except AttributeError as ex:
             raise HaloMethodNotImplementedException("function for "+str(method),ex)
 
+"""
+Request api but don't wait for response
+try:
+    requests.get("http://127.0.0.1:8000/api/",timeout=10)
+except requests.exceptions.ReadTimeout: #this confirms you that the request has reached server
+    do_something
+except:
+    print "unable to reach server"
+    raise
+"""
+
 from threading import RLock
 from .context import HaloContext
 lock = RLock()
@@ -501,6 +513,7 @@ class ApiMngr(AbsBaseClass):
         if list:
             self.API_LIST = list
 
+    @staticmethod
     def get_api(name):
         """
 
@@ -516,6 +529,7 @@ class ApiMngr(AbsBaseClass):
 
         raise NoApiDefinitionError(name)
 
+    @staticmethod
     def get_api_instance(name, *args):
         global api_dict
         ctx = args[0]
@@ -540,14 +554,6 @@ class ApiMngr(AbsBaseClass):
                     lock.release()
                 return api
         raise NoApiDefinitionError(name)
-
-
-    def get_api_instance2(name, *args):
-        class_name = HALO_API_LIST[name]
-        return Reflect.instantiate(class_name,AbsBaseApi,*args)
-
-    def get_api_instance1(self, class_name, *args):
-        return Reflect.instantiate(class_name,AbsBaseApi,self.halo_context)
 
 HALO_API_LIST = None
 SSM_CONFIG = None

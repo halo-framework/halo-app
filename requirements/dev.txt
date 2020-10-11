@@ -6,6 +6,7 @@ pytest==3.7.4
 WebTest==2.0.30
 factory-boy==2.11.1
 coverage
+pylint
 
 # Lint and code style
 flake8==3.5.0
