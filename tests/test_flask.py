@@ -5,7 +5,6 @@ import os
 
 from faker import Faker
 from flask import Flask, request
-from flask_restful import Api
 from nose.tools import eq_
 from jsonpath_ng import jsonpath, parse
 from halo_flask.base_util import BaseUtil
@@ -19,7 +18,7 @@ from halo_flask.logs import log_json
 from halo_flask import saga
 from halo_flask.const import HTTPChoice
 from halo_flask.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
-from halo_flask.flask.viewsx import Resource,AbsBaseLinkX
+from halo_flask.flask.viewsx import AbsBaseLinkX
 from halo_flask.request import HaloContext
 from halo_flask.apis import load_api_config
 from halo_flask.ssm import set_app_param_config,get_app_param_config,set_host_param_config
@@ -31,7 +30,6 @@ import unittest
 
 fake = Faker()
 app = Flask(__name__)
-api = Api(app)
 
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
@@ -178,7 +176,7 @@ class A3(AbsApiMixinX):
         request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
-class A2(Resource, A1, AbsBaseLinkX):
+class A2(A1, AbsBaseLinkX):
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.request.method == HTTPChoice.post.value:
@@ -281,7 +279,7 @@ class A4(A2):
 class A5(AbsApiMixinX):
     secure = True
 
-class A6(Resource, A5, AbsBaseLinkX):
+class A6(A5, AbsBaseLinkX):
     pass
 
 class P1(PerfMixinX):

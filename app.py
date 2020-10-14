@@ -2,7 +2,6 @@
 """Create an application instance."""
 import os
 from flask import Flask
-from flask_restful import Api
 from halo_flask.apis import load_api_config
 from halo_flask.flask.viewsx import PerfLinkX,TestLinkX,HealthLinkX,InfoLinkX
 from halo_flask.ssm import set_app_param_config,set_host_param_config,get_app_param_config
@@ -38,8 +37,6 @@ def create_app(config_object='settings'):
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']
             load_global_data(class_name,data_map)
-
-    api = Api(app, catch_all_404s=True)
 
     site_map(app)
 

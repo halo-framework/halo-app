@@ -44,7 +44,6 @@ requests==2.20.1
 python-json-logger==0.1.9
 PyJWT==1.6.3
 jsonschema==2.6.0
-Flask-RESTful==0.3.6
 six==1.11.0
 jsonpath-ng==1.4.3
 zeep==3.4.0

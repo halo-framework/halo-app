@@ -8,9 +8,8 @@ import traceback
 from abc import ABCMeta,abstractmethod
 import importlib
 import jwt
-from flask import Response as HttpResponse
-from flask import redirect
-from flask_restful import abort
+from flask import Response as HttpResponse, abort, render_template,jsonify,redirect
+from werkzeug.exceptions import HTTPException
 # from flask import request
 # flask
 from flask.views import MethodView
@@ -24,7 +23,6 @@ from ..response import HaloResponse
 from ..settingsx import settingsx
 
 
-import flask_restful as restful
 from ..flask.mixinx import PerfMixinX,TestMixinX,HealthMixinX,InfoMixinX
 from flask import request
 
@@ -117,7 +115,19 @@ class AbsBaseLinkX(MethodView):
         json_error = Util.json_error_response(self.halo_context,request, settings.ERR_MSG_CLASS, error)
         if settings.FRONT_WEB:
             return redirect("/" + settings.ENV_NAME +"/"+ str(http_status_code))
-        abort(http_status_code, errors=json_error)
+        self.do_abort(http_status_code, errors=json_error)
+
+    def do_abort(self,http_status_code, **kwargs):
+        """Raise a HTTPException for the given http_status_code. Attach any keyword
+        arguments to the exception for later processing.
+        """
+        # noinspection PyUnresolvedReferences
+        try:
+            abort(http_status_code)
+        except HTTPException as e:
+            if len(kwargs):
+                e.data = kwargs
+            raise
 
     def process_finally(self, request, orig_log_level):
         """
@@ -285,19 +295,16 @@ class AbsBaseLinkX(MethodView):
         return Util.json_data_response(ret.payload, ret.code, ret.headers)
 
 
-class Resource(restful.Resource):
+class TestLinkX(TestMixinX, AbsBaseLinkX):
     pass
 
-class TestLinkX(Resource, TestMixinX, AbsBaseLinkX):
+class PerfLinkX(PerfMixinX, AbsBaseLinkX):
     pass
 
-class PerfLinkX(Resource, PerfMixinX, AbsBaseLinkX):
+class HealthLinkX(HealthMixinX, AbsBaseLinkX):
     pass
 
-class HealthLinkX(Resource, HealthMixinX, AbsBaseLinkX):
-    pass
-
-class InfoLinkX(Resource, InfoMixinX, AbsBaseLinkX):
+class InfoLinkX(InfoMixinX, AbsBaseLinkX):
     pass
 
 class GlobalService():
