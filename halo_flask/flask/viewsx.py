@@ -37,7 +37,7 @@ settings = settingsx()
 # Create your views here.
 logger = logging.getLogger(__name__)
 
-#@todo add jsonify to al responses
+#@todo add jsonify to all responses
 
 class AbsBaseLinkX(MethodView):
     __metaclass__ = ABCMeta
@@ -89,6 +89,7 @@ class AbsBaseLinkX(MethodView):
             http_status_code = e.status_code
             error = e
             error_message = str(error)
+            # @todo check if stack needed and working
             e.stack = traceback.format_exc()
             logger.error(error_message, extra=log_json(self.halo_context, Util.get_req_params(request), e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -98,6 +99,7 @@ class AbsBaseLinkX(MethodView):
         except Exception as e:
             error = e
             error_message = str(error)
+            #@todo check if stack needed and working
             e.stack = traceback.format_exc()
             logger.error(error_message, extra=log_json(self.halo_context, Util.get_req_params(request), e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
