@@ -6,7 +6,7 @@ import logging
 # aws
 # common
 
-from halo_flask.classes import AbsBaseClass
+from halo_app.classes import AbsBaseClass
 logger = logging.getLogger(__name__)
 
 

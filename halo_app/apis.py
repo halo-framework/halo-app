@@ -8,19 +8,18 @@ import time
 import uuid
 import json
 from abc import ABCMeta
-from flask import jsonify
 import requests
 from requests import RequestException
-from halo_flask.providers.providers import get_provider,ProviderError
-from halo_flask.classes import AbsBaseClass
-from halo_flask.exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, \
+from halo_app.providers.providers import get_provider,ProviderError
+from halo_app.classes import AbsBaseClass
+from halo_app.exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, \
     HaloMethodNotImplementedException, MissingClassConfigError, IllegalMethodException
-from halo_flask.logs import log_json
-from halo_flask.reflect import Reflect
-from halo_flask.const import LOC,DEV,TST,PRD
-from halo_flask.flask.utilx import Util
-from halo_flask.const import HTTPChoice, SYSTEMChoice, LOGChoice
-from halo_flask.settingsx import settingsx
+from halo_app.logs import log_json
+from halo_app.reflect import Reflect
+from halo_app.const import LOC,DEV,TST,PRD
+from halo_app.app.utilx import Util
+from halo_app.const import HTTPChoice, SYSTEMChoice, LOGChoice
+from halo_app.settingsx import settingsx
 
 settings = settingsx()
 
@@ -30,7 +29,7 @@ Rpc = "rpc"
 
 logger = logging.getLogger(__name__)
 
-from halo_flask.circuitbreaker import CircuitBreaker
+from halo_app.circuitbreaker import CircuitBreaker
 class MyCircuitBreaker(CircuitBreaker):
     def __init__(self):
         print("init MyCircuitBreaker:")
@@ -564,21 +563,21 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
     global SSM_APP_CONFIG
 
     #if stage_type == LOC:
-    # from halo_flask.ssm import get_config as get_config
+    # from halo_app.ssm import get_config as get_config
     try:
-        from halo_flask.halo_flask.ssm import get_config
+        from halo_app.halo_flask.ssm import get_config
     except:
-        from halo_flask.ssm import get_config
+        from halo_app.ssm import get_config
 
     SSM_CONFIG = get_config(ssm_type)
     # set_param_config(AWS_REGION, 'DEBUG_LOG', '{"val":"false"}')
     # SSM_CONFIG.get_param("test")
 
-    # from halo_flask.ssm import get_config as get_config
+    # from halo_app.ssm import get_config as get_config
     try:
-        from halo_flask.halo_flask.ssm import get_app_config
+        from halo_app.halo_flask.ssm import get_app_config
     except:
-        from halo_flask.ssm import get_app_config
+        from halo_app.ssm import get_app_config
 
     SSM_APP_CONFIG = get_app_config(ssm_type)
 
@@ -629,7 +628,7 @@ def get_rest_api_instance(class_name,*args):
 
 def get_rest_api_class(name,attributes=None):
     ApiClass = create_api_class(name,(AbsRestApi, ),attributes)
-    return "halo_flask.apis."+ApiClass.__name__
+    return "halo_app.apis."+ApiClass.__name__
 
 def create_api_class(name,bases,attributes=None):
     ApiClass = type(name+"Api", bases, {

@@ -4,8 +4,8 @@ import logging
 from abc import ABCMeta
 
 from collections import OrderedDict
-from halo_flask.response import HaloResponse
-from halo_flask.settingsx import settingsx
+from halo_app.response import HaloResponse
+from halo_app.settingsx import settingsx
 
 SEQ = "seq"
 SAGA = "saga"

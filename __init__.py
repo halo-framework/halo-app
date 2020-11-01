@@ -1,1 +1,1 @@
-name = "halo_flask"
+name = "halo_app"

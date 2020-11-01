@@ -9,12 +9,11 @@ from abc import ABCMeta
 import queue
 import time
 
-from flask import current_app as app
-from halo_flask.exceptions import StoreException,StoreClearException
-from halo_flask.classes import AbsBaseClass
-from halo_flask.request import HaloContext
-from halo_flask.settingsx import settingsx
-from halo_flask.reflect import Reflect
+from halo_app.exceptions import StoreException,StoreClearException
+from halo_app.classes import AbsBaseClass
+from halo_app.request import HaloContext
+from halo_app.settingsx import settingsx
+from halo_app.reflect import Reflect
 
 logger = logging.getLogger(__name__)
 

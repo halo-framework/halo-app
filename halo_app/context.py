@@ -4,8 +4,8 @@ import jwt
 import logging
 import datetime
 # halo
-from halo_flask.classes import AbsBaseClass
-from halo_flask.settingsx import settingsx
+from halo_app.classes import AbsBaseClass
+from halo_app.settingsx import settingsx
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +34,17 @@ class HaloContext(AbsBaseClass):
 
     dict = {}
 
-    def __init__(self, request):
-        for key in self.items:
-            flag = self.items[key]
-            if flag in request.headers:
-                self.dict[key] = request.headers[flag]
+    def __init__(self, headers=None):
+        if headers:
+            for key in self.items:
+                flag = self.items[key]
+                if flag in headers:
+                    self.dict[key] = headers[flag]
 
     def get(self, key):
-        return self.dict[key]
+        if key in self.dict:
+            return self.dict[key]
+        return None
 
     def put(self, key, value):
         self.dict[key] = value

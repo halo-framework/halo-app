@@ -2,14 +2,15 @@
 """Create an application instance."""
 import os
 from flask import Flask
-from halo_flask.apis import load_api_config
-from halo_flask.flask.viewsx import PerfLinkX,TestLinkX,HealthLinkX,InfoLinkX
-from halo_flask.ssm import set_app_param_config,set_host_param_config,get_app_param_config
-from halo_flask.flask.viewsx import load_global_data
-from halo_flask.base_util import BaseUtil
+from halo_app.apis import load_api_config
+from halo_app.ssm import set_app_param_config,set_host_param_config,get_app_param_config
+from halo_app.app.viewsx import load_global_data
+from halo_app.base_util import BaseUtil
 
 #@todo remove aws from code
 #@todo enable reflection for major functionality: saga,cache
+
+
 
 def create_app(config_object='settings'):
     """
@@ -29,10 +30,9 @@ def create_app(config_object='settings'):
             set_app_param_config(app.config['SSM_TYPE'], params )
             val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'], "url")
             print("get_app_param_config=" + str(val))
+        from halo_app.app.viewsx import TestLinkX
         app.add_url_rule(stage, view_func=TestLinkX.as_view("member"))
-        app.add_url_rule(stage+"/perf", view_func=PerfLinkX.as_view("perf"))
-        app.add_url_rule(stage+"/health", view_func=HealthLinkX.as_view("Health"))
-        app.add_url_rule(stage+"/info", view_func=InfoLinkX.as_view("Info"))
+
         if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']

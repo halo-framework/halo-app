@@ -7,23 +7,23 @@ from faker import Faker
 from flask import Flask, request
 from nose.tools import eq_
 from jsonpath_ng import jsonpath, parse
-from halo_flask.base_util import BaseUtil
-from halo_flask.circuitbreaker import CircuitBreakerError
-from halo_flask.flask.utilx import Util
-from halo_flask.errors import status
-from halo_flask.flask.mixinx import AbsApiMixinX,PerfMixinX
-from halo_flask.flask.viewsx import PerfLinkX
-from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
-from halo_flask.logs import log_json
-from halo_flask import saga
-from halo_flask.const import HTTPChoice
-from halo_flask.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
-from halo_flask.flask.viewsx import AbsBaseLinkX
-from halo_flask.request import HaloContext
-from halo_flask.apis import load_api_config
-from halo_flask.ssm import set_app_param_config,get_app_param_config,set_host_param_config
-from halo_flask.flask.viewsx import load_global_data
-from halo_flask.security import HaloSecurity
+from halo_app.base_util import BaseUtil
+from halo_app.circuitbreaker import CircuitBreakerError
+from halo_app.app.utilx import Util
+from halo_app.errors import status
+from halo_app.app.mixinx import AbsApiMixinX,PerfMixinX
+from halo_app.app.viewsx import PerfLinkX
+from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
+from halo_app.logs import log_json
+from halo_app import saga
+from halo_app.const import HTTPChoice
+from halo_app.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
+from halo_app.app.viewsx import AbsBaseLinkX
+from halo_app.request import HaloContext
+from halo_app.apis import load_api_config
+from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
+from halo_app.app.viewsx import load_global_data
+from halo_app.security import HaloSecurity
 import unittest
 
 #6,7,9923,9941 failing
@@ -31,8 +31,8 @@ import unittest
 fake = Faker()
 app = Flask(__name__)
 
-from halo_flask.request import HaloRequest
-from halo_flask.response import HaloResponse
+from halo_app.request import HaloRequest
+from halo_app.response import HaloResponse
 
 
 ##################################### test #########################
@@ -56,7 +56,7 @@ scenarios:
         url: "/loc/info"
 
 """
-from halo_flask.circuitbreaker import CircuitBreaker,CircuitBreakerMonitor
+from halo_app.circuitbreaker import CircuitBreaker,CircuitBreakerMonitor
 from requests.exceptions import RequestException
 class MyCircuitBreaker(CircuitBreaker):
     FAILURE_THRESHOLD = 3
@@ -104,7 +104,7 @@ class AwsApi(AbsRestApi):
 class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
 
-from halo_flask.flask.mixinx import AbsBaseMixinX,AbsApiMixinX,AbsDbMixin
+from halo_app.app.mixinx import AbsBaseMixinX,AbsApiMixinX,AbsDbMixin
 class DbTest(AbsApiMixinX):
     pass
 class DbMixin(AbsDbMixin):
@@ -288,7 +288,7 @@ class P1(PerfMixinX):
 class P2(PerfLinkX):
     pass
 
-from halo_flask.flask.filter import RequestFilter,RequestFilterClear
+from halo_app.app.filter import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.request.headers[HaloContext.items.get(HaloContext.CORRELATION)])
@@ -300,7 +300,7 @@ class TestRequestFilterClear(RequestFilterClear):
 
 class TestAwsRequestFilterClear(RequestFilterClear):
     def run(self,event):
-        from halo_flask.providers.providers import get_provider
+        from halo_app.providers.providers import get_provider
         get_provider().publish()
         print("insert_events_to_repository " + str(event.serialize()))
 
@@ -321,7 +321,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     Tests /users detail operations.
     """
     def start(self):
-        from halo_flask.const import LOC
+        from halo_app.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
         app.config['PROVIDER'] = "AWS"
@@ -357,7 +357,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.start()
 
     def test_000_start(self):
-        from halo_flask.const import LOC
+        from halo_app.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
         app.config['FUNC_NAME'] = "FUNC_NAME"
@@ -385,7 +385,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_01_start(self):
         app.config['SSM_TYPE'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
-        app.config['FUNC_NAME'] = "halo_flask"
+        app.config['FUNC_NAME'] = "halo_app"
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'],"url")
@@ -579,7 +579,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9_send_event(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            from halo_flask.events import AbsBaseEvent
+            from halo_app.events import AbsBaseEvent
             class Event1Event(AbsBaseEvent):
                 target_service = 'func1'
                 key_name = 'def'
@@ -763,51 +763,51 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9940_ssm_aws(self):  # @TODO test without HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = 'halo_flask'
+        app.config['HALO_HOST'] = 'halo_app'
         app.config['SSM_TYPE'] = "AWS"
         #app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
-                from halo_flask.ssm import set_app_param_config
+                from halo_app.ssm import set_app_param_config
                 params = {}
                 params["id"] = "124"
                 set_app_param_config(app.config['SSM_TYPE'],params )
                 import time
                 print("sleep.")
                 time.sleep(5.4)
-                from halo_flask.ssm import get_app_config
+                from halo_app.ssm import get_app_config
                 config = get_app_config(app.config['SSM_TYPE'])
-                eq_(config.get_param("halo_flask")["id"], '124')
+                eq_(config.get_param("halo_app")["id"], '124')
             except Exception as e:
                 eq_(e.__class__.__name__, "ProviderError")
 
     def test_9941_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = 'halo_flask'
+        app.config['HALO_HOST'] = 'halo_app'
         app.config['SSM_TYPE'] = "AWS"
         app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            from halo_flask.ssm import set_app_param_config,set_host_param_config
+            from halo_app.ssm import set_app_param_config,set_host_param_config
             params = {}
             params["url"] = set_host_param_config("127.0.0.1:8000")
             set_app_param_config(app.config['SSM_TYPE'], params)
             import time
             print("sleep.")
             time.sleep(5.4)
-            from halo_flask.ssm import get_app_config
+            from halo_app.ssm import get_app_config
             config = get_app_config(app.config['SSM_TYPE'])
-            eq_(config.get_param("halo_flask")["url"], 'https://127.0.0.1:8000/loc')
+            eq_(config.get_param("halo_app")["url"], 'https://127.0.0.1:8000/loc')
 
     def test_9942_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = 'halo_flask'
+        app.config['HALO_HOST'] = 'halo_app'
         app.config['SSM_TYPE'] = "AWS"
         app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            from halo_flask.ssm import set_app_param_config
+            from halo_app.ssm import set_app_param_config
             import uuid
             uuidx = uuid.uuid4().__str__()
             print(uuidx)
@@ -817,27 +817,27 @@ class TestUserDetailTestCase(unittest.TestCase):
             import time
             print("sleep.")
             time.sleep(5.4)
-            from halo_flask.ssm import get_app_config
+            from halo_app.ssm import get_app_config
             config = get_app_config(app.config['SSM_TYPE'])
             eq_(config.get_param(app.config['HALO_HOST'])["session_id"], uuidx)
 
     def test_9944_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = 'halo_flask'
+        app.config['HALO_HOST'] = 'halo_app'
         app.config['SSM_TYPE'] = None
         #app.config['PROVIDER'] = "AWS"
         #app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
-                from halo_flask.ssm import set_app_param_config
-                from halo_flask.ssm import set_host_param_config
+                from halo_app.ssm import set_app_param_config
+                from halo_app.ssm import set_host_param_config
                 params = {}
-                params["url"] = set_host_param_config("halo_flask:8000")
+                params["url"] = set_host_param_config("halo_app:8000")
                 set_app_param_config(app.config['SSM_TYPE'], params)
                 import time
                 print("sleep.")
                 time.sleep(5.4)
-                from halo_flask.ssm import get_app_config
+                from halo_app.ssm import get_app_config
                 config = get_app_config(app.config['SSM_TYPE'])
                 eq_(config.get_param(app.config['HALO_HOST'])["url"], 'https://127.0.0.1:8000/loc')
             except Exception as e:
@@ -845,23 +845,23 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9945_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
-        app.config['HALO_HOST'] = 'halo_flask'
+        app.config['HALO_HOST'] = 'halo_app'
         app.config['SSM_TYPE'] = "XYZ"
         #app.config['PROVIDER'] = "AWS"
         #app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             try:
-                from halo_flask.ssm import set_app_param_config
-                from halo_flask.ssm import set_host_param_config
+                from halo_app.ssm import set_app_param_config
+                from halo_app.ssm import set_host_param_config
                 params = {}
-                params["url"] = set_host_param_config("halo_flask:8000")
+                params["url"] = set_host_param_config("halo_app:8000")
                 set_app_param_config(app.config['SSM_TYPE'], params)
                 import time
                 print("sleep.")
                 time.sleep(5.4)
-                from halo_flask.ssm import get_app_config
+                from halo_app.ssm import get_app_config
                 config = get_app_config(app.config['SSM_TYPE'])
-                eq_(config.get_param("halo_flask")["url"], 'https://halo_flask:8000/loc')
+                eq_(config.get_param("halo_app")["url"], 'https://halo_flask:8000/loc')
             except Exception as e:
                 eq_(e.__class__.__name__, "NotSSMTypeError")
 
@@ -869,15 +869,15 @@ class TestUserDetailTestCase(unittest.TestCase):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['SSM_TYPE'] = "ONPREM"
         app.config['ONPREM_SSM_CLASS_NAME'] = 'OnPremClient'
-        app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_flask.providers.ssm.onprem_ssm_client'
+        app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_app.providers.ssm.onprem_ssm_client'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            from halo_flask.ssm import set_app_param_config
+            from halo_app.ssm import set_app_param_config
             params = {}
             params["url"] = "124"
             set_app_param_config(app.config['SSM_TYPE'], params)
-            from halo_flask.ssm import get_app_config
+            from halo_app.ssm import get_app_config
             config = get_app_config(app.config['SSM_TYPE'])
-            t = config.get_param('halo_flask')
+            t = config.get_param('halo_app')
             print("t="+str(t))
             eq_(str(t), '<Section: FUNC_NAME>')#'<Section: DEFAULT>')
 
@@ -891,7 +891,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_997_timeout(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            os.environ["AWS_LAMBDA_FUNCTION_NAME"] = "halo_flask"
+            os.environ["AWS_LAMBDA_FUNCTION_NAME"] = "halo_app"
             timeout = Util.get_timeout(request)
             eq_(timeout, 3)
 
@@ -960,10 +960,10 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_9996_NOCORR(self):
-        from halo_flask.flask.viewsx import load_global_data
-        app.config["INIT_CLASS_NAME"] = 'halo_flask.flask.viewsx.GlobalService'
+        from halo_app.app.viewsx import load_global_data
+        app.config["INIT_CLASS_NAME"] = 'halo_app.app.viewsx.GlobalService'
         app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
-            "C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\env\\config\\flask_setting_mapping.json"}
+            "C:\\dev\\projects\\halo\\halo_app\\halo_app\\env\\config\\flask_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
 
     def test_9997_db(self):

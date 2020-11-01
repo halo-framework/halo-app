@@ -7,25 +7,58 @@ import logging
 import os
 import time
 from environs import Env
-
-
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError, NoSSMRegionError,ProviderInitError
-from halo_flask.classes import AbsBaseClass
-# from .logs import log_json
-from halo_flask.base_util import BaseUtil
-from halo_flask.flask.utilx import Util
-from halo_flask.settingsx import settingsx
+from abc import ABCMeta,abstractmethod
+from halo_app.exceptions import HaloError, CacheKeyError, CacheExpireError, HaloException, NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
+from halo_app.classes import AbsBaseClass
+from halo_app.logs import log_json
+from halo_app.base_util import BaseUtil
+from halo_app.reflect import Reflect
+from halo_app.settingsx import settingsx
 settings = settingsx()
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 logger = logging.getLogger(__name__)
 
-# Initialize boto3 client at global scope for connection reuse
 client = None
-full_config_path,short_config_path = BaseUtil.get_env()
 
-def get_client(region_name):
+
+class AbsOnPremClient(AbsBaseClass):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def get_parameters_by_path(self,Path,Recursive,WithDecryption): raise NotImplementedError("NotImplemented get_parameters_by_path in OnPremClient")
+
+    @abstractmethod
+    def put_parameter(self,Name,Value,Type,Overwrite): raise NotImplementedError("NotImplemented put_parameter in OnPremClient")
+
+def get_onprem_client()->AbsOnPremClient:
+    if settings.ONPREM_SSM_CLASS_NAME:
+        class_name = settings.ONPREM_SSM_CLASS_NAME
+    else:
+        raise NoLocalSSMClassError("no ONPREM_SSM_CLASS_NAME")
+    if settings.ONPREM_SSM_MODULE_NAME:
+        module = settings.ONPREM_SSM_MODULE_NAME
+    else:
+        raise NoLocalSSMModuleError("no ONPREM_SSM_MODULE_NAME")
+    return Reflect.do_instantiate(module,class_name, None)
+
+def get_onprem_client1()->AbsOnPremClient:
+    if settings.ONPREM_SSM_CLASS_NAME:
+        class_name = settings.ONPREM_SSM_CLASS_NAME
+    else:
+        raise NoLocalSSMClassError("no ONPREM_SSM_CLASS_NAME")
+    if settings.ONPREM_SSM_MODULE_NAME:
+        module = settings.ONPREM_SSM_MODULE_NAME
+    else:
+        raise NoLocalSSMModuleError("no ONPREM_SSM_MODULE_NAME")
+    import importlib
+    module = importlib.import_module(module)
+    class_ = getattr(module, class_name)
+    instance = class_()
+    return instance
+
+def get_client():
     """
 
     :param region_name:
@@ -34,20 +67,10 @@ def get_client(region_name):
     logger.debug("get_client")
     global client
     if not client:
-        import boto3
-        client = boto3.client('ssm', region_name=region_name)
+        client = get_onprem_client()
     return client
 
-def get_region():
-    logger.debug("get_region")
-    try:
-        return Util.get_func_region()
-    except ProviderInitError as e:
-        raise e
-    except HaloError:
-        if settings.AWS_REGION:
-            return settings.AWS_REGION
-    raise NoSSMRegionError("")
+
 
 # ALWAYS use json value in parameter store!!!
 
@@ -88,14 +111,13 @@ def load_cache(config, expiryMs=DEFAULT_EXPIRY):
 
 
 class MyConfig(AbsBaseClass):
-    def __init__(self, cache, path, region_name):
+    def __init__(self, cache, path):
         """
         Construct new MyApp with configuration
         :param config: application configuration
         """
         self.cache = cache
         self.path = path
-        self.region_name = region_name
 
     def get_param(self, key):
         """
@@ -105,6 +127,8 @@ class MyConfig(AbsBaseClass):
         """
         now = current_milli_time()
         if now <= self.cache.expiration:
+            for key in self.cache.items:
+                logger.debug("key=" + str(key))
             if key in self.cache.items:
                 return self.cache.items[key]
             else:
@@ -116,22 +140,17 @@ class MyConfig(AbsBaseClass):
         raise CacheExpireError("cache expired")
 
 
-def load_config(region_name, ssm_parameter_path):
+def load_config(ssm_parameter_path):
     """
     Load configparser from config stored in SSM Parameter Store
     :param ssm_parameter_path: Path to app config in SSM Parameter Store
     :return: ConfigParser holding loaded config
     """
-    try:
-        from botocore.exceptions import ClientError
-    except Exception as e:
-        logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise SSMError("please Load package Halo_aws in order to use AWS SSM",e)
     configuration = configparser.ConfigParser()
-    logger.debug("ssm_parameter_path=" + str(ssm_parameter_path))
+    logger.debug("ssm_parameter_path=" + str(ssm_parameter_path) )
     try:
         # Get all parameters for this app
-        param_details = get_client(region_name).get_parameters_by_path(
+        param_details = get_client().get_parameters_by_path(
             Path=ssm_parameter_path,
             Recursive=False,
             WithDecryption=True
@@ -149,7 +168,7 @@ def load_config(region_name, ssm_parameter_path):
                 logger.debug("Found configuration: " + str(config_dict))
                 configuration.read_dict(config_dict)
 
-    except ClientError as e:
+    except HaloException as e:
         logger.error("Encountered a client error loading config from SSM:" + str(e))
     except json.decoder.JSONDecodeError as e:
         logger.error("Encountered a json error loading config from SSM:" + str(e))
@@ -167,89 +186,70 @@ def set_param_config(region_name, key, value):
     :param value:
     :return:
     """
+    full_config_path,short_config_path = BaseUtil.get_env()
     ssm_parameter_path = full_config_path + '/' + key
     return set_config(region_name, ssm_parameter_path, value)
 
 def get_app_param_config(service_name,var_name):
-    app_config = get_app_config()
-    try:
-        param = app_config.get_param(service_name)
-        if var_name in param:
-            value = param[var_name]
-            return value
-    except CacheKeyError as e:
-        pass
+    """
+
+    :param region_name:
+    :param host:
+    :return:
+    """
     return None
 
 def set_app_param_config(params):
     """
 
-    :param var_name:
-    :param var_value:
+    :param region_name:
+    :param host:
     :return:
     """
-
-    region_name = get_region()
+    full_config_path,short_config_path = BaseUtil.get_env()
     ssm_parameter_path = short_config_path + '/' + BaseUtil.get_func()
-    app_config = get_app_config()
-    try:
-        param =  app_config.get_param(settings.FUNC_NAME)
-        for var_name in params.keys():
-            param[var_name] = params[var_name]
-        value = '{'
-        for i in param:
-            value = value + '"' + str(i) + '":"' + str(param[i]) + '",'
-        value = value[:-1]
-        value = value + '}'
-        return set_config(region_name, ssm_parameter_path, value)
-    except CacheKeyError as e:
-        value = '{'
-        for var_name in params.keys():
-            value = value + '"' + str(var_name) + '":"' + str(params[var_name]) + '",'
-        value = value[:-1]
-        value = value + '}'
-        return set_config(region_name, ssm_parameter_path, value)
+    value = '{'
+    for var_name in params.keys():
+        value = value + '"' + str(var_name) + '":"' + str(params[var_name]) + '",'
+    value = value[:-1]
+    value = value + '}'
+    return set_config(ssm_parameter_path, value)
 
 
-def set_config(region_name, ssm_parameter_path, value):
+def set_config(ssm_parameter_path, value):
     """
     Load configparser from config stored in SSM Parameter Store
     :param ssm_parameter_path: Path to app config in SSM Parameter Store
     :return: ConfigParser holding loaded config
     """
     try:
-        from botocore.exceptions import ClientError
-    except Exception as e:
-        logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise SSMError("please Load package Halo_aws in order to use AWS SSM",e)
-    try:
         # set parameters for this app
 
         json.loads(value)
-        ret = get_client(region_name).put_parameter(
+        ret = get_client().put_parameter(
             Name=ssm_parameter_path,
             Value=value,
             Type='String',
             Overwrite=True
         )
-
+        full_config_path,short_config_path = BaseUtil.get_env()
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
-    except ClientError as e:
-        msg = "Encountered a client error setting config from SSM:" + str(e)
+    except HaloException as e:
+        msg = "Encountered a client error setting config from SSM"
         logger.error(msg)
         raise SSMError(msg,e)
     except json.decoder.JSONDecodeError as e:
-        msg = "Encountered a json error setting config from SSM" + str(e)
+        msg = "Encountered a json error setting config from SSM"
         logger.error(msg)
         raise SSMError(msg,e)
     except Exception as e:
-        msg = "Encountered an error setting config from SSM:" + str(e)
+        msg = "Encountered an error setting config from SSM"
         logger.error(msg)
         raise SSMError(msg,e)
 
 
-def get_cache(region_name, path):
+def get_cache(path):
     """
 
     :param region_name:
@@ -257,7 +257,7 @@ def get_cache(region_name, path):
     :return:
     """
     logger.debug("get_cache")
-    config = load_config(region_name, path)
+    config = load_config(path)
     cache = load_cache(config)
     return cache
 
@@ -265,14 +265,14 @@ def get_cache(region_name, path):
 def get_config():
     """
 
+    :param region_name:
     :return:
     """
     # Initialize app if it doesn't yet exist
-    region_name = get_region()
-    logger.debug("region_name:"+str(region_name))
-    logger.debug("Loading config and creating new MyConfig..." + full_config_path+",AWS_REGION="+region_name)
-    cache = get_cache(region_name, full_config_path)
-    myconfig = MyConfig(cache, full_config_path, region_name)
+    full_config_path,short_config_path = BaseUtil.get_env()
+    logger.debug("Loading config and creating new MyConfig..." + full_config_path)
+    cache = get_cache(full_config_path)
+    myconfig = MyConfig(cache, full_config_path)
     logger.debug("MyConfig is " + str(cache.items._sections))
     return myconfig
 
@@ -280,12 +280,13 @@ def get_config():
 def get_app_config():
     """
 
+    :param region_name:
     :return:
     """
     # Initialize app if it doesn't yet exist
-    region_name = get_region()
-    logger.debug("Loading app config and creating new AppConfig..." + short_config_path+",AWS_REGION="+region_name)
-    cache = get_cache(region_name, short_config_path)
-    appconfig = MyConfig(cache, short_config_path, region_name)
+    full_config_path,short_config_path = BaseUtil.get_env()
+    logger.debug("Loading app config and creating new AppConfig..." + short_config_path)
+    cache = get_cache(short_config_path)
+    appconfig = MyConfig(cache, short_config_path)
     logger.debug("AppConfig is " + str(cache.items._sections))
     return appconfig

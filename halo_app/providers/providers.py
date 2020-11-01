@@ -17,11 +17,11 @@ from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem
 from .ssm.onprem_ssm import get_config as get_config_onprem
 from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from ..settingsx import settingsx
-from halo_flask.exceptions import ProviderError,NoONPREMProviderClassError,NoONPREMProviderModuleError,ProviderInitError
-from halo_flask.classes import AbsBaseClass
-from halo_flask.logs import log_json
-from halo_flask.sys_util import SysUtil
-from halo_flask.reflect import Reflect
+from halo_app.exceptions import ProviderError,NoONPREMProviderClassError,NoONPREMProviderModuleError,ProviderInitError
+from halo_app.classes import AbsBaseClass
+from halo_app.logs import log_json
+from halo_app.sys_util import SysUtil
+from halo_app.reflect import Reflect
 
 settings = settingsx()
 #current_milli_time = lambda: int(round(time.time() * 1000))

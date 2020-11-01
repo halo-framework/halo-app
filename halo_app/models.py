@@ -6,9 +6,9 @@ import logging
 from abc import ABCMeta
 
 
-from halo_flask.classes import AbsBaseClass
-from halo_flask.logs import log_json
-from halo_flask.const import SYSTEMChoice,LOGChoice
+from halo_app.classes import AbsBaseClass
+from halo_app.logs import log_json
+from halo_app.const import SYSTEMChoice,LOGChoice
 from .settingsx import settingsx
 
 settings = settingsx()

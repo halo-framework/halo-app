@@ -8,14 +8,13 @@ import os
 import uuid
 import random
 import importlib
-from flask import Response
 from ..settingsx import settingsx
-from halo_flask.classes import AbsBaseClass
-from halo_flask.const import HTTPChoice,LOC
-from halo_flask.context import HaloContext
-from halo_flask.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
-from halo_flask.providers.providers import get_provider,ONPREM
-from halo_flask.exceptions import NoCorrelationIdException
+from halo_app.classes import AbsBaseClass
+from halo_app.const import HTTPChoice,LOC
+from halo_app.context import HaloContext
+from halo_app.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
+from halo_app.providers.providers import get_provider,ONPREM
+from halo_app.exceptions import NoCorrelationIdException
 
 settings = settingsx()
 
@@ -203,19 +202,6 @@ class Util(AbsBaseClass):
     """
 
     @staticmethod
-    def json_data_response(data, status_code=200, headers={}):
-        """
-
-        :param data:
-        :param status_code:
-        :return:
-        """
-        if status_code >= 300:
-            return Response(data, status=status_code, headers=headers)
-        return Response(json.dumps(data), status=status_code, headers=headers)
-        #return jsonify(data)
-
-    @staticmethod
     def get_req_params(request):
         """
 
@@ -333,7 +319,7 @@ class Util(AbsBaseClass):
         return dbg
 
     @classmethod
-    def isDebugEnabled(cls, halo_context, request=None):
+    def isDebugEnabled(cls, halo_context):
         """
 
         :param req_context:
@@ -348,7 +334,7 @@ class Util(AbsBaseClass):
         return False
 
     @staticmethod
-    def json_error_response(halo_context,request, clazz, e):  # code, msg, requestId):
+    def json_error_response(halo_context,args, clazz, e):  # code, msg, requestId):
         """
 
         :param req_context:
@@ -382,7 +368,7 @@ class Util(AbsBaseClass):
                    }
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
             payload["stack"] = json.dumps(e.stack)
-            payload["request"] = json.dumps(Util.get_req_params(request))
+            payload["request"] = json.dumps(args)
         return payload
 
     @staticmethod

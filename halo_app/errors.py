@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import os
-from halo_flask.classes import AbsBaseClass
-from halo_flask.const import LOC
+from halo_app.classes import AbsBaseClass
+from halo_app.const import LOC
 
 """
 

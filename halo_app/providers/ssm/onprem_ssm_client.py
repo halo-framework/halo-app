@@ -8,8 +8,8 @@ import os
 import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
-from halo_flask.exceptions import HaloError, CacheKeyError, CacheExpireError,HaloException
-from halo_flask.providers.ssm.onprem_ssm import AbsOnPremClient
+from halo_app.exceptions import HaloError, CacheKeyError, CacheExpireError,HaloException
+from halo_app.providers.ssm.onprem_ssm import AbsOnPremClient
 # from .logs import log_json
 
 

@@ -8,7 +8,10 @@ def append_error(params, err):
     :param err:
     :return:
     """
-    dict_items = params.copy()
+    if params:
+        dict_items = params.copy()
+    else:
+        dict_items = {}
     if err:
         stack = None
         if hasattr(err, "stack"):

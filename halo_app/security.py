@@ -4,9 +4,9 @@ import os
 import jwt
 import logging
 import datetime
-from halo_flask.classes import AbsBaseClass
-from halo_flask.exceptions import MissingHaloContextException,MissingRoleError,MissingSecurityTokenException,BadSecurityTokenException
-from halo_flask.context import HaloContext
+from halo_app.classes import AbsBaseClass
+from halo_app.exceptions import MissingHaloContextException,MissingRoleError,MissingSecurityTokenException,BadSecurityTokenException
+from halo_app.context import HaloContext
 from .settingsx import settingsx
 
 logger = logging.getLogger(__name__)

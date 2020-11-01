@@ -4,7 +4,7 @@ import os
 from environs import Env
 import json
 import uuid
-from halo_flask.const import LOC,DEV,TST,PRD
+from halo_app.const import LOC,DEV,TST,PRD
 
 print("start base")
 
@@ -39,7 +39,7 @@ ENV_TYPE = LOC
 ENV_NAME = LOC  # env.str('ENV_NAME')
 #os.environ["HALO_STAGE"] = ENV_NAME  # done in settings json file
 
-FUNC_NAME = env.str('FUNC_NAME', 'halo_flask')
+FUNC_NAME = env.str('FUNC_NAME', 'halo_app')
 #os.environ['HALO_FUNC_NAME'] = FUNC_NAME  # done in settings json file
 #os.environ['HALO_APP_NAME'] = 'app'  #done in settings json file
 APP_NAME = env.str('APP_NAME', 'halo')
@@ -86,7 +86,7 @@ print(VERSION)
 APPEND_SLASH = True
 
 SERVER = env('SERVER_NAME')
-HALO_HOST = 'halo_flask'
+HALO_HOST = 'halo_app'
 ALLOWED_HOSTS = ['*','127.0.0.1',SERVER]
 
 ADMINS = (
@@ -170,7 +170,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 STATIC_URL = '/static1/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, "halo_flask/api/static")
+STATIC_ROOT = os.path.join(BASE_DIR, "halo_app/api/static")
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
@@ -242,31 +242,31 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'halo_flask.halo_flask.views': {
+        'halo_app.halo_app.views': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halo_flask.halo_flask.apis': {
+        'halo_app.halo_app.apis': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halo_flask.halo_flask.events': {
+        'halo_app.halo_app.events': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halo_flask.halo_flask.mixin': {
+        'halo_app.halo_app.mixin': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halo_flask.halo_flask.models': {
+        'halo_app.halo_app.models': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halo_flask.halo_flask.util': {
+        'halo_app.halo_app.util': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halo_flask.halo_flask.ssm': {
+        'halo_app.halo_app.ssm': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
@@ -299,7 +299,7 @@ INSTANCE_ID = uuid.uuid4().__str__()[0:4]
 
 LOG_SAMPLE_RATE = 0.05  # 5%
 
-ERR_MSG_CLASS = 'halo_flask.mixin_err_msg'
+ERR_MSG_CLASS = 'halo_app.mixin_err_msg'
 
 SSM_TYPE = env.str('SSM_TYPE',default='NONE')
 print('SSM_TYPE='+SSM_TYPE)
@@ -310,7 +310,7 @@ EVENTS_INGESTED = env.int('EVENTS_INGESTED',default=50)
 EVENTS_INGESTED_SLEEP = env.int('EVENTS_INGESTED_SLEEP',default=5)
 
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, 'halo_flask','schema',"saga_schema.json")
+file_path = os.path.join(file_dir, 'halo_app','schema',"saga_schema.json")
 with open(file_path) as f1:
     SAGA_SCHEMA = json.load(f1)
 
@@ -376,9 +376,9 @@ SESSION_MINUTES = 30
 
 PROVIDER="ONPREM"
 ONPREM_PROVIDER_CLASS_NAME="ONPREMProvider"
-ONPREM_PROVIDER_MODULE_NAME="halo_flask.providers.providers"
+ONPREM_PROVIDER_MODULE_NAME="halo_app.providers.providers"
 ONPREM_SSM_CLASS_NAME='OnPremClient'
-ONPREM_SSM_MODULE_NAME='halo_flask.providers.ssm.onprem_ssm_client'
+ONPREM_SSM_MODULE_NAME='halo_app.providers.ssm.onprem_ssm_client'
 
 
 print('The settings file has been loaded.')

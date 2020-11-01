@@ -6,11 +6,11 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 # DRF
-from halo_flask.exceptions import HaloException,ProviderError
-from halo_flask.logs import log_json
-from halo_flask.providers.providers import get_provider
-from halo_flask.classes import AbsBaseClass
-from .flask.utilx import Util
+from halo_app.exceptions import HaloException,ProviderError
+from halo_app.logs import log_json
+from halo_app.providers.providers import get_provider
+from halo_app.classes import AbsBaseClass
+from .app.utilx import Util
 from .reflect import Reflect
 from .settingsx import settingsx
 

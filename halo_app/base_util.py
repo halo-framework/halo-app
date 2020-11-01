@@ -11,10 +11,10 @@ import datetime
 import jwt
 from jsonschema import validate
 from .exceptions import CacheError, ApiTimeOutExpired
-from halo_flask.const import LOC,DEV,TST,PRD
-from halo_flask.context import HaloContext
-from halo_flask.response import HaloResponse
-from halo_flask.classes import AbsBaseClass
+from halo_app.const import LOC,DEV,TST,PRD
+from halo_app.context import HaloContext
+from halo_app.response import HaloResponse
+from halo_app.classes import AbsBaseClass
 from .settingsx import settingsx
 settings = settingsx()
 
