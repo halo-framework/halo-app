@@ -19,7 +19,7 @@ setup(
     license='MIT License',
     author='halo-framework',
     author_email='halo-framework@gmail.com',
-    description='this is the Halo framework library for Flask',
+    description='this is the Halo framework library for domain app',
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
