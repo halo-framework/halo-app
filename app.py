@@ -30,7 +30,7 @@ def create_app(config_object='settings'):
             set_app_param_config(app.config['SSM_TYPE'], params )
             val = get_app_param_config(app.config['SSM_TYPE'], app.config['FUNC_NAME'], "url")
             print("get_app_param_config=" + str(val))
-        from halo_app.app.viewsx import TestLinkX
+        from tests.test_viewsx import TestLinkX
         app.add_url_rule(stage, view_func=TestLinkX.as_view("member"))
 
         if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:

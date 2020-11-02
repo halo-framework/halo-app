@@ -178,28 +178,3 @@ class GlobalService():
 def load_global_data(class_name,data_map):
     clazz = Reflect.instantiate(class_name, GlobalService, data_map)
     clazz.load_global_data()
-
-############################################
-from .mixinx import AbsApiMixinX
-from flask.views import MethodView
-from flask import Response
-import json
-class TestMixinX(AbsApiMixinX,MethodView):
-    def get(self):
-        ret = self.do_process()
-        print(str(ret.payload))
-        if ret.code >= 300:
-            return Response(ret.payload, status=ret.code, headers=ret.headers)
-        return Response(json.dumps(ret.payload), status=ret.code, headers=ret.headers)
-
-    def do_operation_11(self, halo_request):  # basic maturity - single request
-        logger.debug("do_operation_1")
-        self.now = datetime.datetime.now()
-        # 1. get api definition to access the BANK API  - url + vars dict
-        back_json = {"msg": str(datetime.datetime.now())+' test page - timing for process: ' + str(datetime.datetime.now() - self.now) + " " + settings.VERSION}
-        dict = {'1': back_json}
-        # 8. return json response
-        return dict
-
-class TestLinkX(TestMixinX, AbsBaseLinkX):
-    pass
