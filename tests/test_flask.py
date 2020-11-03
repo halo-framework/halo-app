@@ -11,8 +11,6 @@ from halo_app.base_util import BaseUtil
 from halo_app.circuitbreaker import CircuitBreakerError
 from halo_app.app.utilx import Util
 from halo_app.errors import status
-from halo_app.app.mixinx import AbsApiMixinX,PerfMixinX
-from halo_app.app.viewsx import PerfLinkX
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_app.logs import log_json
 from halo_app import saga
@@ -282,11 +280,6 @@ class A5(AbsApiMixinX):
 class A6(A5, AbsBaseLinkX):
     pass
 
-class P1(PerfMixinX):
-    pass
-
-class P2(PerfLinkX):
-    pass
 
 from halo_app.app.filter import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
@@ -352,8 +345,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.a4 = A4()
         self.a5 = A5()
         self.a6 = A6()
-        self.p1 = P1()
-        self.p2 = P2()
+
         self.start()
 
     def test_000_start(self):

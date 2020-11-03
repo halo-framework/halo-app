@@ -230,7 +230,7 @@ class Util(AbsBaseClass):
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
 
     @classmethod
-    def get_halo_context(cls, request, api_key=None):
+    def get_halo_context1(cls, request, api_key=None):
         """
         :param request:
         :param api_key:
@@ -244,6 +244,24 @@ class Util(AbsBaseClass):
         if api_key:
             ret[HaloContext.items[HaloContext.API_KEY]] = api_key
         ctx = HaloContext(request)
+        ctx.dict = ret
+        return ctx
+
+    @classmethod
+    def get_halo_context(cls, api_key=None,x_correlation_id=None,x_user_agent=None,dlog=None,request_id=None):
+        """
+        :param request:
+        :param api_key:
+        :return:
+        """
+
+        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent,
+               HaloContext.items[HaloContext.REQUEST]: request_id,
+               HaloContext.items[HaloContext.CORRELATION]: x_correlation_id,
+               HaloContext.items[HaloContext.DEBUG_LOG]: dlog}
+        if api_key:
+            ret[HaloContext.items[HaloContext.API_KEY]] = api_key
+        ctx = HaloContext()
         ctx.dict = ret
         return ctx
 
