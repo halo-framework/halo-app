@@ -136,7 +136,7 @@ class AbsBaseApi(AbsBaseClass):
                 x = str(data.decode('utf8').replace("'", '"'))
                 if x != "":
                     datax = json.loads(x)
-                    datay = jsonify(datax)
+                    datay = json.dump(datax)
                 else:
                     datay = ""
             else:
@@ -562,22 +562,14 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
     global SSM_CONFIG
     global SSM_APP_CONFIG
 
-    #if stage_type == LOC:
-    # from halo_app.ssm import get_config as get_config
-    try:
-        from halo_app.halo_flask.ssm import get_config
-    except:
-        from halo_app.ssm import get_config
+    from halo_app.ssm import get_config
 
     SSM_CONFIG = get_config(ssm_type)
     # set_param_config(AWS_REGION, 'DEBUG_LOG', '{"val":"false"}')
     # SSM_CONFIG.get_param("test")
 
-    # from halo_app.ssm import get_config as get_config
-    try:
-        from halo_app.halo_flask.ssm import get_app_config
-    except:
-        from halo_app.ssm import get_app_config
+
+    from halo_app.ssm import get_app_config
 
     SSM_APP_CONFIG = get_app_config(ssm_type)
 
@@ -596,12 +588,13 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
                     API_CONFIG[key]["url"] = new_url.replace("service://" + item, url)
     logger.debug(str(API_CONFIG))
     api_list = {}
-    for key in API_CONFIG:
-        if "class" in API_CONFIG[key]:
-            class_name = API_CONFIG[key]["class"]
-            api_list[key] = class_name
-        else:
-            raise MissingClassConfigError(key)
+    if API_CONFIG:
+        for key in API_CONFIG:
+            if "class" in API_CONFIG[key]:
+                class_name = API_CONFIG[key]["class"]
+                api_list[key] = class_name
+            else:
+                raise MissingClassConfigError(key)
 
     HALO_API_LIST = api_list
     #ApiMngr.instance().set_api_list(api_list)
