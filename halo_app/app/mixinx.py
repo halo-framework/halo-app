@@ -632,8 +632,8 @@ class AbsApiMixinX(AbsBaseMixinX):
                     if bq in bqs:
                         service_list = bqs[bq]
                         #@todo add schema to all event config files
-                        if halo_request.request.method in service_list:
-                            service_map = service_list[halo_request.request.method]
+                        if halo_request.func in service_list:
+                            service_map = service_list[halo_request.func]
                             if SEQ in service_map:
                                 dict = service_map[SEQ]
                                 self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
@@ -653,9 +653,9 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     ######################################################################
 
-    def process(self,  vars=None):
+    def process(self,method,  vars=None):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(bq,self.secure,self.method_roles)
+        halo_request = HaloRequest(method,bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret

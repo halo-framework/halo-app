@@ -45,11 +45,9 @@ class AbsBaseLinkX(AbsBaseClass):
     def __init__(self, **kwargs):
         super(AbsBaseLinkX, self).__init__(**kwargs)
 
-    def do_process(self,args=None):
+    def do_process(self,method,args=None):
         """
 
-        :param request:
-        :param typer:
         :param vars:
         :return:
         """
@@ -61,7 +59,7 @@ class AbsBaseLinkX(AbsBaseClass):
         http_status_code = 500
 
         try:
-            ret = self.process(args)
+            ret = self.process(method,args)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.server.value,
@@ -110,7 +108,6 @@ class AbsBaseLinkX(AbsBaseClass):
     def process_finally(self, orig_log_level):
         """
 
-        :param request:
         :param orig_log_level:
         """
         if Util.isDebugEnabled(self.halo_context):
@@ -121,46 +118,6 @@ class AbsBaseLinkX(AbsBaseClass):
 
 
 
-    def get_client_ip(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        ip = request.headers.get('REMOTE_ADDR')
-        logger.debug("get_client_ip: " + str(ip), extra=log_json(self.halo_context))
-        return ip
-
-    def get_jwt(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        ip = self.get_client_ip(request)
-        encoded_token = jwt.encode({'ip': ip}, settings.SECRET_JWT_KEY, algorithm='HS256')
-        return encoded_token
-
-    def check_jwt(self, request):  # return true if token matches
-        """
-
-        :param request:
-        :return:
-        """
-        ip = self.get_client_ip(request)
-        encoded_token = request.GET.get('jwt', None)
-        if not encoded_token:
-            return False
-        decoded_token = jwt.decode(encoded_token, settings.SECRET_JWT_KEY, algorithm='HS256')
-        return ip == decoded_token['ip']
-
-    def get_jwt_str(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        return '&jwt=' + self.get_jwt(request).decode()
 
 
 

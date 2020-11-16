@@ -18,13 +18,19 @@ settings = settingsx()
 class HaloRequest(AbsBaseClass):
 
     request = None
+    func = None
     sub_func = None
     context = None
     security = None
 
-    def __init__(self, sub_func=None,secure=False,method_roles=None,context=None):
-        self.sub_func = sub_func
-        self.context = context
+    def __init__(self, func,sub_func=None,secure=False,method_roles=None,context=None):
+        self.func = func
+        if sub_func:
+            self.sub_func = sub_func
+        if context:
+            self.context = context
+        else:
+            self.context = self.init_ctx()
         for i in settings.HALO_CONTEXT_LIST:
             item = HaloContext.items[i]
             if item not in self.context.keys():

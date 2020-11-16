@@ -102,11 +102,12 @@ class AwsApi(AbsRestApi):
 class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
 
-from halo_app.app.mixinx import AbsBaseMixinX,AbsApiMixinX,AbsDbMixin
-class DbTest(AbsApiMixinX):
-    pass
-class DbMixin(AbsDbMixin):
-    pass
+with app.app_context():
+    from halo_app.app.mixinx import AbsBaseMixinX,AbsApiMixinX,AbsDbMixin
+    class DbTest(AbsApiMixinX):
+        pass
+    class DbMixin(AbsDbMixin):
+        pass
 
 
 class Sec(HaloSecurity):
@@ -124,7 +125,7 @@ class A1(AbsApiMixinX):
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
             if not halo_request.sub_func:#not in bq
-                if halo_request.request.method == HTTPChoice.delete.value:
+                if halo_request.func == HTTPChoice.delete.value:
                     return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
                     #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
@@ -398,31 +399,31 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1_get_request_returns_exception(self):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
-                response = self.a1.process_get(request, {})
+                response = self.a1.process( "z1",{})
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
-            response = self.a1.process_delete(request, {})
+            response = self.a1.process( "z1",{})
             eq_(response.payload, {"tst_delete":"good"})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
-            response = self.a1.process_put(request, {})
+            response = self.a1.process("z1", {})
             eq_(response.payload, {'1': {'tst_put': 'good1'}, '2': {'tst_put': 'good2'}, '3': None})
 
     def test_4_post_request_returns_a_given_string(self):
         with app.test_request_context(method='POST', path='/?abc=def'):
-            response = self.a1.process_post(request, {})
+            response = self.a1.process("z1", {})
             print("response=" + str(response.payload))
             eq_(response.code, status.HTTP_201_CREATED)
             eq_(response.payload, {'$.BookHotelResult': {'tst_post': 'good1'}, '$.BookFlightResult': {'tst_post': 'good2'}, '$.BookRentalResult': None})
 
     def test_5_patch_request_returns_a_given_string(self):
         with app.test_request_context(method='PATCH', path='/?abc=def'):
-            response = self.a1.process_patch(request, {})
+            response = self.a1.process("z1", {})
             print("response=" + str(response.payload))
             eq_(response.code, status.HTTP_200_OK)
             eq_(response.payload, {'$.BookHotelResult': {'tst_patch': 'good'}, '$.BookFlightResult': {'tst_patch': 'good'}, '$.BookRentalResult': {'tst_patch': 'good'}})
@@ -589,14 +590,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
-            response = self.a2.process_post(request,{})
+            response = self.a2.process("z1",{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_901_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.process_get(request,{})
+            response = self.a2.process("z1",{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
@@ -611,14 +612,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.do_process(HTTPChoice.get,request.args)
+            response = self.a2.do_process("z1",request.args)
 
     def test_904_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.do_process(HTTPChoice.get,request.args)
+            response = self.a2.do_process("z1",request.args)
 
 
     def test_91_system_debug_enabled(self):
@@ -669,7 +670,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_96_pref_mixin(self):
         with app.test_request_context(method='GET', path='/perf'):
-            response = self.p1.process_get(request, {})
+            response = self.p1.process("z1", {})
             eq_(response.code, status.HTTP_200_OK)
 
     def test_97_pref_mixin1(self):

@@ -6,6 +6,7 @@ import logging
 import re
 import os
 import uuid
+import jwt
 import random
 import importlib
 from ..settingsx import settingsx
@@ -15,6 +16,7 @@ from halo_app.context import HaloContext
 from halo_app.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
 from halo_app.providers.providers import get_provider,ONPREM
 from halo_app.exceptions import NoCorrelationIdException
+from ..logs import log_json
 
 settings = settingsx()
 
@@ -397,3 +399,44 @@ class Util(AbsBaseClass):
         if detail:
             return str(e)+':'+detail
         return str(e)
+
+    def get_client_ip(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        ip = request.headers.get('REMOTE_ADDR')
+        logger.debug("get_client_ip: " + str(ip), extra=log_json(self.halo_context))
+        return ip
+
+    def get_jwt(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        ip = self.get_client_ip(request)
+        encoded_token = jwt.encode({'ip': ip}, settings.SECRET_JWT_KEY, algorithm='HS256')
+        return encoded_token
+
+    def check_jwt(self, request):  # return true if token matches
+        """
+
+        :param request:
+        :return:
+        """
+        ip = self.get_client_ip(request)
+        encoded_token = request.GET.get('jwt', None)
+        if not encoded_token:
+            return False
+        decoded_token = jwt.decode(encoded_token, settings.SECRET_JWT_KEY, algorithm='HS256')
+        return ip == decoded_token['ip']
+
+    def get_jwt_str(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        return '&jwt=' + self.get_jwt(request).decode()
