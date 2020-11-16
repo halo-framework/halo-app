@@ -96,10 +96,10 @@ class AbsBaseLinkX(AbsBaseClass):
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
         json_error = Util.json_error_response(self.halo_context, args,settings.ERR_MSG_CLASS, error)
-        return self.do_abort(http_status_code, errors=json_error)
+        return self.do_abort(method,http_status_code, errors=json_error)
 
-    def do_abort(self,http_status_code, errors):
-        ret = HaloResponse(HaloRequest())
+    def do_abort(self,method,http_status_code, errors):
+        ret = HaloResponse(HaloRequest(method))
         ret.payload = errors
         ret.code = http_status_code
         ret.headers = {}
