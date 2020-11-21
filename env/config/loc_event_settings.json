@@ -12,6 +12,10 @@
       "PATCH": {
         "url": "tst_saga.json",
         "type": "saga"
+      },
+      "z1": {
+        "url": "base_seq.json",
+        "type": "seq"
       }
     }
   },

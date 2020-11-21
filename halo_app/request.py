@@ -17,14 +17,17 @@ settings = settingsx()
 
 class HaloRequest(AbsBaseClass):
 
-    request = None
     func = None
     sub_func = None
+    vars = None
     context = None
     security = None
+    headers = None
 
-    def __init__(self, func,sub_func=None,secure=False,method_roles=None,context=None):
+    def __init__(self, func,vars,headers,sub_func=None,secure=False,method_roles=None,context=None):
         self.func = func
+        self.vars = vars
+        self.headers = headers
         if sub_func:
             self.sub_func = sub_func
         if context:

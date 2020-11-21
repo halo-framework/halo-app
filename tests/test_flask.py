@@ -132,22 +132,22 @@ class A1(AbsApiMixinX):
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.request.method == HTTPChoice.get.value:#method type
+            if halo_request.func == HTTPChoice.get.value:#method type
                 return {"tst_get":"good"}
-            if halo_request.request.method == HTTPChoice.delete.value:#method type
+            if halo_request.func == HTTPChoice.delete.value:#method type
                 return {"tst_delete":"good"}
         else:#in event
-            if halo_request.request.method == HTTPChoice.put.value:#method type
+            if halo_request.func == HTTPChoice.put.value:#method type
                 if seq == '1':
                     return {"tst_put":"good1"}
                 if seq == '2':
                     return {"tst_put":"good2"}
-            if halo_request.request.method == HTTPChoice.post.value:#method type
+            if halo_request.func == HTTPChoice.post.value:#method type
                 if seq == '1':
                     return {"tst_post":"good1"}
                 if seq == '2':
                     return {"tst_post":"good2"}
-            if halo_request.request.method == HTTPChoice.patch.value:#method type
+            if halo_request.func == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 
 class A3(AbsApiMixinX):
@@ -406,27 +406,14 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
-            response = self.a1.process( "z1",{})
+            response = self.a1.process( "z2",{},{"httk":"abc"})
             eq_(response.payload, {"tst_delete":"good"})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
-            response = self.a1.process("z1", {})
+            response = self.a1.process("z3", {})
             eq_(response.payload, {'1': {'tst_put': 'good1'}, '2': {'tst_put': 'good2'}, '3': None})
 
-    def test_4_post_request_returns_a_given_string(self):
-        with app.test_request_context(method='POST', path='/?abc=def'):
-            response = self.a1.process("z1", {})
-            print("response=" + str(response.payload))
-            eq_(response.code, status.HTTP_201_CREATED)
-            eq_(response.payload, {'$.BookHotelResult': {'tst_post': 'good1'}, '$.BookFlightResult': {'tst_post': 'good2'}, '$.BookRentalResult': None})
-
-    def test_5_patch_request_returns_a_given_string(self):
-        with app.test_request_context(method='PATCH', path='/?abc=def'):
-            response = self.a1.process("z1", {})
-            print("response=" + str(response.payload))
-            eq_(response.code, status.HTTP_200_OK)
-            eq_(response.payload, {'$.BookHotelResult': {'tst_patch': 'good'}, '$.BookFlightResult': {'tst_patch': 'good'}, '$.BookRentalResult': {'tst_patch': 'good'}})
 
     def test_6_api_request_returns_a_CircuitBreakerError(self):
         app.config['PROVIDER'] = "AWS"
@@ -619,7 +606,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.do_process("z1",request.args)
+            response = self.a2.do_process("z10",request.args,request.headers)
 
 
     def test_91_system_debug_enabled(self):

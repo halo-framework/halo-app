@@ -203,7 +203,7 @@ class AbsApiMixinX(AbsBaseMixinX):
     def set_api_headers(self,halo_request,api, seq=None, dictx=None):
         logger.debug("in set_api_headers ")
         if halo_request and api.api_type == "service":
-            return dict(halo_request.request.headers)
+            return dict(halo_request.headers)
         return {}
         raise HaloException("no headers")
 
@@ -219,12 +219,12 @@ class AbsApiMixinX(AbsBaseMixinX):
         return None
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
-        return halo_request.request.data
+        return halo_request.vars
 
     def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         logger.debug("in execute_api "+back_api.name)
         if back_api:
-            timeout = Util.get_timeout(halo_request.request)
+            timeout = Util.get_timeout(halo_request)
             try:
                 seq_msg = ""
                 if seq:
@@ -260,7 +260,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise HaloException("mapping error for " + halo_request.request.path,e)
+                    raise HaloException("mapping error for " + halo_request.func,e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -291,18 +291,18 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
-        if settings.MAPPING and halo_request.request.path in settings.MAPPING:
-            mapping = settings.MAPPING[halo_request.request.path]
+        if settings.MAPPING and halo_request.func in settings.MAPPING:
+            mapping = settings.MAPPING[halo_request.func]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
-        raise HaloException("no mapping for "+halo_request.request.path)
+        raise HaloException("no mapping for "+halo_request.func)
 
     def load_resp_mapping(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
         if settings.MAPPING:
             for path in settings.MAPPING:
                 try:
-                    if re.match(path,halo_request.request.path):
+                    if re.match(path,halo_request.func):
                         mapping = settings.MAPPING[path]
                         logger.debug("in load_resp_mapping " + str(mapping))
                         return mapping
@@ -351,7 +351,7 @@ class AbsApiMixinX(AbsBaseMixinX):
             logger.debug("payload=" + str(payload))
             # 5. setup headers for reply
             headers = getattr(self, 'set_resp_headers_%s' % sub_func)(halo_request,
-                                                                                halo_request.request.headers)
+                                                                                halo_request.headers)
             # 6. build json and add to halo response
             halo_response = self.create_response(halo_request, payload, headers)
             # 7. post condition
@@ -377,10 +377,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 4. Sset request auth
         back_auth = getattr(self, 'set_api_auth_%s' % sub_func)(halo_request,back_api)
         # 5. Sset request data
-        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request,back_api)
-        else:
-            back_data = None
+        back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request,back_api)
         # 6. Sending the request to the BANK API with params
         back_response = getattr(self, 'execute_api_%s' % sub_func)(halo_request, back_api, back_vars,
                                                                              back_headers, back_auth, back_data)
@@ -441,10 +438,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 5. auth
         back_auth = getattr(self, 'set_api_auth_%s' % sub_func)(halo_request,back_api, seq, dict)
         # 6. set request data
-        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request,back_api, seq, dict)
-        else:
-            back_data = None
+        back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         back_response = getattr(self, 'execute_api_%s' % sub_func)(halo_request, back_api, back_vars,
                                                                              back_headers, back_auth, back_data,
@@ -486,11 +480,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 4. Set request auth
         back_auth = self.set_api_auth(halo_request,back_api)
         # 5. Set request data
-        #@todo add patch
-        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = self.set_api_data(halo_request,back_api)
-        else:
-            back_data = None
+        back_data = self.set_api_data(halo_request,back_api)
         # 6. Sending the request to the BANK API with params
         back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
                                                    back_data)
@@ -531,10 +521,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 5. auth
         back_auth = self.set_api_auth(halo_request,back_api, seq, dict)
         # 6. set request data
-        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = self.set_api_data(halo_request,back_api, seq, dict)
-        else:
-            back_data = None
+        back_data = self.set_api_data(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         status = get_provider().add_to_queue(halo_request, back_api, back_vars, back_headers, back_auth,
                                          back_data, seq, dict)
@@ -548,10 +535,7 @@ class AbsApiMixinX(AbsBaseMixinX):
         # 5. auth
         back_auth = self.set_api_auth(halo_request,back_api, seq, dict)
         # 6. set request data
-        if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            back_data = self.set_api_data(halo_request,back_api, seq, dict)
-        else:
-            back_data = None
+        back_data = self.set_api_data(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
                                               back_data, seq, dict)
@@ -653,9 +637,9 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     ######################################################################
 
-    def process(self,method,  vars=None):
+    def process(self,method,  vars=None,headers=None):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(method,bq,self.secure,self.method_roles)
+        halo_request = HaloRequest(method,vars,headers,bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret

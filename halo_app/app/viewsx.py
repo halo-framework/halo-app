@@ -45,7 +45,7 @@ class AbsBaseLinkX(AbsBaseClass):
     def __init__(self, **kwargs):
         super(AbsBaseLinkX, self).__init__(**kwargs)
 
-    def do_process(self,method,args=None):
+    def do_process(self,method,args=None,headers=None):
         """
 
         :param vars:
@@ -59,7 +59,7 @@ class AbsBaseLinkX(AbsBaseClass):
         http_status_code = 500
 
         try:
-            ret = self.process(method,args)
+            ret = self.process(method,args,headers)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.server.value,
@@ -96,10 +96,10 @@ class AbsBaseLinkX(AbsBaseClass):
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
         json_error = Util.json_error_response(self.halo_context, args,settings.ERR_MSG_CLASS, error)
-        return self.do_abort(method,http_status_code, errors=json_error)
+        return self.do_abort(method,args,headers,http_status_code, errors=json_error)
 
-    def do_abort(self,method,http_status_code, errors):
-        ret = HaloResponse(HaloRequest(method))
+    def do_abort(self,method,args,headers,http_status_code, errors):
+        ret = HaloResponse(HaloRequest(method,args,headers))
         ret.payload = errors
         ret.code = http_status_code
         ret.headers = {}

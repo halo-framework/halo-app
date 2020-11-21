@@ -535,7 +535,7 @@ class ApiMngr(AbsBaseClass):
         if HaloContext.items[HaloContext.CORRELATION] in ctx.keys():
             id = ctx.get(HaloContext.items[HaloContext.CORRELATION])
             print("ctx:"+str(id))
-        else:
+        if not id:
             id = str(uuid.uuid4())[:8]
         if name in HALO_API_LIST:
             class_name = HALO_API_LIST[name]

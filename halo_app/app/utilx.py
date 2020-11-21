@@ -218,7 +218,7 @@ class Util(AbsBaseClass):
         return qd
 
     @classmethod
-    def get_timeout(cls, request):
+    def get_timeout1(cls, request):
         """
 
         :param request:
@@ -227,6 +227,19 @@ class Util(AbsBaseClass):
         provider = get_provider()
         if provider.PROVIDER_NAME != ONPREM:
             timeout =  provider.get_timeout(request)
+            if timeout:
+                return timeout
+        return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
+
+    @classmethod
+    def get_timeout(cls, halo_request):
+        """
+
+        :param request:
+        :return:
+        """
+        if "timeout" in halo_request.context.dict:
+            timeout = halo_request.context.dict["timeout"]
             if timeout:
                 return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
