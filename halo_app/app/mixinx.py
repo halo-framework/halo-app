@@ -616,7 +616,7 @@ class AbsApiMixinX(AbsBaseMixinX):
                     if bq in bqs:
                         service_list = bqs[bq]
                         #@todo add schema to all event config files
-                        if halo_request.func in service_list:
+                        if service_list and halo_request.func in service_list.keys():
                             service_map = service_list[halo_request.func]
                             if SEQ in service_map:
                                 dict = service_map[SEQ]

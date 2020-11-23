@@ -9,7 +9,7 @@ import uuid
 import jwt
 import random
 import importlib
-from ..settingsx import settingsx
+
 from halo_app.classes import AbsBaseClass
 from halo_app.const import HTTPChoice,LOC
 from halo_app.context import HaloContext
@@ -17,6 +17,7 @@ from halo_app.exceptions import ApiTimeOutExpired, CacheError, HaloException, Pr
 from halo_app.providers.providers import get_provider,ONPREM
 from halo_app.exceptions import NoCorrelationIdException
 from ..logs import log_json
+from ..settingsx import settingsx
 
 settings = settingsx()
 
@@ -218,7 +219,7 @@ class Util(AbsBaseClass):
         return qd
 
     @classmethod
-    def get_timeout1(cls, request):
+    def get_timeout(cls, request):
         """
 
         :param request:
@@ -232,7 +233,7 @@ class Util(AbsBaseClass):
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
 
     @classmethod
-    def get_timeout(cls, halo_request):
+    def get_halo_timeout(cls, halo_request):
         """
 
         :param request:

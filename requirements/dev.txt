@@ -23,7 +23,8 @@ halo_aws==0.11.41
 boto3==1.9.227
 
 # Flask
-Flask==1.0.2
+connexion >= 2.6.0
+
 Flask-SQLAlchemy==2.3.2
 
 

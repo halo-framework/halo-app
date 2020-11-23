@@ -1,7 +1,7 @@
 {
   "A1": {
     "base": {
-      "PUT": {
+      "z3": {
         "url": "base_seq.json",
         "type": "seq"
       },
@@ -14,6 +14,10 @@
         "type": "saga"
       },
       "z1": {
+        "url": "base_seq.json",
+        "type": "seq"
+      },
+      "z2": {
         "url": "base_seq.json",
         "type": "seq"
       }

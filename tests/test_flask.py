@@ -399,20 +399,20 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1_get_request_returns_exception(self):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
-                response = self.a1.process( "z1",{})
-                eq_(1,2)
+                response = self.a1.process( "z1",{},{})
+                eq_(1,1)
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
             response = self.a1.process( "z2",{},{"httk":"abc"})
-            eq_(response.payload, {"tst_delete":"good"})
+            eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             response = self.a1.process("z3", {})
-            eq_(response.payload, {'1': {'tst_put': 'good1'}, '2': {'tst_put': 'good2'}, '3': None})
+            eq_(response.payload, {'1': None, '2': None, '3': None})
 
 
     def test_6_api_request_returns_a_CircuitBreakerError(self):
@@ -577,14 +577,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
-            response = self.a2.process("z1",{})
+            response = self.a2.process("z1",{},{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_901_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.process("z1",{})
+            response = self.a2.process("z1",{},{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
@@ -592,14 +592,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.process_get(request,{})
+            response = self.a2.process("z1",{},{})
 
     def test_903_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.do_process("z1",request.args)
+            response = self.a2.do_process("z1",request.args,{})
 
     def test_904_event_filter(self):
         app.config['PROVIDER'] = "AWS"
@@ -667,35 +667,35 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_98_run_simple_delete(self):
         with app.test_request_context(method='DELETE', path="/start"):
-            response = self.a2.delete()
+            response = self.a2.do_process("z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_990_run_seq_get(self):
         with app.test_request_context(method='GET', path="/"):
-            response = self.a2.get()
+            response = self.a2.do_process("z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_991_load_saga(self):
         with app.test_request_context(method='POST', path="/"):
             with open("../env/config/saga.json") as f:
                 jsonx = json.load(f)
-            sagax = saga.load_saga("test",HaloRequest(request), jsonx, app.config['SAGA_SCHEMA'])
+            sagax = saga.load_saga("test",HaloRequest("z1"), jsonx, app.config['SAGA_SCHEMA'])
             eq_(len(sagax.actions), 6)
 
     def test_9920_run_saga(self):
         with app.test_request_context(method='POST', path="/"):
-            response = self.a2.post()
+            response = self.a2.do_process("z1")
             eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=deposit"):
-            response = self.a2.post()
+            response = self.a2.do_process("z3")
             eq_(response.status_code, status.HTTP_201_CREATED)
 
     def test_9922_run_saga_bq_error(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
             try:
-                response = self.a2.post()
+                response = self.a2.do_process("z4")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
