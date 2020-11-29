@@ -282,7 +282,7 @@ class A6(A5, AbsBaseLinkX):
     pass
 
 
-from halo_app.app.filter import RequestFilter,RequestFilterClear
+from halo_app.app.filterx import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.request.headers[HaloContext.items.get(HaloContext.CORRELATION)])

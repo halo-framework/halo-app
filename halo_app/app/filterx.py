@@ -55,7 +55,7 @@ class BaseEvent(AbsBaseClass):
 class FilterEvent(BaseEvent):
     pass
 
-class Filter(AbsBaseClass):
+class AbsFilter(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     def do_filter(self,halo_request,  halo_response):
@@ -64,7 +64,7 @@ class Filter(AbsBaseClass):
     def augment_event_with_headers_and_data(self, event, halo_request, halo_response):
         pass
 
-class RequestFilter(Filter):
+class RequestFilter(AbsFilter):
 
     def do_filter(self,halo_request,  halo_response):
         logger.debug("do_filter")

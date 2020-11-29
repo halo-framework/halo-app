@@ -10,7 +10,7 @@ with open("README.md", "r") as h:
 
 setup(
     name='halo-app',
-    version='0.10.8',
+    version='0.10.9',
     packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.providers', 'halo_app.providers.cloud', 'halo_app.providers.cloud.aws', 'halo_app.providers.onprem', 'halo_app.providers.ssm'],
     data_files=[('schema', ['halo_app/schema/saga_schema.json'])],
     package_data={'schema': ['halo_app/schema/saga_schema.json']},
@@ -23,11 +23,9 @@ setup(
     long_description_content_type="text/markdown",
     classifiers=[
         'Environment :: Console',
-        'License :: OSI Approved :: Apache Software License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
-        'Framework :: Flask',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ]

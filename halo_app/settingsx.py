@@ -2,16 +2,28 @@ from __future__ import print_function
 
 from halo_app.classes import AbsBaseClass
 
-class settingsx(AbsBaseClass):
-    def __getattribute__(self, name):
-        global flx
+try:
+    from flask import current_app as app
 
-        from flask import current_app as app
-        settings = app.config
-        try:
+    class settingsx(AbsBaseClass):
+        def __getattribute__(self, name):
+            settings = app.config
+            try:
+                attr = settings.get(name)
+                return attr
+            except RuntimeError as e:
+                print("settingsx=" + name + " error:" + str(e))
+                return None
+except:
+    from ..config import get_setting
 
-            attr = settings.get(name)
-            return attr
-        except RuntimeError as e:
-            print("settingsx=" + name + " error:" + str(e))
-            return None
+    class settingsx(AbsBaseClass):
+        def __getattribute__(self, name):
+            settings = get_setting()
+            try:
+                if hasattr(settings, name):
+                    return settings.__getattribute__(name)
+                return None
+            except RuntimeError as e:
+                print("settingsx=" + name + " error:" + str(e))
+                return None
