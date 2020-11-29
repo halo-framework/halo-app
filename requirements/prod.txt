@@ -23,5 +23,3 @@ jsonschema==2.6.0
 six==1.11.0
 jsonpath-ng==1.4.3
 zeep==3.4.0
-
-injector
