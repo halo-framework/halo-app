@@ -125,7 +125,7 @@ class A1(AbsApiMixinX):
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
             if not halo_request.sub_func:#not in bq
-                if halo_request.func == HTTPChoice.delete.value:
+                if halo_request.func == "z1":
                     return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
                     #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
@@ -186,25 +186,25 @@ class A2(A1, AbsBaseLinkX):
         ret = super(A2,self).set_api_data(halo_request,api, seq, dict)
         return ret
 
-    def set_api_headers_deposit(self,halo_request,api, seq=None, dict=None):
+    def set_api_headers(self,halo_request,api, seq=None, dict=None):
         return super(A2,self).set_api_headers(halo_request,api, seq, dict)
 
-    def set_api_vars_deposit(self,halo_request,api, seq=None, dict=None):
+    def set_api_vars(self,halo_request,api, seq=None, dict=None):
         return super(A2,self).set_api_vars(halo_request,api, seq, dict)
 
-    def set_api_auth_deposit(self,halo_request,api, seq=None, dict=None):
+    def set_api_auth(self,halo_request,api, seq=None, dict=None):
         return super(A2,self).set_api_auth(halo_request,api, seq, dict)
 
-    def set_api_data_deposit(self,halo_request,api, seq=None, dict=None):
+    def set_api_data(self,halo_request,api, seq=None, dict=None):
         ret = super(A2,self).set_api_data(halo_request,api, seq, dict)
         return ret
 
-    def execute_api_deposit(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
+    def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         return super(A2,self).execute_api(halo_request, back_api, back_vars, back_headers, back_auth, back_data, seq, dict)
 
-    def extract_json_deposit(self,halo_request,api, back_response, seq=None):
+    def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.request.method == HTTPChoice.get.value:#method type
+            if halo_request.func == "z1":#method type
                 return {"tst_get_deposit":"good"}
             if halo_request.request.method == HTTPChoice.delete.value:#method type
                 return {"tst_delete_deposit":"good"}
@@ -655,25 +655,17 @@ class TestUserDetailTestCase(unittest.TestCase):
         ret = BaseUtil.get_correlation_from_event(event)
         eq_(ret[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
-    def test_96_pref_mixin(self):
-        with app.test_request_context(method='GET', path='/perf'):
-            response = self.p1.process("z1", {})
-            eq_(response.code, status.HTTP_200_OK)
 
-    def test_97_pref_mixin1(self):
-        with app.test_request_context(method='GET', path='/perf/tst'):
-            response = self.p2.get()
-            eq_(response.status_code, status.HTTP_200_OK)
 
     def test_98_run_simple_delete(self):
         with app.test_request_context(method='DELETE', path="/start"):
             response = self.a2.do_process("z1")
-            eq_(response.status_code, status.HTTP_200_OK)
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_990_run_seq_get(self):
         with app.test_request_context(method='GET', path="/"):
             response = self.a2.do_process("z1")
-            eq_(response.status_code, status.HTTP_200_OK)
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_991_load_saga(self):
         with app.test_request_context(method='POST', path="/"):
@@ -685,12 +677,12 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9920_run_saga(self):
         with app.test_request_context(method='POST', path="/"):
             response = self.a2.do_process("z1")
-            eq_(response.status_code, status.HTTP_201_CREATED)
+            eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=deposit"):
             response = self.a2.do_process("z3")
-            eq_(response.status_code, status.HTTP_201_CREATED)
+            eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9922_run_saga_bq_error(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
@@ -703,7 +695,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9923_trans_json(self):
         with app.test_request_context(method='GET', path="/tst"):
             try:
-                response = self.a2.get()
+                response = self.a2.do_process("z1")
                 eq_(response.data, b'{"employees": [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}]}')
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -711,7 +703,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9930_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
             try:
-                response = self.a2.process_put(request, {})
+                response = self.a2.do_process("z1", {})
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiError")
@@ -719,7 +711,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9931_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):
             try:
-                response = self.a2.process_patch(request, {})
+                response = self.a2.do_process("z1", {})
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
@@ -728,7 +720,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9932_all_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
             try:
-                response = self.a2.put()
+                response = self.a2.do_process("z1")
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -736,7 +728,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9933_all_rollback_saga_bq(self):
         with app.test_request_context(method='PUT', path="/test?sub_func=deposit"):
             try:
-                response = self.a2.put()
+                response = self.a2.do_process("z1")
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -861,13 +853,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             print("t="+str(t))
             eq_(str(t), '<Section: FUNC_NAME>')#'<Section: DEFAULT>')
 
-    def test_996_error_handler(self):
-        with app.test_request_context(method='DELETE', path='/perf'):
-            response = self.p1.process_delete(request, {})
-            #print("x="+str(response.content))
-            #print("ret=" + str(json.loads(response.content)))
-            #eq_(json.loads(response.content)['error']['error_message'], 'test error msg')
-            eq_(response.code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     def test_997_timeout(self):
         with app.test_request_context(method='GET', path='/?a=b'):
@@ -877,36 +863,27 @@ class TestUserDetailTestCase(unittest.TestCase):
 
 
 
-    def test_998_perf_get(self):
-        with app.test_request_context(method='GET', path='/perf'):
-            response = self.p1.process_get(request, {})
-            eq_(response.code, status.HTTP_200_OK)
-
-    def test_999_perf_get_link(self):
-        with app.test_request_context(method='GET', path='/perf'):
-            response = self.p2.get()
-            eq_(response.status_code, status.HTTP_200_OK)
 
     def test_9991_tst2_get(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            response = self.a2.get()
+            response = self.a2.do_process("z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            response = self.a3.process_get(request, {})
+            response = self.a3.do_process("z1", {})
             eq_(response.code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            response = self.a3.process_get(request, {})
+            response = self.a3.do_process("z1", {})
             eq_(response.code, status.HTTP_200_OK)
 
     def test_9992_CORR(self):
         headers = {'HTTP_HOST': '127.0.0.2','x-correlation-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            response = self.a2.get()
+            response = self.a2.do_process("z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_9993_NOCORR(self):
@@ -914,7 +891,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             try:
-                response = self.a2.get()
+                response = self.a2.do_process("z1")
                 return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -925,7 +902,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            response = self.a2.get()
+            response = self.a2.do_process("z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_9995_NOCORR(self):
@@ -934,7 +911,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             try:
-                response = self.a2.get()
+                response = self.a2.do_process("z1")
                 return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -965,7 +942,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['CIRCUIT_BREAKER'] = False
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             try:
-                response = self.a4.get()
+                response = self.a4.do_process("z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10108)
@@ -979,7 +956,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             try:
-                response = self.a4.get()
+                response = self.a4.do_process("z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10109)
@@ -994,7 +971,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             try:
-                response = self.a4.get()
+                response = self.a4.do_process("z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1011,7 +988,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a4.method_roles = []
-                response = self.a4.get()
+                response = self.a4.do_process("z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1028,7 +1005,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a4.method_roles = ['tst1']
-                response = self.a4.get()
+                response = self.a4.do_process("z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1046,7 +1023,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a4.method_roles = ['tst']
-                response = self.a4.get()
+                response = self.a4.do_process("z1")
                 eq_(response.status_code,200)
             except Exception as e:
                 print(str(e))
@@ -1065,7 +1042,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.process_get(request,{})
+                response = self.a5.do_process("z1",{})
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1083,7 +1060,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.get()
+                response = self.a6.do_process("z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1102,7 +1079,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.process_post(request, {})
+                response = self.a5.do_process("z1", {})
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))
@@ -1123,7 +1100,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.post()
+                response = self.a6.do_process("z1")
                 eq_(response.status_code, 201)
             except Exception as e:
                 print(str(e))
