@@ -338,6 +338,12 @@ class AbsApiMixinX(AbsBaseMixinX):
     def do_operation_bq(self, halo_request):
         if halo_request.sub_func is None:
             raise IllegalBQException("missing sub_func value")
+        sub_func = halo_request.sub_func.lower()
+        return self.do_operation(halo_request)
+
+    def do_operation_bq1(self, halo_request):
+        if halo_request.sub_func is None:
+            raise IllegalBQException("missing sub_func value")
         try:
             sub_func = halo_request.sub_func.lower()
             # 1. validate input params
