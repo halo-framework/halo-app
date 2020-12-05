@@ -608,6 +608,119 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             response = self.a2.do_process("z10",request.args,request.headers)
 
+    def test_905_filter(self):
+        app.config['PROVIDER'] = "AWS"
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": "<", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            q = request.args['q']
+            import json
+            from flask_filter.schemas import FilterSchema
+            filter_schema = FilterSchema()
+            try:
+                collection_filter_json = json.loads(q)
+                if "field" in collection_filter_json:
+                    many = False
+                else:
+                    many = True
+                filters = filter_schema.load(collection_filter_json, many=many)
+                if not many:
+                    filters = [filters]
+                from halo_app.filters import Filter
+                arr = []
+                for f in filters:
+                    filter = Filter(f.field, f.OP, f.value)
+                    arr.append(filter)
+
+            except Exception as e:
+                raise e
+
+    def test_906_filter(self):
+        app.config['PROVIDER'] = "AWS"
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": "?", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            q = request.args['q']
+            import json
+            from flask_filter.schemas import FilterSchema
+            filter_schema = FilterSchema()
+            try:
+                collection_filter_json = json.loads(q)
+                if "field" in collection_filter_json:
+                    many = False
+                else:
+                    many = True
+                filters = filter_schema.load(collection_filter_json, many=many)
+                if not many:
+                    filters = [filters]
+                from halo_app.filters import Filter
+                arr = []
+                for f in filters:
+                    filter = Filter(f.field, f.OP, f.value)
+                    arr.append(filter)
+
+            except Exception as e:
+                eq_(e.__class__.__name__, "ValidationError")
+
+    def test_907_filter(self):
+        app.config['PROVIDER'] = "AWS"
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": ">", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            q = request.args['q']
+            import json
+            from flask_filter.schemas import FilterSchema
+            filter_schema = FilterSchema()
+            try:
+                collection_filter_json = json.loads(q)
+                if "field" in collection_filter_json:
+                    many = False
+                else:
+                    many = True
+                filters = filter_schema.load(collection_filter_json, many=many)
+                if not many:
+                    filters = [filters]
+                from halo_app.filters import Filter
+                arr = []
+                for f in filters:
+                    filter = Filter(f.field, f.OP, f.value)
+                    arr.append(filter)
+                for f in arr:
+                    if f.field == "weight":
+                        eq_(True,f.apply(11))
+
+            except Exception as e:
+                eq_(e.__class__.__name__, "ValidationError")
+
+    def test_908_filter(self):
+        app.config['PROVIDER'] = "AWS"
+        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": ">", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+            q = request.args['q']
+            import json
+            from flask_filter.schemas import FilterSchema
+            filter_schema = FilterSchema()
+            try:
+                collection_filter_json = json.loads(q)
+                if "field" in collection_filter_json:
+                    many = False
+                else:
+                    many = True
+                filters = filter_schema.load(collection_filter_json, many=many)
+                if not many:
+                    filters = [filters]
+                from halo_app.filters import Filter
+                arr = []
+                for f in filters:
+                    filter = Filter(f.field, f.OP, f.value)
+                    arr.append(filter)
+                for f in arr:
+                    if f.field == "weight":
+                        eq_(True,f.apply(10))
+
+            except Exception as e:
+                eq_(e.__class__.__name__, "ValidationError")
 
     def test_91_system_debug_enabled(self):
         with app.test_request_context(method='GET', path='/?a=b'):

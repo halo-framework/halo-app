@@ -175,3 +175,6 @@ class MissingSecurityTokenException(HaloException):
 
 class BadSecurityTokenException(HaloException):
     pass
+
+class FilterValidationError(HaloException):
+    pass

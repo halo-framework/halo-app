@@ -1,8 +1,11 @@
+import datetime
+from numbers import Number
 from halo_app.classes import AbsBaseClass
 
 from dataclasses import dataclass
 
 #{"field": "<field_name>", "op": "<operator>", "value": "<some_value>"}
+from halo_app.exceptions import FilterValidationError
 
 """
 symbol  operator	
@@ -16,11 +19,60 @@ in	    in
 like	like	
 contains	many-to-many associated	
 """
+
+class AbsFilter(AbsBaseClass):
+    pass
+
+
 @dataclass
-class Filter(AbsBaseClass):
+class Filter(AbsFilter):
     field: str
     op: str
     value: object
+
+    def is_valid(self,value):
+        try:
+            allowed = (Number, datetime.date, datetime.datetime)
+            return isinstance(value, allowed)
+        except AssertionError:
+            raise FilterValidationError(f"{self} requires an ordinal value")
+
+    def is_valid_list(self,value):
+        try:
+            allowed = ([])
+            return isinstance(value, allowed)
+        except AssertionError:
+            raise FilterValidationError(f"{self} requires an ordinal value")
+
+    def apply(self, value):
+        if self.op == '<' and self.is_valid(value):
+            return value < self.value
+
+        if self.op == '>' and self.is_valid(value):
+            return value > self.value
+
+        if self.op == '<=' and self.is_valid(value):
+            return value <= self.value
+
+        if self.op == '>=' and self.is_valid(value):
+            return value >= self.value
+
+        if self.op == '=':
+            return value == self.value
+
+        if self.op == '!=':
+            return value != self.value
+
+        if self.op == 'in' and self.is_valid_list(value):
+            return value in self.value
+
+        #if self.op == 'like' and self.is_valid_list(value):
+        #    return value like self.value
+
+        #if self.op == 'contains' and self.is_valid_list(value):
+        #    return value contains self.value
+
+
 
 
 
