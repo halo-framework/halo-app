@@ -17,6 +17,7 @@ from halo_app.exceptions import ApiTimeOutExpired, CacheError, HaloException, Pr
 from halo_app.providers.providers import get_provider,ONPREM
 from halo_app.exceptions import NoCorrelationIdException
 from ..logs import log_json
+from ..reflect import Reflect
 from ..settingsx import settingsx
 
 settings = settingsx()
@@ -41,199 +42,27 @@ def strx(str1):
 
 class Util(AbsBaseClass):
 
-    @staticmethod
-    def get_header_name(request,header):
-        provider = get_provider()
-        if provider:
-            header_name = provider.get_header_name(request,header)
-        else:
-            header_name = header
-        return header_name
-
-    @staticmethod
-    def get_chrome_browser(cls,request):
-        """
-
-        :param request:
-        :return:
-        """
-        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.USER_AGENT])
-        CHROME_AGENT_RE = re.compile(r".*(Chrome)", re.IGNORECASE)
-        NON_CHROME_AGENT_RE = re.compile(
-            r".*(Aviator | ChromePlus | coc_ | Dragon | Edge | Flock | Iron | Kinza | Maxthon | MxNitro | Nichrome | OPR | Perk | Rockmelt | Seznam | Sleipnir | Spark | UBrowser | Vivaldi | WebExplorer | YaBrowser)",
-            re.IGNORECASE)
-        if CHROME_AGENT_RE.match(request.headers[header_name]):
-            if NON_CHROME_AGENT_RE.match(request.headers[header_name]):
-                return False
-            else:
-                return True
-        else:
-            return False
-
-    @staticmethod
-    def mobile(cls,request):
-        """Return True if the request comes from a mobile device.
-        :param request:
-        :return:
-        """
-        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.USER_AGENT])
-        MOBILE_AGENT_RE = re.compile(r".*(iphone|mobile|androidtouch)", re.IGNORECASE)
-        if MOBILE_AGENT_RE.match(request.headers[header_name]):
-            return True
-        else:
-            return False
+    def init_halo_context(self):
+        context = Util.get_halo_context()
+        if settings.HALO_CONTEXT_CLASS:
+            context = Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext)
+        return context
 
     @classmethod
-    def get_correlation_id(cls, request):
+    def get_timeout(cls, halo_context:HaloContext):
         """
 
         :param request:
         :return:
         """
-        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.CORRELATION])
-        if header_name in request.headers:
-            return request.headers[header_name]
-        else:
-            provider = get_provider()
-            if provider:
-                return provider.get_request_id(request)
-        raise NoCorrelationIdException("")
-
-    @classmethod
-    def get_user_agent(cls, request):
-        """
-
-        :param request:
-        :return:
-        """
-        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.USER_AGENT])
-        if header_name in request.headers:
-            user_agent = request.headers[header_name]
-        else:
-            user_agent = cls.get_func_name() + ':' + request.path + ':' + request.method + ':' + settings.INSTANCE_ID
-        return user_agent
-
-    @classmethod
-    def get_debug_enabled(cls, request):
-        """
-
-        :param request:
-        :return:
-        """
-        # check if the specific call is debug enabled
-        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.DEBUG_LOG])
-        if header_name in request.headers:
-            dlog = request.headers[header_name]
-            if dlog == 'true':
-                return 'true'
-        # check if system wide enabled - done on edge
-        header_name = cls.get_header_name(request, HaloContext.items[HaloContext.CORRELATION])
-        if header_name not in request.headers:
-            dlog = cls.get_system_debug_enabled()
-            if dlog == 'true':
-                return 'true'
-        return 'false'
-
-    @staticmethod
-    def get_headers(request):
-        """
-
-        :param request:
-        :return:
-        """
-        regex_http_ = re.compile(r'^HTTP_.+$')
-        regex_content_type = re.compile(r'^CONTENT_TYPE$')
-        regex_content_length = re.compile(r'^CONTENT_LENGTH$')
-        request_headers = {}
-        for header, value in request.headers:
-            logger.debug("header=" + str(header))
-            if regex_http_.match(header) or regex_content_type.match(header) or regex_content_length.match(header):
-                request_headers[header] = value  # request.headers[header]
-        return request_headers
-
-    @staticmethod
-    def get_client_ip(cls,request):  # front - when browser calls us
-        """
-
-        :param request:
-        :return:
-        """
-        header = 'HTTP_X_FORWARDED_FOR'
-        header_name = cls.get_header_name(request, header)
-        x_forwarded_for = request.headers.get(header_name)
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            header = 'REMOTE_ADDR'
-            header_name = cls.get_header_name(request, header)
-            ip = request.headers.get(header_name)
-        return ip
-
-    @staticmethod
-    def get_server_client_ip(cls,request):  # not front - when service calls us
-        """
-
-        :param request:
-        :return:
-        """
-        header = 'HTTP_REFERER'
-        header_name = cls.get_header_name(request, header)
-        return request.headers.get(header_name)
-
-
-
-    """"
-    Success
-    response
-    return data
-    {
-        "data": {
-            "id": 1001,
-            "name": "Wing"
-        }
-    }
-    Error
-    response
-    return error
-    {
-        "error": {
-            "code": 404,
-            "message": "ID not found",
-            "requestId": "123-456"
-        }
-    }
-    """
-
-    @staticmethod
-    def get_req_params(request):
-        """
-
-        :param request:
-        :return:
-        """
-        qd = {}
-        if request.method == HTTPChoice.get.value:
-            qd = request.args
-        elif request.method == HTTPChoice.post.value:
-            qd = request.args
-        return qd
-
-    @classmethod
-    def get_timeout(cls, request):
-        """
-
-        :param request:
-        :return:
-        """
-        provider = get_provider()
-        if provider.PROVIDER_NAME != ONPREM:
-            timeout =  provider.get_timeout(request)
+        if "timeout" in halo_context.dict:
+            timeout = halo_context.dict["timeout"]
             if timeout:
                 return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
 
     @classmethod
-    def get_halo_timeout(cls, halo_request):
+    def get_halo_timeout1(cls, halo_request):
         """
 
         :param request:
@@ -245,23 +74,6 @@ class Util(AbsBaseClass):
                 return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
 
-    @classmethod
-    def get_halo_context1(cls, request, api_key=None):
-        """
-        :param request:
-        :param api_key:
-        :return:
-        """
-        x_correlation_id = cls.get_correlation_id(request)
-        x_user_agent = cls.get_user_agent(request)
-        dlog = cls.get_debug_enabled(request)
-        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent, HaloContext.items[HaloContext.REQUEST]: cls.get_request_id(request),
-               HaloContext.items[HaloContext.CORRELATION]: x_correlation_id, HaloContext.items[HaloContext.DEBUG_LOG]: dlog}
-        if api_key:
-            ret[HaloContext.items[HaloContext.API_KEY]] = api_key
-        ctx = HaloContext(request)
-        ctx.dict = ret
-        return ctx
 
     @classmethod
     def get_halo_context(cls, api_key=None,x_correlation_id=None,x_user_agent=None,dlog=None,request_id=None):
@@ -314,12 +126,7 @@ class Util(AbsBaseClass):
             return provider.get_func_region()
         raise ProviderError("no region defined")
 
-    @classmethod
-    def get_request_id(cls,request):
-        provider = get_provider()
-        if provider:
-            return provider.get_request_id(request)
-        raise ProviderError("no provider defined")
+
 
     @classmethod
     def get_system_debug_enabled(cls):
@@ -414,43 +221,4 @@ class Util(AbsBaseClass):
             return str(e)+':'+detail
         return str(e)
 
-    def get_client_ip(self, request):
-        """
 
-        :param request:
-        :return:
-        """
-        ip = request.headers.get('REMOTE_ADDR')
-        logger.debug("get_client_ip: " + str(ip), extra=log_json(self.halo_context))
-        return ip
-
-    def get_jwt(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        ip = self.get_client_ip(request)
-        encoded_token = jwt.encode({'ip': ip}, settings.SECRET_JWT_KEY, algorithm='HS256')
-        return encoded_token
-
-    def check_jwt(self, request):  # return true if token matches
-        """
-
-        :param request:
-        :return:
-        """
-        ip = self.get_client_ip(request)
-        encoded_token = request.GET.get('jwt', None)
-        if not encoded_token:
-            return False
-        decoded_token = jwt.decode(encoded_token, settings.SECRET_JWT_KEY, algorithm='HS256')
-        return ip == decoded_token['ip']
-
-    def get_jwt_str(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        return '&jwt=' + self.get_jwt(request).decode()

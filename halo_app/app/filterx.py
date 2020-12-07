@@ -71,11 +71,11 @@ class RequestFilter(AbsFilter):
         try:
             #catching all requests to api and logging them for analytics
             event = FilterEvent({})
-            event.name = halo_request.request.path
+            event.name = halo_request.func
             event.time = datetime.datetime.now()
-            event.method = halo_request.request.method
-            event.remote_addr = halo_request.request.remote_addr
-            event.host = halo_request.request.host
+            event.method = halo_request.context.get(HaloContext.method)
+            event.remote_addr = halo_request.context.get(HaloContext.remote_addr)
+            event.host = halo_request.context.get(HaloContext.host)
             if halo_request.sub_func:
                 event.put("sub_func", halo_request.sub_func)
             event = self.augment_event_with_headers_and_data(event, halo_request,halo_response)
@@ -91,8 +91,8 @@ class RequestFilter(AbsFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         # context data
         for key in HaloContext.items.keys():
-            if HaloContext.items[key] in halo_request.request.headers:
-                event.put(HaloContext.items[key],halo_request.request.headers[HaloContext.items[key]])
+            if HaloContext.items[key] in halo_request.context.dict:
+                event.put(HaloContext.items[key],halo_request.context.get(HaloContext.items[key]))
         return event
 
 class RequestFilterClear(AbsBaseClass):

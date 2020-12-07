@@ -103,7 +103,7 @@ class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
 
 with app.app_context():
-    from halo_app.app.mixinx import AbsBaseMixinX,AbsApiMixinX,AbsDbMixin
+    from halo_app.app.mixinx import AbsApiMixinX,AbsDbMixin
     class DbTest(AbsApiMixinX):
         pass
     class DbMixin(AbsDbMixin):
@@ -125,7 +125,7 @@ class A1(AbsApiMixinX):
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
             if not halo_request.sub_func:#not in bq
-                if halo_request.func == "z1":
+                if halo_request.func == "z1" or halo_request.func == "z3":
                     return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
                     #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
@@ -161,7 +161,7 @@ class A3(AbsApiMixinX):
         # 4. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(halo_request, {})
         # 5. setup headers for reply
-        headers = self.set_resp_headers(halo_request, halo_request.request.headers)
+        headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
         halo_response = self.create_response(halo_request, payload, headers)
         # 7. post condition
@@ -178,7 +178,7 @@ class A3(AbsApiMixinX):
 class A2(A1, AbsBaseLinkX):
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
-        if halo_request.request.method == HTTPChoice.post.value:
+        if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
             if seq == '1':
                 return {}
             if seq == '3':
@@ -206,20 +206,20 @@ class A2(A1, AbsBaseLinkX):
         if seq == None:#no event
             if halo_request.func == "z1":#method type
                 return {"tst_get_deposit":"good"}
-            if halo_request.request.method == HTTPChoice.delete.value:#method type
+            if halo_request.context.get(HaloContext.method) == HTTPChoice.delete.value:#method type
                 return {"tst_delete_deposit":"good"}
         else:#in event
-            if halo_request.request.method == HTTPChoice.put.value:#method type
+            if halo_request.context.get(HaloContext.method) == HTTPChoice.put.value:#method type
                 if seq == '1':
                     return {"tst_put_deposit":"good1"}
                 if seq == '2':
                     return {"tst_put_deposit":"good2"}
-            if halo_request.request.method == HTTPChoice.post.value:#method type
+            if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:#method type
                 if seq == '1':
                     return {"tst_post_deposit":"good1"}
                 if seq == '2':
                     return {"tst_post_deposit":"good2"}
-            if halo_request.request.method == HTTPChoice.patch.value:#method type
+            if halo_request.context.get(HaloContext.method) == HTTPChoice.patch.value:#method type
                 return {"tst_patch_deposit":"good"}
 
     def create_resp_payload(self, halo_request, dict_back_json):
@@ -285,7 +285,7 @@ class A6(A5, AbsBaseLinkX):
 from halo_app.app.filterx import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
-        event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.request.headers[HaloContext.items.get(HaloContext.CORRELATION)])
+        event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.context.get(HaloContext.items.get(HaloContext.CORRELATION)))
         return event
 
 class TestRequestFilterClear(RequestFilterClear):
@@ -309,6 +309,14 @@ def get_host_name():
         return os.environ['HALO_HOST']
     else:
         return 'HALO_HOST'
+
+def get_halo_context(request):
+    context = Util.get_halo_context()
+    for i in request.headers.keys():
+        if type(i) == str:
+            context.put(i,request.headers[i])
+    context.put(HaloContext.method,request.method)
+    return context
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -399,19 +407,22 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1_get_request_returns_exception(self):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
-                response = self.a1.process( "z1",{},{})
+                halo_context = get_halo_context(request)
+                response = self.a1.process(halo_context, "z1",{})
                 eq_(1,1)
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
-            response = self.a1.process( "z2",{},{"httk":"abc"})
+            halo_context = get_halo_context(request)
+            response = self.a1.process(halo_context, "z2",{})
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
-            response = self.a1.process("z3", {})
+            halo_context = get_halo_context(request)
+            response = self.a1.process(halo_context,"z3", {})
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
 
@@ -419,8 +430,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = TstApi(Util.get_halo_context(request))
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = TstApi(halo_context)
+            timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
             except ApiError as e:
@@ -444,8 +456,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['CIRCUIT_BREAKER'] = True
         #self.test_6_api_request_returns_a_CircuitBreakerError()
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = TstApi(Util.get_halo_context(request))
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = TstApi(halo_context)
+            timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
             except Exception as e:
@@ -464,8 +477,8 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
             for c in CircuitBreakerMonitor.get_open():
                 print(str(c))
-            api = CnnApi(Util.get_halo_context(request))
-            timeout = Util.get_timeout(request)
+            api = CnnApi(halo_context)
+            timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
                 for c in CircuitBreakerMonitor.get_circuits():
@@ -476,9 +489,10 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_80_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = CnnApi(Util.get_halo_context(request))
+            halo_context = get_halo_context(request)
+            api = CnnApi(halo_context)
             api.url = api.url + "/lgkmlgkhm??l,mhb&&,g,hj "
-            timeout = Util.get_timeout(request)
+            timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
                 assert False
@@ -488,8 +502,9 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_810_api_request_soap_returns(self):
         with app.test_request_context(method='GET', path='/'):
-            api = Tst2Api(Util.get_halo_context(request),method='method1')
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = Tst2Api(halo_context,method='method1')
+            timeout = Util.get_timeout(halo_context)
             try:
                 data = {}
                 data['first'] = 'start'
@@ -504,8 +519,9 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_811_api_request_soap_returns(self):
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/'):
-            api = Tst2Api(Util.get_halo_context(request),method='method1')
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = Tst2Api(halo_context,method='method1')
+            timeout = Util.get_timeout(halo_context)
             try:
                 data = {}
                 data['first'] = 'start'
@@ -520,8 +536,9 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_812_api_request_soap_returns(self):
         app.config['CIRCUIT_BREAKER'] = True
         with app.test_request_context(method='GET', path='/'):
-            api = Tst2Api(Util.get_halo_context(request),method='method2')
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = Tst2Api(halo_context,method='method2')
+            timeout = Util.get_timeout(halo_context)
             try:
                 data = {}
                 data['first'] = 'start'
@@ -536,8 +553,9 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_82_api_request_rpc_returns(self):
         app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = Tst3Api(Util.get_halo_context(request))
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = Tst3Api(halo_context)
+            timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
                 assert False
@@ -548,8 +566,9 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_83_api_request_event_returns(self):
         app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
-            api = Tst4Api(Util.get_halo_context(request))
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            api = Tst4Api(halo_context)
+            timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
                 assert False
@@ -577,14 +596,16 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
-            response = self.a2.process("z1",{},{})
+            halo_context = get_halo_context(request)
+            response = self.a2.process(halo_context,"z1",{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_901_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.process("z1",{},{})
+            halo_context = get_halo_context(request)
+            response = self.a2.process(halo_context,"z1",{})
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
@@ -592,21 +613,24 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.process("z1",{},{})
+            halo_context = get_halo_context(request)
+            response = self.a2.process(halo_context,"z1",{})
 
     def test_903_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.do_process("z1",request.args,{})
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1",request.args)
 
     def test_904_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            response = self.a2.do_process("z10",request.args,request.headers)
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z10",request.args)
 
     def test_905_filter(self):
         app.config['PROVIDER'] = "AWS"
@@ -717,7 +741,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                     arr.append(filter)
                 for f in arr:
                     if f.field == "weight":
-                        eq_(True,f.apply(10))
+                        eq_(False,f.apply(10))
 
             except Exception as e:
                 eq_(e.__class__.__name__, "ValidationError")
@@ -735,17 +759,21 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_92_debug_enabled(self):
         app.config['PROVIDER'] = "AWS"
-        headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
+        #headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
+        headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
-            ret = Util.get_halo_context(request)
-            eq_(ret.dict[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
+            ret = get_halo_context(request)
+            print(HaloContext.items[HaloContext.DEBUG_LOG])
+            print(ret.dict)
+            eq_(ret.dict["Http-"+HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
     def test_93_json_log(self):
         import traceback
         app.config['PROVIDER'] = "AWS"
-        headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
+        #headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
+        headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
-            halo_context = Util.get_halo_context(request)
+            halo_context = get_halo_context(request)
             try:
                 raise Exception("test it")
             except Exception as e:
@@ -758,7 +786,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = 'ONPREM'
         headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
-            ret = Util.get_debug_enabled(request)
+            halo_context = get_halo_context(request)
+            ret = Util.get_debug_enabled(halo_context)
             eq_(ret, 'true')
 
     def test_95_debug_event(self):
@@ -772,59 +801,68 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_98_run_simple_delete(self):
         with app.test_request_context(method='DELETE', path="/start"):
-            response = self.a2.do_process("z1")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1")
             eq_(response.code, status.HTTP_200_OK)
 
     def test_990_run_seq_get(self):
         with app.test_request_context(method='GET', path="/"):
-            response = self.a2.do_process("z1")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1")
             eq_(response.code, status.HTTP_200_OK)
 
     def test_991_load_saga(self):
         with app.test_request_context(method='POST', path="/"):
+            halo_context = get_halo_context(request)
             with open("../env/config/saga.json") as f:
                 jsonx = json.load(f)
-            sagax = saga.load_saga("test",HaloRequest("z1"), jsonx, app.config['SAGA_SCHEMA'])
+            sagax = saga.load_saga("test",HaloRequest(halo_context,"z1",{}), jsonx, app.config['SAGA_SCHEMA'])
             eq_(len(sagax.actions), 6)
 
     def test_9920_run_saga(self):
         with app.test_request_context(method='POST', path="/"):
-            response = self.a2.do_process("z1")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1")
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=deposit"):
-            response = self.a2.do_process("z3")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z3")
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9922_run_saga_bq_error(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z4")
+                response = self.a2.do_process(halo_context,"z4")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_9923_trans_json(self):
         with app.test_request_context(method='GET', path="/tst"):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1")
-                eq_(response.data, b'{"employees": [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}]}')
+                response = self.a2.do_process(halo_context,"z1")
+                eq_(response.payload, b'{"employees": [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}]}')
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_9930_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1", {})
+                response = self.a2.do_process(halo_context,"z1", {})
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiError")
 
     def test_9931_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1", {})
+                response = self.a2.do_process(halo_context,"z1", {})
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
@@ -832,16 +870,18 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9932_all_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1")
+                response = self.a2.do_process(halo_context,"z1")
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_9933_all_rollback_saga_bq(self):
         with app.test_request_context(method='PUT', path="/test?sub_func=deposit"):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1")
+                response = self.a2.do_process(halo_context,"z1")
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -853,6 +893,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
+            halo_context = get_halo_context(request)
             try:
                 from halo_app.ssm import set_app_param_config
                 params = {}
@@ -971,7 +1012,8 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_997_timeout(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             os.environ["AWS_LAMBDA_FUNCTION_NAME"] = "halo_app"
-            timeout = Util.get_timeout(request)
+            halo_context = get_halo_context(request)
+            timeout = Util.get_timeout(halo_context)
             eq_(timeout, 3)
 
 
@@ -984,27 +1026,31 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            response = self.a3.do_process("z1", {})
+            halo_context = get_halo_context(request)
+            response = self.a3.do_process(halo_context,"z1", {})
             eq_(response.code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            response = self.a3.do_process("z1", {})
+            halo_context = get_halo_context(request)
+            response = self.a3.process(halo_context,"z1", {})
             eq_(response.code, status.HTTP_200_OK)
 
     def test_9992_CORR(self):
         headers = {'HTTP_HOST': '127.0.0.2','x-correlation-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            response = self.a2.do_process("z1")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_9993_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1")
+                response = self.a2.do_process(halo_context,"z1")
                 return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1015,7 +1061,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            response = self.a2.do_process("z1")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_9995_NOCORR(self):
@@ -1023,8 +1070,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a2.do_process("z1")
+                response = self.a2.do_process(halo_context,"z1")
                 return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1039,23 +1087,26 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9997_db(self):
         app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            halo_context = get_halo_context(request)
             db = DbTest()
-            req = HaloRequest(request)
+            req = HaloRequest(halo_context)
             db.get_dbaccess(req,True)
 
     def test_9998_db(self):
         app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            halo_context = get_halo_context(request)
             db = DbTest()
-            req = HaloRequest(request)
+            req = HaloRequest(halo_context)
             db.get_dbaccess(req,False)
 
 
     def test_99991_security_need_token(self):
         app.config['CIRCUIT_BREAKER'] = False
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a4.do_process("z1")
+                response = self.a4.do_process(halo_context,"z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10108)
@@ -1068,8 +1119,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id,30,secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a4.do_process("z1")
+                response = self.a4.do_process(halo_context,"z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10109)
@@ -1083,8 +1135,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id,30,secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
+            halo_context = get_halo_context(request)
             try:
-                response = self.a4.do_process("z1")
+                response = self.a4.do_process(halo_context,"z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1099,9 +1152,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a4.method_roles = []
-                response = self.a4.do_process("z1")
+                response = self.a4.do_process(halo_context,"z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1116,9 +1170,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a4.method_roles = ['tst1']
-                response = self.a4.do_process("z1")
+                response = self.a4.do_process(halo_context,"z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1134,9 +1189,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a4.method_roles = ['tst']
-                response = self.a4.do_process("z1")
+                response = self.a4.do_process(halo_context,"z1")
                 eq_(response.status_code,200)
             except Exception as e:
                 print(str(e))
@@ -1153,9 +1209,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.do_process("z1",{})
+                response = self.a5.do_process(halo_context,"z1",{})
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1171,9 +1228,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.do_process("z1")
+                response = self.a6.do_process(halo_context,"z1")
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1190,9 +1248,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.do_process("z1", {})
+                response = self.a5.do_process(halo_context,"z1", {})
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))
@@ -1211,9 +1270,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
+            halo_context = get_halo_context(request)
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.do_process("z1")
+                response = self.a6.do_process(halo_context,"z1")
                 eq_(response.status_code, 201)
             except Exception as e:
                 print(str(e))

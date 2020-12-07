@@ -45,21 +45,21 @@ class AbsBaseLinkX(AbsBaseClass):
     def __init__(self, **kwargs):
         super(AbsBaseLinkX, self).__init__(**kwargs)
 
-    def do_process(self,method,args=None,headers=None):
+    def do_process(self,halo_context:HaloContext,method_id:str,args:dict=None):
         """
 
         :param vars:
         :return:
         """
         now = datetime.datetime.now()
-        self.halo_context = HaloContext()
+        self.halo_context = halo_context
         error_message = None
         error = None
         orig_log_level = 0
         http_status_code = 500
 
         try:
-            ret = self.process(method,args,headers)
+            ret = self.process(halo_context,method_id,args)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.server.value,
@@ -96,10 +96,10 @@ class AbsBaseLinkX(AbsBaseClass):
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
         json_error = Util.json_error_response(self.halo_context, args,settings.ERR_MSG_CLASS, error)
-        return self.do_abort(method,args,headers,http_status_code, errors=json_error)
+        return self.do_abort(halo_context,method_id,args,http_status_code, errors=json_error)
 
-    def do_abort(self,method,args,headers,http_status_code, errors):
-        ret = HaloResponse(HaloRequest(method,args,headers))
+    def do_abort(self,halo_context,method,args,http_status_code, errors):
+        ret = HaloResponse(HaloRequest(halo_context,method,args))
         ret.payload = errors
         ret.code = http_status_code
         ret.headers = {}

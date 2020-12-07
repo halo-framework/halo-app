@@ -14,6 +14,7 @@ from jsonpath_ng import jsonpath, parse
 # app
 
 from .utilx import Util
+from ..context import HaloContext
 from ..errors import status
 from ..const import HTTPChoice,ASYNC
 from ..exceptions import *
@@ -41,129 +42,8 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-class AbsBaseMixinX(AbsBaseClass):
-    __metaclass__ = ABCMeta
 
-    name = 'Base'
-
-    def __init__(self):
-        self.name = self.get_name()
-
-    # def get_the_template(self, request, name):
-    #    return loader.get_template(name)
-
-    def get_root_url(self):
-        """
-
-        :return:
-        """
-        if not settings.STAGE_URL:
-            root = '/'
-        else:
-            root = "/" + settings.ENV_NAME + "/"
-        return root
-
-    def get_name(self):
-        """
-
-        :return:
-        """
-        name = self.__class__.__name__
-        new_name = name.replace('Link', '')
-        return new_name
-
-    def process_get(self, request, vars):
-        """
-
-        :param request:
-        :param vars:
-        :return:
-        """
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = 'this is process get on '  # + self.get_view_name()
-        ret.code = 200
-        ret.headers = {}
-        return ret
-
-    def process_post(self, request, vars):
-        """
-
-        :param request:
-        :param vars:
-        :return:
-        """
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = 'this is process post on '  # + self.get_view_name()
-        ret.code = 201
-        ret.headers = {}
-        return ret
-
-    def process_put(self, request, vars):
-        """
-
-        :param request:
-        :param vars:
-        :return:
-        """
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = 'this is process put on '  # + self.get_view_name()
-        ret.code = 200
-        ret.headers = {}
-        return ret
-
-    def process_patch(self, request, vars):
-        """
-
-        :param request:
-        :param vars:
-        :return:
-        """
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = 'this is process patch on '  # + self.get_view_name()
-        ret.code = 200
-        ret.headers = {}
-        return ret
-
-    def process_delete(self, request, vars):
-        """
-
-        :param request:
-        :param vars:
-        :return:
-        """
-        ret = HaloResponse(HaloRequest(request))
-        ret.payload = 'this is process delete on '  # + self.get_view_name()
-        ret.code = 200
-        ret.headers = {}
-        return ret
-
-    def check_author(self, request, vars, json):
-        """
-
-        :param request:
-        :param vars:
-        :param json:
-        :return:
-        """
-        # @TODO check authorization and do masking
-        return True, json, None
-
-    def check_authen(self, typer, request, vars):
-        """
-
-        :param typer:
-        :param request:
-        :param vars:
-        :return:
-        """
-        # @TODO check authentication and do masking
-        return True, None
-
-    @abstractmethod
-    def get_dbaccess(self, halo_request,read):
-        return Reflect.instantiate(settings.DBACCESS_CLASS, AbsDbMixin, halo_request.context,read)
-
-class AbsApiMixinX(AbsBaseMixinX):
+class AbsApiMixinX(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     business_event = None
@@ -172,8 +52,8 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     def create_response(self,halo_request, payload, headers):
         code = status.HTTP_200_OK
-        #if halo_request.request.method == HTTPChoice.post.value or halo_request.request.method == HTTPChoice.put.value:
-            #code = status.HTTP_201_CREATED
+        if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value or halo_request.context.get(HaloContext.method) == HTTPChoice.put.value:
+            code = status.HTTP_201_CREATED
         return HaloResponse(halo_request, payload, code, headers)
 
     def validate_req(self, halo_request):
@@ -224,7 +104,7 @@ class AbsApiMixinX(AbsBaseMixinX):
     def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         logger.debug("in execute_api "+back_api.name)
         if back_api:
-            timeout = Util.get_timeout(halo_request)
+            timeout = Util.get_timeout(halo_request.context)
             try:
                 seq_msg = ""
                 if seq:
@@ -595,6 +475,18 @@ class AbsApiMixinX(AbsBaseMixinX):
     def processing_engine(self, halo_request):
         if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
+                return self.do_operation_3(halo_request)
+            if self.business_event.get_business_event_type() == SEQ:
+                if self.business_event.keys():
+                    return self.do_operation_2(halo_request)
+                else:
+                    raise BusinessEventMissingSeqException(self.service_operation)
+        else:
+            return self.do_operation_1(halo_request)
+
+    def processing_engine1(self, halo_request):
+        if self.business_event:
+            if self.business_event.get_business_event_type() == SAGA:
                 if halo_request.sub_func:
                     return self.do_operation_3_bq(halo_request, halo_request.sub_func.lower())
                 return self.do_operation_3(halo_request)
@@ -643,9 +535,9 @@ class AbsApiMixinX(AbsBaseMixinX):
 
     ######################################################################
 
-    def process(self,method,  vars=None,headers=None):
+    def process(self,halo_context,method_id,vars=None):
         bq = self.get_bq(vars)
-        halo_request = HaloRequest(method,vars,headers,bq,self.secure,self.method_roles)
+        halo_request = HaloRequest(halo_context,method_id,vars,bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
         ret = self.do_operation(halo_request)
         return ret

@@ -22,18 +22,13 @@ class HaloRequest(AbsBaseClass):
     vars = None
     context = None
     security = None
-    headers = None
 
-    def __init__(self, func,vars,headers,sub_func=None,secure=False,method_roles=None,context=None):
+    def __init__(self,halo_context, func,vars,sub_func=None,secure=False,method_roles=None):
         self.func = func
         self.vars = vars
-        self.headers = headers
         if sub_func:
             self.sub_func = sub_func
-        if context:
-            self.context = context
-        else:
-            self.context = self.init_ctx()
+        self.context = halo_context
         for i in settings.HALO_CONTEXT_LIST:
             item = HaloContext.items[i]
             if item not in self.context.keys():
@@ -45,11 +40,7 @@ class HaloRequest(AbsBaseClass):
                 self.security = HaloSecurity()
             self.security.validate_method(method_roles)
 
-    def init_ctx(self):
-        context = Util.get_halo_context()
-        if settings.HALO_CONTEXT_CLASS:
-            context = Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext)
-        return context
+
 
 
 
