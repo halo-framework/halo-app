@@ -1023,7 +1023,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
             response = self.a2.do_process(halo_context,"z1")
-            eq_(response.status_code, status.HTTP_200_OK)
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
@@ -1090,7 +1090,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
             db = DbTest()
-            req = HaloRequest(halo_context,"z1")
+            req = HaloRequest(halo_context,"z1",{})
             db.get_dbaccess(req,True)
 
     def test_9998_db(self):
@@ -1098,7 +1098,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
             db = DbTest()
-            req = HaloRequest(halo_context,"z1")
+            req = HaloRequest(halo_context,"z1",{})
             db.get_dbaccess(req,False)
 
 
