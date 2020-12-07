@@ -1021,7 +1021,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9991_tst2_get(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            response = self.a2.do_process("z1")
+            halo_context = get_halo_context(request)
+            response = self.a2.do_process(halo_context,"z1")
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
@@ -1042,7 +1043,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
             response = self.a2.do_process(halo_context,"z1")
-            eq_(response.status_code, status.HTTP_200_OK)
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_9993_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1089,7 +1090,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
             db = DbTest()
-            req = HaloRequest(halo_context)
+            req = HaloRequest(halo_context,"z1")
             db.get_dbaccess(req,True)
 
     def test_9998_db(self):
@@ -1097,7 +1098,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
             db = DbTest()
-            req = HaloRequest(halo_context)
+            req = HaloRequest(halo_context,"z1")
             db.get_dbaccess(req,False)
 
 
@@ -1193,7 +1194,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 self.a4.method_roles = ['tst']
                 response = self.a4.do_process(halo_context,"z1")
-                eq_(response.status_code,200)
+                eq_(response.code,200)
             except Exception as e:
                 print(str(e))
                 eq_(1,2)
@@ -1212,7 +1213,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.do_process(halo_context,"z1",{})
+                response = self.a5.process(halo_context,"z1",{})
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1251,7 +1252,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.do_process(halo_context,"z1", {})
+                response = self.a5.process(halo_context,"z1", {})
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))
@@ -1274,7 +1275,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 self.a6.method_roles = ['tst']
                 response = self.a6.do_process(halo_context,"z1")
-                eq_(response.status_code, 201)
+                eq_(response.code, 201)
             except Exception as e:
                 print(str(e))
                 eq_(1,2)
