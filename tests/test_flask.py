@@ -425,6 +425,12 @@ class TestUserDetailTestCase(unittest.TestCase):
             response = self.a1.process(halo_context,"z3", {})
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
+    def test_4_cli(self):
+        halo_context = HaloContext()
+        response = self.a1.process(halo_context,"z3", {})
+        eq_(response.payload, {'1': None, '2': None, '3': None})
+
+
 
     def test_6_api_request_returns_a_CircuitBreakerError(self):
         app.config['PROVIDER'] = "AWS"
