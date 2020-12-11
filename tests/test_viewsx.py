@@ -17,7 +17,7 @@ settings = settingsx()
 
 ############################################
 from halo_app.app.mixinx import AbsApiMixinX
-from halo_app.app.viewsx import AbsBaseLinkX
+from halo_app.app.viewsx import AbsService
 from flask.views import MethodView
 from flask import Response
 import json
@@ -37,5 +37,5 @@ class TestMixinX(AbsApiMixinX,MethodView):
         # 8. return json response
         return dict
 
-class TestLinkX(TestMixinX, AbsBaseLinkX):
+class TestLinkX(TestMixinX, AbsService):
     pass

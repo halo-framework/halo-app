@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 # python
+import abc
 import datetime
 import logging
 import os
@@ -30,9 +31,12 @@ settings = settingsx()
 # Create your views here.
 logger = logging.getLogger(__name__)
 
-#@todo add jsonify to all responses
+class AbsBaseService(AbsBaseClass,abc.ABC):
+    @abc.abstractmethod
+    def do_process(self, halo_context: HaloContext, method_id: str, args: dict = None):
+        pass
 
-class AbsBaseLinkX(AbsBaseClass):
+class AbsService(AbsBaseService):
     __metaclass__ = ABCMeta
 
     """
@@ -43,7 +47,7 @@ class AbsBaseLinkX(AbsBaseClass):
         """
 
     def __init__(self, **kwargs):
-        super(AbsBaseLinkX, self).__init__(**kwargs)
+        super(AbsService, self).__init__(**kwargs)
 
     def do_process(self,halo_context:HaloContext,method_id:str,args:dict=None):
         """

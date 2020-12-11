@@ -16,7 +16,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice
 from halo_app.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
-from halo_app.app.viewsx import AbsBaseLinkX
+from halo_app.app.viewsx import AbsService
 from halo_app.request import HaloContext
 from halo_app.apis import load_api_config
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
@@ -175,7 +175,7 @@ class A3(AbsApiMixinX):
         request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
-class A2(A1, AbsBaseLinkX):
+class A2(A1, AbsService):
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
@@ -278,7 +278,7 @@ class A4(A2):
 class A5(AbsApiMixinX):
     secure = True
 
-class A6(A5, AbsBaseLinkX):
+class A6(A5, AbsService):
     pass
 
 
