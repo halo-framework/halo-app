@@ -9,7 +9,6 @@ from nose.tools import eq_
 from jsonpath_ng import jsonpath, parse
 from halo_app.base_util import BaseUtil
 from halo_app.circuitbreaker import CircuitBreakerError
-from halo_app.app.utilx import Util
 from halo_app.command import HaloCommand
 from halo_app.errors import status
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
@@ -17,7 +16,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
-from halo_app.app.viewsx import AbsService
+from halo_app.app.viewsx import BoundaryService
 from halo_app.request import HaloContext
 from halo_app.apis import load_api_config
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
@@ -26,6 +25,7 @@ from halo_app.security import HaloSecurity
 import unittest
 
 #6,7,9923,9941 failing
+from halo_app.sys_util import SysUtil
 
 fake = Faker()
 app = Flask(__name__)
@@ -123,34 +123,33 @@ class Sec(HaloSecurity):
 
 #ApiMngr.set_api_list(API_LIST)
 
-class A1(AbsService,AbsCommandHandler,AbsQueryHandler):
+class A1(BoundaryService,AbsCommandHandler,AbsQueryHandler):
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
-            if not halo_request.sub_func:#not in bq
-                if halo_request.func == "z1" or halo_request.func == "z3":
-                    return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
-                    #return CnnApi(halo_request.context,HTTPChoice.delete.value)
+            if halo_request.method_id == "z1" or halo_request.method_id == "z3":
+                return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
+                #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.func == HTTPChoice.get.value:#method type
+            if halo_request.method_id == HTTPChoice.get.value:#method type
                 return {"tst_get":"good"}
-            if halo_request.func == HTTPChoice.delete.value:#method type
+            if halo_request.method_id == HTTPChoice.delete.value:#method type
                 return {"tst_delete":"good"}
         else:#in event
-            if halo_request.func == HTTPChoice.put.value:#method type
+            if halo_request.method_id == HTTPChoice.put.value:#method type
                 if seq == '1':
                     return {"tst_put":"good1"}
                 if seq == '2':
                     return {"tst_put":"good2"}
-            if halo_request.func == HTTPChoice.post.value:#method type
+            if halo_request.method_id == HTTPChoice.post.value:#method type
                 if seq == '1':
                     return {"tst_post":"good1"}
                 if seq == '2':
                     return {"tst_post":"good2"}
-            if halo_request.func == HTTPChoice.patch.value:#method type
+            if halo_request.method_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 
 class A3(AbsCommandHandler):
@@ -178,7 +177,7 @@ class A3(AbsCommandHandler):
         request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
-class A2(A1, AbsService):
+class A2(A1, BoundaryService):
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
@@ -207,7 +206,7 @@ class A2(A1, AbsService):
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.func == "z1":#method type
+            if halo_request.method_id == "z1":#method type
                 return {"tst_get_deposit":"good"}
             if halo_request.context.get(HaloContext.method) == HTTPChoice.delete.value:#method type
                 return {"tst_delete_deposit":"good"}
@@ -281,7 +280,7 @@ class A4(A2):
 class A5(AbsCommandHandler):
     secure = True
 
-class A6(A5, AbsService):
+class A6(A5, BoundaryService):
     pass
 
 
@@ -314,6 +313,7 @@ def get_host_name():
         return 'HALO_HOST'
 
 def get_halo_context(request):
+    from halo_app.app.utilx import Util
     context = Util.get_halo_context()
     for i in request.headers.keys():
         if type(i) == str:
@@ -411,7 +411,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 halo_context = get_halo_context(request)
-                response = self.a1.process(halo_context, "z0", {})
+                halo_request = SysUtil.create_request(halo_context, "z0", {})
+                response = self.a1.process(halo_request)
                 eq_(1,2)
             except Exception as e:
                 print(str(e))
@@ -420,29 +421,34 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
             halo_context = get_halo_context(request)
-            response = self.a1.process(halo_context, "z2", {})
+            halo_request = SysUtil.create_request(halo_context, "z2", {})
+            response = self.a1.process(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             halo_context = get_halo_context(request)
-            response = self.a1.process(halo_context, "z3", {})
+            halo_request = SysUtil.create_request(halo_context, "z3", {})
+            response = self.a1.process(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_4_cli(self):
         halo_context = HaloContext()
-        response = self.a1.process(halo_context,"z3", {})
+        halo_request = SysUtil.create_request(halo_context, "z3", {})
+        response = self.a1.process(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_41_cli(self):
         halo_context = HaloContext()
-        response = self.a1.do_process(halo_context,"z3", {})
+        halo_request = SysUtil.create_request(halo_context, "z3", {})
+        response = self.a1.do_process(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_5_query_request_returns_dict(self):
         with app.test_request_context(method='GET', path='/?abc=def'):
             halo_context = get_halo_context(request)
-            response = self.a1.process(halo_context, "z3", {},OPType.query)
+            halo_request = SysUtil.create_request(halo_context, "z3", {})
+            response = self.a1.process(halo_request,OPType.query)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
 

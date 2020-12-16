@@ -92,7 +92,6 @@ class AbsBaseHandler(AbsBaseClass):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
-            ret["sub_func"] = halo_request.sub_func
             return ret
         raise HaloException("no var")
 
@@ -141,7 +140,7 @@ class AbsBaseHandler(AbsBaseClass):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise HaloException("mapping error for " + halo_request.func,e)
+                    raise HaloException("mapping error for " + halo_request.method_id,e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -172,18 +171,18 @@ class AbsBaseHandler(AbsBaseClass):
 
     def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
-        if settings.MAPPING and halo_request.func in settings.MAPPING:
-            mapping = settings.MAPPING[halo_request.func]
+        if settings.MAPPING and halo_request.method_id in settings.MAPPING:
+            mapping = settings.MAPPING[halo_request.method_id]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
-        raise HaloException("no mapping for "+halo_request.func)
+        raise HaloException("no mapping for "+halo_request.method_id)
 
     def load_resp_mapping(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
         if settings.MAPPING:
             for path in settings.MAPPING:
                 try:
-                    if re.match(path,halo_request.func):
+                    if re.match(path,halo_request.method_id):
                         mapping = settings.MAPPING[path]
                         logger.debug("in load_resp_mapping " + str(mapping))
                         return mapping
@@ -543,14 +542,12 @@ class AbsCommandHandler(AbsBaseHandler):
             if settings.BUSINESS_EVENT_MAP:
                 if self.service_operation in settings.BUSINESS_EVENT_MAP:
                     bq = "base"
-                    if halo_request.sub_func:
-                        bq = halo_request.sub_func
                     bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
                     if bq in bqs:
                         service_list = bqs[bq]
                         #@todo add schema to all event config files
-                        if service_list and halo_request.func in service_list.keys():
-                            service_map = service_list[halo_request.func]
+                        if service_list and halo_request.method_id in service_list.keys():
+                            service_map = service_list[halo_request.method_id]
                             if SEQ in service_map:
                                 dict = service_map[SEQ]
                                 self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
@@ -570,9 +567,7 @@ class AbsCommandHandler(AbsBaseHandler):
 
     ######################################################################
 
-    def run_command(self,halo_command:HaloCommand)->HaloResponse:
-        bq = self.get_bq(halo_command.vars)
-        halo_request = HaloCommandRequest(halo_command,bq,self.secure,self.method_roles)
+    def run_command(self,halo_request:HaloCommandRequest)->HaloResponse:
         self.set_businss_event(halo_request, "x")
         ret:HaloResponse = self.do_command(halo_request)
         return ret
