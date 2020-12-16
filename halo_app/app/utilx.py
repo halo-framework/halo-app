@@ -12,7 +12,7 @@ import importlib
 
 from halo_app.classes import AbsBaseClass
 from halo_app.const import HTTPChoice,LOC
-from halo_app.context import HaloContext
+from halo_app.context import HaloContext, InitCtxFactory
 from halo_app.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
 from halo_app.providers.providers import get_provider,ONPREM
 from halo_app.exceptions import NoCorrelationIdException
@@ -55,8 +55,8 @@ class Util(AbsBaseClass):
         :param request:
         :return:
         """
-        if "timeout" in halo_context.dict:
-            timeout = halo_context.dict["timeout"]
+        if "timeout" in halo_context.keys():
+            timeout = halo_context.get("timeout")
             if timeout:
                 return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
@@ -68,8 +68,8 @@ class Util(AbsBaseClass):
         :param request:
         :return:
         """
-        if "timeout" in halo_request.context.dict:
-            timeout = halo_request.context.dict["timeout"]
+        if "timeout" in halo_request.context.keys():
+            timeout = halo_request.context.get("timeout")
             if timeout:
                 return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
@@ -83,14 +83,13 @@ class Util(AbsBaseClass):
         :return:
         """
 
-        ret = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent,
+        env = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent,
                HaloContext.items[HaloContext.REQUEST]: request_id,
                HaloContext.items[HaloContext.CORRELATION]: x_correlation_id,
                HaloContext.items[HaloContext.DEBUG_LOG]: dlog}
         if api_key:
-            ret[HaloContext.items[HaloContext.API_KEY]] = api_key
-        ctx = HaloContext()
-        ctx.dict = ret
+            env[HaloContext.items[HaloContext.API_KEY]] = api_key
+        ctx = InitCtxFactory.get_initial_context(env)
         return ctx
 
     @staticmethod

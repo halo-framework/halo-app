@@ -34,7 +34,7 @@ def log_json(halo_context, params=None, err=None,provider_context=None):
     :return:
     """
 
-    dict_items = dict(halo_context.dict)
+    dict_items = dict(halo_context.table)
     if provider_context:
         dict_items.update(provider_context)
     logMsg = {key: value for (key, value) in (dict_items.items())}

@@ -34,5 +34,8 @@ class LOGChoice(Enum):  # A subclass of Enum
     saga = "saga"
     url = "url"
 
+class OPType(Enum):  # A subclass of Enum
+    query = "QUERY"
+    command = "COMMAND"
 
 ASYNC = "async"

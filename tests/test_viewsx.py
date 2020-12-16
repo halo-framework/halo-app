@@ -16,12 +16,12 @@ from halo_app.const import HTTPChoice
 settings = settingsx()
 
 ############################################
-from halo_app.app.mixinx import AbsApiMixinX
+from halo_app.app.mixinx import AbsCommandHandler
 from halo_app.app.viewsx import AbsService
 from flask.views import MethodView
 from flask import Response
 import json
-class TestMixinX(AbsApiMixinX,MethodView):
+class TestMixinX(AbsCommandHandler, MethodView):
     def get(self):
         ret = self.do_process()
         print(str(ret.payload))

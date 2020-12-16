@@ -31,24 +31,24 @@ class BaseEvent(AbsBaseClass):
     host = None
 
 
-    dict = {}
+    table = {}
 
-    def __init__(self, dict):
-        self.dict = dict
+    def __init__(self, table):
+        self.table = table
 
     def get(self, key):
-        return self.dict[key]
+        return self.table[key]
 
     def put(self, key, value):
-        self.dict[key] = value
+        self.table[key] = value
 
     def keys(self):
-        return self.dict.keys()
+        return self.table.keys()
 
     def serialize(self):
         d = {'name':self.name,'time':str(self.time),'method':self.method,'remote_addr':self.remote_addr,'host':self.host}
-        if len(self.dict) > 0:
-            d.update(self.dict)
+        if len(self.table) > 0:
+            d.update(self.table)
         return str(d)
 
 
@@ -91,7 +91,7 @@ class RequestFilter(AbsFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         # context data
         for key in HaloContext.items.keys():
-            if HaloContext.items[key] in halo_request.context.dict:
+            if HaloContext.items[key] in halo_request.context.keys():
                 event.put(HaloContext.items[key],halo_request.context.get(HaloContext.items[key]))
         return event
 

@@ -36,30 +36,34 @@ class HaloContext(AbsBaseClass):
         ACCESS: "x-halo-access-token"
     }
 
-    dict = {}
+    table:dict = {}
 
-    def __init__(self, headers=None):
-        if headers:
+    def __init__(self, env:dict=None):
+        if env:
             for key in self.items:
                 flag = self.items[key]
-                if flag in headers:
-                    self.dict[key] = headers[flag]
+                if flag in env:
+                    self.table[key] = env[flag]
 
     def get(self, key):
-        if key in self.dict:
-            return self.dict[key]
+        if key in self.table:
+            return self.table[key]
         return None
 
     def put(self, key, value):
-        self.dict[key] = value
+        self.table[key] = value
 
     def keys(self):
-        return self.dict.keys()
+        return self.table.keys()
 
     def size(self):
-        return len(self.dict)
+        return len(self.table)
 
 
 
+class InitCtxFactory(AbsBaseClass):
+
+    def get_initial_context(env:dict)->HaloContext:
+        return HaloContext(env)
 
 

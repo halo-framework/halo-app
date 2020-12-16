@@ -532,9 +532,10 @@ class ApiMngr(AbsBaseClass):
     def get_api_instance(name, *args):
         global api_dict
         ctx = args[0]
+        id = None
         if HaloContext.items[HaloContext.CORRELATION] in ctx.keys():
             id = ctx.get(HaloContext.items[HaloContext.CORRELATION])
-            print("ctx:"+str(id))
+            logger.debug("ctx:"+str(id))
         if not id:
             id = str(uuid.uuid4())[:8]
         if name in HALO_API_LIST:

@@ -14,12 +14,13 @@ from jsonpath_ng import jsonpath, parse
 # app
 
 from .utilx import Util
+from ..command import HaloCommand, HaloQuery
 from ..context import HaloContext
 from ..errors import status
-from ..const import HTTPChoice,ASYNC
+from ..const import HTTPChoice, ASYNC, OPType
 from ..exceptions import *
 from ..reflect import Reflect
-from ..request import HaloRequest
+from ..request import HaloRequest, HaloQueryRequest, HaloCommandRequest
 from ..response import HaloResponse
 from ..settingsx import settingsx
 from ..logs import log_json
@@ -43,7 +44,7 @@ settings = settingsx()
 logger = logging.getLogger(__name__)
 
 
-class AbsApiMixinX(AbsBaseClass):
+class AbsBaseHandler(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     business_event = None
@@ -215,6 +216,40 @@ class AbsApiMixinX(AbsBaseClass):
             return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
+
+class AbsQueryHandler(AbsBaseHandler):
+    __metaclass__ = ABCMeta
+
+    def do_query(self, halo_request:HaloRequest)->HaloResponse:
+        # 1. validate input params
+        self.validate_req(halo_request)
+        # 2. run pre conditions
+        self.validate_pre(halo_request)
+        # 3. processing engine
+        dict = self.processing_engine(halo_request)
+        # 4. Build the payload target response structure which is Compliant
+        payload = self.create_resp_payload(halo_request, dict)
+        logger.debug("payload=" + str(payload))
+        # 5. setup headers for reply
+        headers = self.set_resp_headers(halo_request)
+        # 6. build json and add to halo response
+        halo_response = self.create_response(halo_request, payload, headers)
+        # 7. post condition
+        self.validate_post(halo_request, halo_response)
+        # 8. do filter
+        #self.do_filter(halo_request,halo_response)
+        # 9. return json response
+        return halo_response
+
+    def run_query(self,halo_query:HaloQuery)->HaloResponse:
+        bq = self.get_bq(halo_query.vars)
+        halo_request = HaloQueryRequest(halo_query,bq,self.secure,self.method_roles)
+        ret:HaloResponse = self.do_query(halo_request)
+        return ret
+
+class AbsCommandHandler(AbsBaseHandler):
+    __metaclass__ = ABCMeta
+
     def do_operation_bq(self, halo_request):
         if halo_request.sub_func is None:
             raise IllegalBQException("missing sub_func value")
@@ -334,7 +369,7 @@ class AbsApiMixinX(AbsBaseClass):
         # return
         return back_json
 
-    def do_operation(self, halo_request):
+    def do_command(self, halo_request:HaloRequest)->HaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -535,12 +570,16 @@ class AbsApiMixinX(AbsBaseClass):
 
     ######################################################################
 
-    def process(self,halo_context,method_id,vars=None):
-        bq = self.get_bq(vars)
-        halo_request = HaloRequest(halo_context,method_id,vars,bq,self.secure,self.method_roles)
+    def run_command(self,halo_command:HaloCommand)->HaloResponse:
+        bq = self.get_bq(halo_command.vars)
+        halo_request = HaloCommandRequest(halo_command,bq,self.secure,self.method_roles)
         self.set_businss_event(halo_request, "x")
-        ret = self.do_operation(halo_request)
+        ret:HaloResponse = self.do_command(halo_request)
         return ret
+
+
+
+
 
 
 

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # for testing
 
 class OnPremClient(AbsOnPremClient):
-    dict = {}
+    table = {}
 
     def put_parameter(self, Name, Value, Type, Overwrite):
         root = Name.split("/")
@@ -26,9 +26,9 @@ class OnPremClient(AbsOnPremClient):
         section_name = root[section_position]
         params = [{'Name':section_name,'Value':Value}]
         rec = {'Parameters' : params }
-        self.dict[Name.replace("/"+section_name,"")] = rec
+        self.table[Name.replace("/"+section_name,"")] = rec
 
     def get_parameters_by_path(self, Path, Recursive, WithDecryption):
-        return self.dict[Path]
+        return self.table[Path]
 
 

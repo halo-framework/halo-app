@@ -10,10 +10,10 @@ from abc import ABCMeta,abstractmethod
 import importlib
 import jwt
 # app
-from ..command import HaloQuery, HaloCommand
+from ..command import AbsHaloCommand
 from ..exceptions import HaloError
 from .utilx import Util
-from ..const import HTTPChoice, SYSTEMChoice, LOGChoice, OPType
+from ..const import HTTPChoice,SYSTEMChoice,LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
 from ..request import HaloRequest
@@ -31,43 +31,40 @@ settings = settingsx()
 # Create your views here.
 logger = logging.getLogger(__name__)
 
-class AbsBaseService(AbsBaseClass,abc.ABC):
-    """
-    the only port exposed from the boundry
-    """
+
+class AbsBaseCommandHandler(AbsBaseClass,abc.ABC):
     @abc.abstractmethod
-    def do_process(self, halo_context: HaloContext, method_id: str, args: dict,op_type:OPType=OPType.command)->HaloResponse:
+    def handle(self, halo_command: AbsHaloCommand)->HaloResponse:
         pass
 
-class AbsService(AbsBaseService):
+class AbsCommandHandler(AbsBaseCommandHandler):
     __metaclass__ = ABCMeta
 
     """
-        the only point of communication with left-side driver
-        adapters. It accepts commands, and calls the appropriate command handler.
+        View to list all users in the system.
 
-        Requires token authentication.
-        Only admin users are able to access this view.
+        * Requires token authentication.
+        * Only admin users are able to access this view.
         """
 
     def __init__(self, **kwargs):
-        super(AbsService, self).__init__(**kwargs)
+        super(AbsCommandHandler, self).__init__(**kwargs)
 
-    def do_process(self,halo_context:HaloContext,method_id:str,args:dict,op_type:OPType=OPType.command)->HaloResponse:
+    def handle(self,halo_command: AbsHaloCommand)->HaloResponse:
         """
 
         :param vars:
         :return:
         """
         now = datetime.datetime.now()
-        self.halo_context = halo_context
+        self.halo_context = halo_command.context
         error_message = None
         error = None
         orig_log_level = 0
         http_status_code = 500
 
         try:
-            ret = self.process(halo_context,method_id,args,op_type)
+            ret = self.do_handle(halo_command)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(self.halo_context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.server.value,
@@ -80,7 +77,7 @@ class AbsService(AbsBaseService):
             error_message = str(error)
             # @todo check if stack needed and working
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(self.halo_context, args, e))
+            logger.error(error_message, extra=log_json(self.halo_context, halo_command.args, e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -90,7 +87,7 @@ class AbsService(AbsBaseService):
             error_message = str(error)
             #@todo check if stack needed and working
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(self.halo_context, args, e))
+            logger.error(error_message, extra=log_json(self.halo_context, halo_command.args, e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -103,11 +100,11 @@ class AbsService(AbsBaseService):
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        json_error = Util.json_error_response(self.halo_context, args,settings.ERR_MSG_CLASS, error)
-        return self.do_abort(halo_context,method_id,args,http_status_code, errors=json_error)
+        json_error = Util.json_error_response(self.halo_context, halo_command.args,settings.ERR_MSG_CLASS, error)
+        return self.do_abort(halo_command,http_status_code, errors=json_error)
 
-    def do_abort(self,halo_context,method,args,http_status_code, errors):
-        ret = HaloResponse(HaloRequest(halo_context,method,args))
+    def do_abort(self,halo_command,http_status_code, errors):
+        ret = HaloResponse(HaloRequest(halo_command))
         ret.payload = errors
         ret.code = http_status_code
         ret.headers = {}
@@ -124,13 +121,6 @@ class AbsService(AbsBaseService):
                 logger.debug("process_finally - back to orig:" + str(orig_log_level),
                              extra=log_json(self.halo_context))
 
-
-    def process(self,halo_context:HaloContext,method_id:str,args:dict,op_type:OPType=OPType.command)->HaloResponse:
-        if op_type == OPType.query:
-            halo_query = HaloQuery(halo_context,method_id,args)
-            return self.run_query(halo_query)
-        halo_command = HaloCommand(halo_context,method_id,args)
-        return self.run_command(halo_command)
 
 
 
