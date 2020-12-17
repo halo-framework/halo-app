@@ -6,19 +6,24 @@ import os
 from faker import Faker
 from flask import Flask, request
 from nose.tools import eq_
-from jsonpath_ng import jsonpath, parse
+
+from halo_app.app.mixinx import AbsCommandHandler, AbsQueryHandler
 from halo_app.base_util import BaseUtil
 from halo_app.circuitbreaker import CircuitBreakerError
-from halo_app.command import HaloCommand
+from halo_app.data.finder import AbsFinder
+from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
+from halo_app.domain.repository import AbsRepository
+from halo_app.infra.service import AbsInfraService, AbsMailService
 from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
-from halo_app.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
+from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.viewsx import BoundaryService
-from halo_app.request import HaloContext
-from halo_app.apis import load_api_config
+from halo_app.app.request import HaloContext, HaloCommandRequest, HaloQueryRequest
+from halo_app.infra.apis import load_api_config
+from halo_app.models import AbsDbMixin
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
 from halo_app.app.viewsx import load_global_data
 from halo_app.security import HaloSecurity
@@ -31,9 +36,7 @@ from halo_app.sys_util import SysUtil
 fake = Faker()
 app = Flask(__name__)
 
-from halo_app.request import HaloRequest
-from halo_app.response import HaloResponse
-
+from halo_app.app.request import HaloRequest
 
 ##################################### test #########################
 """
@@ -104,14 +107,10 @@ class AwsApi(AbsRestApi):
 class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
 
-with app.app_context():
-    from halo_app.app.mixinx import AbsCommandHandler, AbsDbMixin, AbsQueryHandler
-
-
-    class DbTest(AbsCommandHandler):
-        pass
-    class DbMixin(AbsDbMixin):
-        pass
+class DbTest(AbsDbMixin):
+    pass
+class DbMixin(AbsDbMixin):
+    pass
 
 
 class Sec(HaloSecurity):
@@ -124,7 +123,22 @@ class Sec(HaloSecurity):
 
 #ApiMngr.set_api_list(API_LIST)
 
-class A1(BoundaryService,AbsCommandHandler,AbsQueryHandler):
+class A1(BoundaryService,AbsCommandHandler):
+    repository = None
+    domain_service = None
+    infra_service = None
+
+    def __init__(self):
+        super(A1,self).__init__()
+        self.repository = AbsRepository()
+        self.domain_service = AbsDomainService()
+        self.infra_service = AbsMailService()
+
+    def handle(self,halo_command_request:HaloCommandRequest) ->dict:
+        item = self.repository.load(halo_command_request.vars['id'])
+        entity = self.domain_service.validate(item)
+        self.infra_service.send(entity)
+        return {"1":{"a":"b"}}
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
@@ -285,6 +299,19 @@ class A6(A5, BoundaryService):
     pass
 
 
+class A7(BoundaryService,AbsQueryHandler):
+    finder = None
+
+    def __init__(self):
+        super(A7, self).__init__()
+        self.finder = AbsFinder()
+
+    def run(self, halo_query_request: HaloQueryRequest) -> dict:
+        items = self.finder.find(halo_query_request.vars)
+        return {"1": {"a": "c"}}
+
+
+
 from halo_app.app.filterx import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
@@ -314,7 +341,6 @@ def get_host_name():
         return 'HALO_HOST'
 
 def get_halo_context(request):
-    from halo_app.app.utilx import Util
     context = Util.get_halo_context()
     for i in request.headers.keys():
         if type(i) == str:
@@ -358,8 +384,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         self.a4 = A4()
         self.a5 = A5()
         self.a6 = A6()
+        self.a7 = A7()
 
-        self.start()
+        #self.start()
 
     def test_000_start(self):
         from halo_app.const import LOC
@@ -412,9 +439,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 halo_context = get_halo_context(request)
-                halo_request = SysUtil.create_request(halo_context, "z0", {})
+                halo_request = SysUtil.create_request(halo_context, "z0", {'id':'1'})
                 response = self.a1.process(halo_request)
-                eq_(1,2)
+                eq_(response.payload,{'a': 'b'})
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -442,15 +469,15 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_41_cli(self):
         halo_context = HaloContext()
         halo_request = SysUtil.create_request(halo_context, "z3", {})
-        response = self.a1.do_process(halo_request)
+        response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_5_query_request_returns_dict(self):
-        with app.test_request_context(method='GET', path='/?abc=def'):
+        with app.test_request_context(method='GET', path='/?id=1'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z3", {},OPType.query)
-            response = self.a1.process(halo_request)
-            eq_(response.payload, {'1': None, '2': None, '3': None})
+            halo_request = SysUtil.create_request(halo_context, "z3", request.args,OPType.query)
+            response = self.a7.execute(halo_request)
+            eq_(response.payload, {'a': 'c'})
 
 
     def test_6_api_request_returns_a_CircuitBreakerError(self):
@@ -623,7 +650,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['AWS_REGION'] = 'us-east-1'
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        with app.test_request_context(method='POST', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
+        with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", {})
             response = self.a2.process(halo_request)
@@ -632,7 +659,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_901_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+        with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", {})
             response = self.a2.process(halo_request)
@@ -642,7 +669,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
-        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+        with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", {})
             response = self.a2.process(halo_request)
@@ -654,7 +681,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
 
     def test_904_event_filter(self):
         app.config['PROVIDER'] = "AWS"
@@ -663,7 +690,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z10", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
 
     def test_905_filter(self):
         app.config['PROVIDER'] = "AWS"
@@ -820,7 +847,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
             halo_context = get_halo_context(request)
-            ret = Util.get_debug_enabled(halo_context)
+            ret = Util.get_debug_enable(halo_context)
             eq_(ret, 'true')
 
     def test_95_debug_event(self):
@@ -836,14 +863,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='DELETE', path="/start"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_990_run_seq_get(self):
         with app.test_request_context(method='GET', path="/"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_991_load_saga(self):
@@ -859,14 +886,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST', path="/"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=deposit"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z3", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9922_run_saga_bq_error(self):
@@ -874,7 +901,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z4", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -884,8 +911,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
-                eq_(response.payload, b'{"employees": [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}]}')
+                response = self.a2.execute(halo_request)
+                eq_(response.payload, [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}])
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
@@ -894,7 +921,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiError")
@@ -904,7 +931,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
@@ -915,7 +942,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -925,7 +952,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 assert False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1067,7 +1094,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
@@ -1090,7 +1117,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_9993_NOCORR(self):
@@ -1100,7 +1127,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1113,7 +1140,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.do_process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.status_code, status.HTTP_200_OK)
 
     def test_9995_NOCORR(self):
@@ -1124,7 +1151,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a2.do_process(halo_request)
+                response = self.a2.execute(halo_request)
                 return False
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1159,7 +1186,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a4.do_process(halo_request)
+                response = self.a4.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10108)
@@ -1175,7 +1202,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a4.do_process(halo_request)
+                response = self.a4.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10109)
@@ -1192,7 +1219,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
-                response = self.a4.do_process(halo_request)
+                response = self.a4.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1211,7 +1238,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = []
-                response = self.a4.do_process(halo_request)
+                response = self.a4.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1230,7 +1257,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = ['tst1']
-                response = self.a4.do_process(halo_request)
+                response = self.a4.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
@@ -1250,7 +1277,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = ['tst']
-                response = self.a4.do_process(halo_request)
+                response = self.a4.execute(halo_request)
                 eq_(response.code,200)
             except Exception as e:
                 print(str(e))
@@ -1291,7 +1318,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.do_process(halo_request)
+                response = self.a6.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1335,7 +1362,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a6.method_roles = ['tst']
-                response = self.a6.do_process(halo_request)
+                response = self.a6.execute(halo_request)
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))

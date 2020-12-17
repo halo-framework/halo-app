@@ -4,25 +4,18 @@ from __future__ import print_function
 import abc
 import datetime
 import logging
-import os
 import traceback
 from abc import ABCMeta,abstractmethod
-import importlib
-import jwt
 # app
-from ..command import HaloQuery, HaloCommand
 from ..exceptions import HaloError
 from .utilx import Util
-from ..const import HTTPChoice, SYSTEMChoice, LOGChoice, OPType
+from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
-from ..request import HaloRequest, HaloCommandRequest, HaloQueryRequest
-from ..response import HaloResponse
+from halo_app.app.request import HaloRequest, HaloCommandRequest
+from halo_app.app.response import HaloResponse
 from ..classes import AbsBaseClass
-from ..context import HaloContext
 from ..settingsx import settingsx
-
-from halo_app.const import HTTPChoice
 
 settings = settingsx()
 # aws
@@ -36,7 +29,7 @@ class AbsBoundaryService(AbsBaseClass,abc.ABC):
     the only port exposed from the boundry
     """
     @abc.abstractmethod
-    def do_process(self, halo_request: HaloRequest)->HaloResponse:
+    def execute(self, halo_request: HaloRequest)->HaloResponse:
         pass
 
 class BoundaryService(AbsBoundaryService,abc.ABC):
@@ -53,7 +46,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
     def __init__(self, **kwargs):
         super(BoundaryService, self).__init__(**kwargs)
 
-    def do_process(self,halo_request: HaloRequest)->HaloResponse:
+    def execute(self, halo_request: HaloRequest)->HaloResponse:
         """
 
         :param vars:
@@ -79,7 +72,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
             error_message = str(error)
             # @todo check if stack needed and working
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.context, halo_request.args, e))
+            logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -89,7 +82,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
             error_message = str(error)
             #@todo check if stack needed and working
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.context, halo_request.args, e))
+            logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -102,7 +95,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        json_error = Util.json_error_response(halo_request.context, halo_request.args,settings.ERR_MSG_CLASS, error)
+        json_error = Util.json_error_response(halo_request.context, halo_request.vars,settings.ERR_MSG_CLASS, error)
         return self.do_abort(halo_request,http_status_code, errors=json_error)
 
     def do_abort(self,halo_request,http_status_code, errors):
@@ -114,7 +107,6 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
 
     def process_finally(self,halo_context, orig_log_level):
         """
-
         :param orig_log_level:
         """
         if Util.isDebugEnabled(halo_context):

@@ -1,8 +1,7 @@
 from __future__ import print_function
 
 import logging
-import requests
-from .apis import ApiMngr
+from halo_app.infra.apis import ApiMngr
 from .base_util import BaseUtil
 from .exceptions import ApiError,HaloException, HaloError
 from .logs import log_json

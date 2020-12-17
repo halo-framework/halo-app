@@ -1,15 +1,12 @@
 from __future__ import print_function
 import abc
-import importlib
 import logging
-import datetime
 # halo
 from halo_app.classes import AbsBaseClass
-from halo_app.command import HaloCommand, HaloQuery
-from halo_app.exceptions import HaloException,MissingHaloContextException
+from halo_app.exceptions import MissingHaloContextException
 from halo_app.reflect import Reflect
 from halo_app.security import HaloSecurity
-from halo_app.context import HaloContext
+from halo_app.app.context import HaloContext
 from halo_app.settingsx import settingsx
 
 logger = logging.getLogger(__name__)
@@ -50,6 +47,6 @@ class HaloCommandRequest(HaloRequest):
 class HaloQueryRequest(HaloRequest):
     query = None
 
-    def __init__(self, halo_query,bq=None, secure=False, method_roles=None):
+    def __init__(self, halo_query,secure=False, method_roles=None):
         super(HaloQueryRequest,self).__init__(halo_query.context,halo_query.name,halo_query.vars,secure,method_roles)
         self.query = halo_query

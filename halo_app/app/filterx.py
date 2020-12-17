@@ -3,15 +3,11 @@ from __future__ import print_function
 # python
 import datetime
 import logging
-import os
-import traceback
 from abc import ABCMeta
-import queue
-import time
 
-from halo_app.exceptions import StoreException,StoreClearException
+from halo_app.exceptions import StoreException
 from halo_app.classes import AbsBaseClass
-from halo_app.request import HaloContext
+from halo_app.app.request import HaloContext
 from halo_app.settingsx import settingsx
 from halo_app.reflect import Reflect
 

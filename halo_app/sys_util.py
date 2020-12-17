@@ -2,10 +2,10 @@ from __future__ import print_function
 
 import os
 from halo_app.classes import AbsBaseClass
-from halo_app.command import HaloQuery, HaloCommand
+from halo_app.app.command import HaloQuery, HaloCommand
 from halo_app.const import LOC, OPType
-from halo_app.context import HaloContext
-from halo_app.request import HaloQueryRequest, HaloCommandRequest, HaloRequest
+from halo_app.app.context import HaloContext
+from halo_app.app.request import HaloQueryRequest, HaloCommandRequest, HaloRequest
 
 
 class SysUtil(AbsBaseClass):

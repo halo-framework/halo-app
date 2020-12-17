@@ -2,21 +2,17 @@ from __future__ import print_function
 
 # python
 import datetime
-import importlib
 import logging
-import time
 import uuid
 import json
 from abc import ABCMeta
 import requests
-from requests import RequestException
 from halo_app.providers.providers import get_provider,ProviderError
 from halo_app.classes import AbsBaseClass
 from halo_app.exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, \
     HaloMethodNotImplementedException, MissingClassConfigError, IllegalMethodException
 from halo_app.logs import log_json
 from halo_app.reflect import Reflect
-from halo_app.const import LOC,DEV,TST,PRD
 from halo_app.app.utilx import Util
 from halo_app.const import HTTPChoice, SYSTEMChoice, LOGChoice
 from halo_app.settingsx import settingsx
@@ -491,7 +487,7 @@ except:
 """
 
 from threading import RLock
-from .context import HaloContext
+from halo_app.app.context import HaloContext
 lock = RLock()
 api_dict = {}
 class ApiMngr(AbsBaseClass):

@@ -1,19 +1,12 @@
 from __future__ import print_function
 
-import importlib
-import json
 # python
 import logging
 import os
-import random
 import uuid
-import datetime
-import jwt
 from jsonschema import validate
-from .exceptions import CacheError, ApiTimeOutExpired
-from halo_app.const import LOC,DEV,TST,PRD
-from halo_app.context import HaloContext
-from halo_app.response import HaloResponse
+from halo_app.const import LOC
+from halo_app.app.context import HaloContext
 from halo_app.classes import AbsBaseClass
 from .settingsx import settingsx
 settings = settingsx()

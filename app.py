@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """Create an application instance."""
-import os
 from flask import Flask
-from halo_app.apis import load_api_config
+from halo_app.infra.apis import load_api_config
 from halo_app.ssm import set_app_param_config,set_host_param_config,get_app_param_config
 from halo_app.app.viewsx import load_global_data
 from halo_app.base_util import BaseUtil

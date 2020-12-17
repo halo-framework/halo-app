@@ -1,11 +1,8 @@
 from __future__ import print_function
 
-import logging
 from abc import ABCMeta
 
 from collections import OrderedDict
-from halo_app.response import HaloResponse
-from halo_app.settingsx import settingsx
 
 SEQ = "seq"
 SAGA = "saga"

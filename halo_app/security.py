@@ -1,12 +1,11 @@
 from __future__ import print_function
 
-import os
 import jwt
 import logging
 import datetime
 from halo_app.classes import AbsBaseClass
-from halo_app.exceptions import MissingHaloContextException,MissingRoleError,MissingSecurityTokenException,BadSecurityTokenException
-from halo_app.context import HaloContext
+from halo_app.exceptions import MissingRoleError,MissingSecurityTokenException,BadSecurityTokenException
+from halo_app.app.context import HaloContext
 from .settingsx import settingsx
 
 logger = logging.getLogger(__name__)

@@ -30,6 +30,12 @@ class Config(object):
     HOST = "127.0.0.1"
     DEBUG = False
 
+    DB_VER = env('DB_VER',None)
+    DB_READ_URL = env('DB_READ_URL',None)
+    DB_WRITE_URL = env('DB_READ_URL',None)
+
+    SSM_CONFIG = None
+
     API_PATH = '/loc'
     API_TITLE = 'Advertising'
     API_VERSION = '{}'.format('1.1')
@@ -80,7 +86,7 @@ class Config(object):
 
     APP_NAME = 'halo_current-accountv2' #env var HALO_APP_NAME
 
-    FUNC_NAME='tester' #env var HALO_FUNC_NAME
+    FUNC_NAME='halo_app' #env var HALO_FUNC_NAME
 
 
     #@TODO load config data from env var if possible and if not from env file
@@ -286,7 +292,7 @@ class Config(object):
 
     USER_HEADERS = 'Mozilla/5.0'
 
-    MIXIN_HANDLER = 'tester.app.handler'
+    MIXIN_HANDLER = 'halo_app.app.handler'
 
     SERVICE_READ_TIMEOUT_IN_SC = 3  # in seconds = 300 ms
 
@@ -302,7 +308,7 @@ class Config(object):
 
     HTTP_RETRY_SLEEP = 10 #0.100  # in seconds = 100 ms
 
-    ERR_MSG_CLASS = 'tester.app.err_msg'
+    ERR_MSG_CLASS = 'halo_app.app.err_msg'
 
     #in case a web edge
     FRONT_WEB = False #env.str('FRONT_API',default=False)

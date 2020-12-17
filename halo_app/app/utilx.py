@@ -3,23 +3,15 @@ from __future__ import print_function
 import json
 # python
 import logging
-import re
 import os
-import uuid
-import jwt
 import random
 import importlib
 
 from halo_app.classes import AbsBaseClass
-from halo_app.const import HTTPChoice, LOC, OPType
-from halo_app.context import HaloContext, InitCtxFactory
-from halo_app.exceptions import ApiTimeOutExpired, CacheError, HaloException, ProviderError
+from halo_app.app.context import HaloContext, InitCtxFactory
+from halo_app.exceptions import CacheError, ProviderError
 from halo_app.providers.providers import get_provider,ONPREM
-from halo_app.exceptions import NoCorrelationIdException
-from ..command import HaloQuery, HaloCommand
-from ..logs import log_json
 from ..reflect import Reflect
-from ..request import HaloQueryRequest, HaloCommandRequest,HaloRequest
 from ..settingsx import settingsx
 
 settings = settingsx()

@@ -1,36 +1,29 @@
 from __future__ import print_function
 
 # python
-import datetime
 import logging
-from abc import ABCMeta, abstractmethod
 import json
 import re
-import requests
-import importlib
-from jsonpath_ng import jsonpath, parse
+from jsonpath_ng import parse
 # aws
 # common
 # app
 
 from .utilx import Util
-from ..command import HaloCommand, HaloQuery
-from ..context import HaloContext
+from halo_app.app.context import HaloContext
 from ..errors import status
-from ..const import HTTPChoice, ASYNC, OPType
+from ..const import HTTPChoice, ASYNC
 from ..exceptions import *
 from ..reflect import Reflect
-from ..request import HaloRequest, HaloQueryRequest, HaloCommandRequest
-from ..response import HaloResponse
+from halo_app.app.request import HaloRequest, HaloQueryRequest, HaloCommandRequest
+from halo_app.app.response import HaloResponse
 from ..settingsx import settingsx
-from ..logs import log_json
-from ..classes import AbsBaseClass,ServiceInfo
+from ..classes import AbsBaseClass
 from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
-from ..apis import AbsBaseApi,ApiMngr
-from .filterx import RequestFilter,FilterEvent
+from halo_app.infra.apis import ApiMngr
+from .filterx import RequestFilter
 from halo_app.providers.providers import get_provider
-from halo_app.saga import Saga, SagaRollBack, load_saga
-from halo_app.models import AbsDbMixin
+from halo_app.saga import SagaRollBack, load_saga
 
 settings = settingsx()
 
@@ -225,7 +218,7 @@ class AbsQueryHandler(AbsBaseHandler):
         # 2. run pre conditions
         self.validate_pre(halo_request)
         # 3. processing engine
-        dict = self.processing_engine(halo_request)
+        dict = self.data_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(halo_request, dict)
         logger.debug("payload=" + str(payload))
@@ -240,14 +233,23 @@ class AbsQueryHandler(AbsBaseHandler):
         # 9. return json response
         return halo_response
 
-    def run_query(self,halo_query:HaloQuery)->HaloResponse:
-        bq = self.get_bq(halo_query.vars)
-        halo_request = HaloQueryRequest(halo_query,bq,self.secure,self.method_roles)
+    def data_engine(self,halo_request:HaloQueryRequest)->dict:
+        return self.run(halo_request)
+
+    def run(self, halo_query_request: HaloQueryRequest) -> dict:
+        return {}
+
+    def run_query(self,halo_request:HaloQueryRequest)->HaloResponse:
         ret:HaloResponse = self.do_query(halo_request)
         return ret
 
 class AbsCommandHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
+
+    # each handler injects the following:
+    # DomainService
+    # InfrastructureService
+    # Repository
 
     def do_operation_bq(self, halo_request):
         if halo_request.sub_func is None:
@@ -374,9 +376,9 @@ class AbsCommandHandler(AbsBaseHandler):
         # 2. run pre conditions
         self.validate_pre(halo_request)
         # 3. processing engine
-        dict = self.processing_engine(halo_request)
+        table = self.processing_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
-        payload = self.create_resp_payload(halo_request, dict)
+        payload = self.create_resp_payload(halo_request, table)
         logger.debug("payload=" + str(payload))
         # 5. setup headers for reply
         headers = self.set_resp_headers(halo_request)
@@ -506,7 +508,7 @@ class AbsCommandHandler(AbsBaseHandler):
         except SagaRollBack as e:
             raise ApiError(e.message,e,e.detail ,e.data,status_code=500)
 
-    def processing_engine(self, halo_request):
+    def processing_engine(self, halo_request:HaloCommandRequest)->dict:
         if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
                 return self.do_operation_3(halo_request)
@@ -515,8 +517,13 @@ class AbsCommandHandler(AbsBaseHandler):
                     return self.do_operation_2(halo_request)
                 else:
                     raise BusinessEventMissingSeqException(self.service_operation)
+            else:
+                return self.do_operation_1(halo_request)
         else:
-            return self.do_operation_1(halo_request)
+            return self.handle(halo_request)
+
+    def handle(self,halo_command_request:HaloCommandRequest)->dict:
+        return {}
 
     def processing_engine1(self, halo_request):
         if self.business_event:

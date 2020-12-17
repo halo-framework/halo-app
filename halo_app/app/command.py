@@ -1,13 +1,10 @@
 from __future__ import print_function
 import abc
-import importlib
-import jwt
 import logging
-import datetime
 import uuid
 # halo
 from halo_app.classes import AbsBaseClass
-from halo_app.context import HaloContext
+from halo_app.app.context import HaloContext
 from halo_app.settingsx import settingsx
 
 logger = logging.getLogger(__name__)
