@@ -79,7 +79,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
             error_message = str(error)
             # @todo check if stack needed and working
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.halo_context, halo_request.args, e))
+            logger.error(error_message, extra=log_json(halo_request.context, halo_request.args, e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -89,7 +89,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
             error_message = str(error)
             #@todo check if stack needed and working
             e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.halo_context, halo_request.args, e))
+            logger.error(error_message, extra=log_json(halo_request.context, halo_request.args, e))
             # exc_type, exc_obj, exc_tb = sys.exc_info()
             # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
@@ -98,11 +98,11 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
             self.process_finally(halo_request.context,orig_log_level)
 
         total = datetime.datetime.now() - now
-        logger.info(LOGChoice.error_performance_data.value, extra=log_json(halo_request.halo_context,
+        logger.info(LOGChoice.error_performance_data.value, extra=log_json(halo_request.context,
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        json_error = Util.json_error_response(halo_request.halo_context, halo_request.args,settings.ERR_MSG_CLASS, error)
+        json_error = Util.json_error_response(halo_request.context, halo_request.args,settings.ERR_MSG_CLASS, error)
         return self.do_abort(halo_request,http_status_code, errors=json_error)
 
     def do_abort(self,halo_request,http_status_code, errors):
