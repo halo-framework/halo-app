@@ -510,6 +510,12 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def processing_engine(self, halo_request:HaloCommandRequest)->dict:
         if self.business_event:
+            return self.processing_engine_dtl(halo_request)
+        else:
+            return self.handle(halo_request)
+
+    def processing_engine_dtl(self, halo_request:HaloCommandRequest)->dict:
+        if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
                 return self.do_operation_3(halo_request)
             if self.business_event.get_business_event_type() == SEQ:
@@ -519,8 +525,6 @@ class AbsCommandHandler(AbsBaseHandler):
                     raise BusinessEventMissingSeqException(self.service_operation)
             else:
                 return self.do_operation_1(halo_request)
-        else:
-            return self.handle(halo_request)
 
     def handle(self,halo_command_request:HaloCommandRequest)->dict:
         return {}
