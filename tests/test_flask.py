@@ -15,7 +15,7 @@ from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_app.domain.repository import AbsRepository
-from halo_app.infra.service import AbsInfraService, AbsMailService
+from halo_app.infra.service import AbsMailService
 from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
@@ -167,7 +167,7 @@ class A1(BoundaryService,AbsCommandHandler):
             if halo_request.method_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 
-class A3(AbsCommandHandler):
+class A3(BoundaryService,AbsCommandHandler):
 
     def do_operation(self, halo_request):
         # 1. validate input params
@@ -192,7 +192,7 @@ class A3(AbsCommandHandler):
         request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
-class A2(A1, BoundaryService):
+class A2(A1):
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
@@ -292,10 +292,10 @@ class A2(A1, BoundaryService):
 class A4(A2):
     secure = True
 
-class A5(AbsCommandHandler):
+class A5(BoundaryService,AbsCommandHandler):
     secure = True
 
-class A6(A5, BoundaryService):
+class A6(A5):
     pass
 
 
@@ -466,11 +466,17 @@ class TestUserDetailTestCase(unittest.TestCase):
         response = self.a1.process(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
-    def test_41_cli(self):
+    def test_41_cli_command(self):
         halo_context = HaloContext()
         halo_request = SysUtil.create_request(halo_context, "z3", {})
         response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
+
+    def test_42_cli_query(self):
+        halo_context = HaloContext()
+        halo_request = SysUtil.create_request(halo_context, "z3", {},OPType.query)
+        response = self.a7.execute(halo_request)
+        eq_(response.payload, {'a': 'c'})
 
     def test_5_query_request_returns_dict(self):
         with app.test_request_context(method='GET', path='/?id=1'):
@@ -502,9 +508,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 pass
             try:
                 response = api.get(timeout)
-            except CircuitBreakerError as e:
+            except ApiError as e:
                 print(str(e))
-                eq_(e.__class__.__name__, "CircuitBreakerError")
+                eq_(e.__class__.__name__, "ApiError")
 
     def test_7_api_request_returns_success(self):
         app.config['PROVIDER'] = "AWS"
@@ -652,7 +658,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", {})
+            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.process(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
@@ -661,7 +667,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", {})
+            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.process(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
@@ -671,14 +677,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", {})
+            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.process(halo_request)
 
     def test_903_event_filter(self):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
-        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+        with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
@@ -687,7 +693,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
-        with app.test_request_context(method='GET', path='/?a=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
+        with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z10", request.args)
             response = self.a2.execute(halo_request)
@@ -710,7 +716,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.filters import Filter
+                from halo_app.data.filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -737,7 +743,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.filters import Filter
+                from halo_app.data.filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -764,7 +770,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.filters import Filter
+                from halo_app.data.filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -794,7 +800,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.filters import Filter
+                from halo_app.data.filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -860,14 +866,14 @@ class TestUserDetailTestCase(unittest.TestCase):
 
 
     def test_98_run_simple_delete(self):
-        with app.test_request_context(method='DELETE', path="/start"):
+        with app.test_request_context(method='DELETE', path="/start?id=a"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_990_run_seq_get(self):
-        with app.test_request_context(method='GET', path="/"):
+        with app.test_request_context(method='GET', path="/?id=a"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
@@ -883,14 +889,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(len(sagax.actions), 6)
 
     def test_9920_run_saga(self):
-        with app.test_request_context(method='POST', path="/"):
+        with app.test_request_context(method='POST', path="/?id=a"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
-        with app.test_request_context(method='POST', path="/tst?sub_func=deposit"):
+        with app.test_request_context(method='POST', path="/tst?id=deposit"):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z3", request.args)
             response = self.a2.execute(halo_request)

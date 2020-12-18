@@ -1,5 +1,5 @@
 from halo_app.classes import AbsBaseClass
-from halo_app.filters import Filter
+from halo_app.data.filters import Filter
 
 
 class Dto(AbsBaseClass):
