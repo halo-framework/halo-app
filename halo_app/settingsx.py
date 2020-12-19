@@ -9,7 +9,7 @@ def getit():
         return app.config
     except:
         try:
-            from halo_app.config import Config
+            from ..config import Config
             return Config
         except:
             raise Exception("no settings")

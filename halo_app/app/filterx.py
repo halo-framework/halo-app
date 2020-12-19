@@ -75,6 +75,7 @@ class RequestFilter(AbsFilter):
             if halo_request.sub_func:
                 event.put("sub_func", halo_request.sub_func)
             event = self.augment_event_with_headers_and_data(event, halo_request,halo_response)
+            store_util = InitStoreFactory.get_store()
             if store_util:
                 inserted = store_util.put(event)
                 if (not inserted):
@@ -104,8 +105,11 @@ class StoreUtil(AbsBaseClass):
     config = None
     cleaner = None
 
-    def __init__(self, config=settings.REQUEST_FILTER_CONFIG):
-        self.config = config
+    def __init__(self, config=None):
+        if config:
+            self.config = config
+        else:
+            self.config = settings.REQUEST_FILTER_CONFIG
 
     def put(self,event):
         logger.debug("StoreUtil:"+str(event.name))
@@ -125,4 +129,10 @@ class StoreUtil(AbsBaseClass):
         return clazz
 
 
-store_util = StoreUtil()
+class InitStoreFactory(AbsBaseClass):
+    store_util = None  # StoreUtil()
+    @classmethod
+    def get_store(cls,config=None)->StoreUtil:
+        if not cls.store_util:
+            cls.store_util = StoreUtil(config)
+        return cls.store_util
