@@ -116,7 +116,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
                              extra=log_json(halo_context))
 
     def process(self,halo_request:HaloRequest)->HaloResponse:
-        if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request,HaloCommandRequest):
+        if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
             return self.run_command(halo_request)
         return self.run_query(halo_request)
 
