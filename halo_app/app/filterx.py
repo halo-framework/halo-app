@@ -104,7 +104,7 @@ class StoreUtil(AbsBaseClass):
     config = None
     cleaner = None
 
-    def __init__(self, config):
+    def __init__(self, config=settings.REQUEST_FILTER_CONFIG):
         self.config = config
 
     def put(self,event):
@@ -125,4 +125,4 @@ class StoreUtil(AbsBaseClass):
         return clazz
 
 
-store_util = StoreUtil(settings.REQUEST_FILTER_CONFIG)
+store_util = StoreUtil()

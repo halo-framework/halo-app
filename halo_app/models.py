@@ -15,11 +15,11 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-ver = settings.DB_VER
-read_uri = settings.DB_READ_URL
-write_uri = settings.DB_WRITE_URL
+ver = None
+read_uri = None
+write_uri = None
 tbl = False
-page_size = settings.PAGE_SIZE
+page_size = None
 
 
 class AbsDbMixin(AbsBaseClass):
@@ -33,6 +33,11 @@ class AbsDbMixin(AbsBaseClass):
     def __init__(self, halo_context,read):
         self.halo_context = halo_context
         self.read = read
+        global ver,read_uri,write_uri,page_size
+        ver = settings.DB_VER
+        read_uri = settings.DB_READ_URL
+        write_uri = settings.DB_WRITE_URL
+        page_size = settings.PAGE_SIZE
         if read:
             self.uri = read_uri
         else:

@@ -28,15 +28,16 @@ from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_para
 from halo_app.app.viewsx import load_global_data
 from halo_app.security import HaloSecurity
 from halo_app.app.utilx import Util
-import unittest
-
-#6,7,9923,9941 failing
 from halo_app.sys_util import SysUtil
+from halo_app.app.request import HaloRequest
+import unittest
+#6,7,9923,9941 failing
+
 
 fake = Faker()
 app = Flask(__name__)
 
-from halo_app.app.request import HaloRequest
+
 
 ##################################### test #########################
 """
