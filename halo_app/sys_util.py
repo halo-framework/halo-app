@@ -20,10 +20,10 @@ class SysUtil(AbsBaseClass):
         return LOC
 
     @staticmethod
-    def create_request(halo_context: HaloContext, method_id: str, args: dict, op_type: OPType = OPType.command,
+    def create_request(halo_context: HaloContext, method_id: str, vars: dict, op_type: OPType = OPType.command,
                        security=None, roles=None) -> HaloRequest:
         if op_type == OPType.query:
-            halo_query = HaloQuery(halo_context, method_id, args)
+            halo_query = HaloQuery(halo_context, method_id, vars)
             return HaloQueryRequest(halo_query, security, roles)
-        halo_command = HaloCommand(halo_context, method_id, args)
+        halo_command = HaloCommand(halo_context, method_id, vars)
         return HaloCommandRequest(halo_command, security, roles)
