@@ -441,7 +441,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_context = get_halo_context(request)
                 halo_request = SysUtil.create_request(halo_context, "z0", {'id':'1'})
-                response = self.a1.process(halo_request)
+                response = self.a1.execute(halo_request)
                 eq_(response.payload,{'a': 'b'})
             except Exception as e:
                 print(str(e))
@@ -451,20 +451,20 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z2", {})
-            response = self.a1.process(halo_request)
+            response = self.a1.execute(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z3", {})
-            response = self.a1.process(halo_request)
+            response = self.a1.execute(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_4_cli(self):
         halo_context = HaloContext()
         halo_request = SysUtil.create_request(halo_context, "z3", {})
-        response = self.a1.process(halo_request)
+        response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_41_cli_command(self):
@@ -660,7 +660,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_901_event_filter(self):
@@ -669,7 +669,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.process(halo_request)
+            response = self.a2.execute(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
     def test_902_event_filter(self):
@@ -679,7 +679,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
-            response = self.a2.process(halo_request)
+            response = self.a2.execute(halo_request)
 
     def test_903_event_filter(self):
         app.config['PROVIDER'] = "AWS"
@@ -1305,7 +1305,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.process(halo_request)
+                response = self.a5.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
@@ -1346,7 +1346,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_request(halo_context, "z1", request.args)
             try:
                 self.a5.method_roles = ['tst']
-                response = self.a5.process(halo_request)
+                response = self.a5.execute(halo_request)
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))

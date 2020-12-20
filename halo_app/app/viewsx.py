@@ -59,7 +59,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
         http_status_code = 500
 
         try:
-            ret = self.process(halo_request)
+            ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,
                                                                          {LOGChoice.type.value: SYSTEMChoice.server.value,
@@ -88,7 +88,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
             # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
 
         finally:
-            self.process_finally(halo_request.context,orig_log_level)
+            self.__process_finally(halo_request.context,orig_log_level)
 
         total = datetime.datetime.now() - now
         logger.info(LOGChoice.error_performance_data.value, extra=log_json(halo_request.context,
@@ -96,16 +96,16 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
         json_error = Util.json_error_response(halo_request.context, halo_request.vars,settings.ERR_MSG_CLASS, error)
-        return self.do_abort(halo_request,http_status_code, errors=json_error)
+        return self.__do_abort(halo_request,http_status_code, errors=json_error)
 
-    def do_abort(self,halo_request,http_status_code, errors):
+    def __do_abort(self,halo_request,http_status_code, errors):
         ret = HaloResponse(halo_request)
         ret.payload = errors
         ret.code = http_status_code
         ret.headers = {}
         return ret
 
-    def process_finally(self,halo_context, orig_log_level):
+    def __process_finally(self,halo_context, orig_log_level):
         """
         :param orig_log_level:
         """
@@ -115,7 +115,7 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
                 logger.debug("process_finally - back to orig:" + str(orig_log_level),
                              extra=log_json(halo_context))
 
-    def process(self,halo_request:HaloRequest)->HaloResponse:
+    def __process(self,halo_request:HaloRequest)->HaloResponse:
         if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
             return self.run_command(halo_request)
         return self.run_query(halo_request)
