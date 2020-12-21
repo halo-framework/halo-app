@@ -236,7 +236,7 @@ class AbsQueryHandler(AbsBaseHandler):
         return self.run(halo_request)
 
     def run(self, halo_query_request: HaloQueryRequest) -> dict:
-        return {}
+        raise HaloMethodNotImplementedException("method run in Query")
 
     def run_query(self,halo_request:HaloQueryRequest)->HaloResponse:
         ret:HaloResponse = self.do_operation(halo_request)
@@ -526,7 +526,7 @@ class AbsCommandHandler(AbsBaseHandler):
                 return self.do_operation_1(halo_request)
 
     def handle(self,halo_command_request:HaloCommandRequest)->dict:
-        return {}
+        raise HaloMethodNotImplementedException("method handle in command")
 
     def processing_engine1(self, halo_request):
         if self.business_event:
