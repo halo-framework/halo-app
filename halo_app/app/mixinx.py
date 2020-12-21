@@ -208,11 +208,10 @@ class AbsBaseHandler(AbsBaseClass):
             return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
-
 class AbsQueryHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
-    def do_query(self, halo_request:HaloRequest)->HaloResponse:
+    def do_operation(self, halo_request:HaloRequest)->HaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -240,7 +239,7 @@ class AbsQueryHandler(AbsBaseHandler):
         return {}
 
     def run_query(self,halo_request:HaloQueryRequest)->HaloResponse:
-        ret:HaloResponse = self.do_query(halo_request)
+        ret:HaloResponse = self.do_operation(halo_request)
         return ret
 
 class AbsCommandHandler(AbsBaseHandler):
@@ -370,7 +369,7 @@ class AbsCommandHandler(AbsBaseHandler):
         # return
         return back_json
 
-    def do_command(self, halo_request:HaloRequest)->HaloResponse:
+    def do_operation(self, halo_request:HaloRequest)->HaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -580,7 +579,7 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def run_command(self,halo_request:HaloCommandRequest)->HaloResponse:
         self.set_businss_event(halo_request, "x")
-        ret:HaloResponse = self.do_command(halo_request)
+        ret:HaloResponse = self.do_operation(halo_request)
         return ret
 
 
