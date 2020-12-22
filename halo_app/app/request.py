@@ -19,6 +19,7 @@ class HaloRequest(AbsBaseClass,abc.ABC):
     vars = None
     context = None
     security = None
+    sub_func = None
 
     @abc.abstractmethod
     def __init__(self,halo_context, method_id,vars,secure=False,method_roles=None):
