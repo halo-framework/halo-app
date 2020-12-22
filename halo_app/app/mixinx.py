@@ -250,125 +250,6 @@ class AbsCommandHandler(AbsBaseHandler):
     # InfrastructureService
     # Repository
 
-    def do_operation_bq(self, halo_request):
-        if halo_request.sub_func is None:
-            raise IllegalBQException("missing sub_func value")
-        sub_func = halo_request.sub_func.lower()
-        return self.do_operation(halo_request)
-
-    def do_operation_bq1(self, halo_request):
-        if halo_request.sub_func is None:
-            raise IllegalBQException("missing sub_func value")
-        try:
-            sub_func = halo_request.sub_func.lower()
-            # 1. validate input params
-            getattr(self, 'validate_req_%s' % sub_func)(halo_request)
-            # 2. Code to access the BANK API  to retrieve data - url + vars dict
-            getattr(self, 'validate_pre_%s' % sub_func)(halo_request)
-            # 3. processing engine
-            dict = self.processing_engine(halo_request)
-            # 4. Build the payload target response structure which is Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % sub_func)(halo_request, dict)
-            logger.debug("payload=" + str(payload))
-            # 5. setup headers for reply
-            headers = getattr(self, 'set_resp_headers_%s' % sub_func)(halo_request,
-                                                                                halo_request.headers)
-            # 6. build json and add to halo response
-            halo_response = self.create_response(halo_request, payload, headers)
-            # 7. post condition
-            getattr(self, 'validate_post_%s' % sub_func)(halo_request, halo_response)
-            # 8. do filter
-            #self.do_filter(halo_request, halo_response)
-            # return json response
-            return halo_response
-        except AttributeError as ex:
-            raise HaloMethodNotImplementedException("function for "+str(halo_request.sub_func),ex)
-
-    def do_operation_1_bq(self, halo_request, sub_func):  # basic maturity - single request
-        logger.debug("do_operation_1_bq")
-        if sub_func is None:
-            raise IllegalBQException("missing sub_func value")
-        logger.debug("do_operation_1")
-        # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = getattr(self, 'set_back_api_%s' % sub_func)(halo_request)
-        # 2. array to store the headers required for the API Access
-        back_headers = getattr(self, 'set_api_headers_%s' % sub_func)(halo_request,back_api)
-        # 3. set request params
-        back_vars = getattr(self, 'set_api_vars_%s' % sub_func)(halo_request,back_api)
-        # 4. Sset request auth
-        back_auth = getattr(self, 'set_api_auth_%s' % sub_func)(halo_request,back_api)
-        # 5. Sset request data
-        back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request,back_api)
-        # 6. Sending the request to the BANK API with params
-        back_response = getattr(self, 'execute_api_%s' % sub_func)(halo_request, back_api, back_vars,
-                                                                             back_headers, back_auth, back_data)
-        # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = getattr(self, 'extract_json_%s' % sub_func)(halo_request,back_api, back_response)
-        dict = {'1': back_json}
-        # 8. return json response
-        return dict
-
-    def do_operation_2_bq(self, halo_request, sub_func):  # medium maturity - foi
-        logger.debug("do_operation_2_bq")
-        dict = {}
-        for seq in self.business_event.keys():
-            # 1. get get first order interaction
-            foi = self.business_event.get(seq)
-            # 2. get api definition to access the BANK API  - url + vars dict
-            back_api = getattr(self, 'set_back_api_%s' % sub_func)(halo_request, foi)
-            back_json = self.do_api_work_bq(halo_request, sub_func, back_api, seq)
-            # 9. store in dict
-            dict[seq] = back_json
-        return dict
-
-    def do_operation_3_bq(self, halo_request,sub_func):  # high maturity - saga transactions
-        logger.debug("do_operation_3_bq")
-        # saga engine
-        #@todo implement provider saga
-        #if saga_type == "provider":
-        #    return get_provider().provider_saga(self.business_event.EVENT_NAME,halo_request, self.business_event.saga)
-        sagax = load_saga(self.business_event.EVENT_NAME,halo_request, self.business_event.saga, settings.SAGA_SCHEMA)
-        payloads = {}
-        apis = {}
-        counter = 1
-        for state in self.business_event.saga["States"]:
-            if 'Resource' in self.business_event.saga["States"][state]:
-                api_name = self.business_event.saga["States"][state]['Resource']
-                logger.debug(api_name)
-                payloads[state] = {"request": halo_request, 'seq': str(counter),"sub_func":sub_func}
-                apis[state] = self.do_saga_work_bq
-                counter = counter + 1
-
-        try:
-            ret = sagax.execute(halo_request.context, payloads, apis)
-            return ret
-        except SagaRollBack as e:
-            logger.error("error in business_event:EVENT_NAME" + str(self.business_event.EVENT_NAME))
-            raise HaloError("error in processing", original_exception=e,status_code=500)
-
-    def do_saga_work_bq(self, api, results, payload):
-        logger.debug("do_saga_work_bq=" + str(api) + " result=" + str(results) + "payload=" + str(payload))
-        set_api = self.set_api_op(api,payload)
-        return self.do_api_work_bq(payload['request'],payload['sub_func'], set_api, payload['seq'])
-
-    def do_api_work_bq(self,halo_request,sub_func, back_api, seq):
-        # 3. array to store the headers required for the API Access
-        back_headers = getattr(self, 'set_api_headers_%s' % sub_func)(halo_request,back_api, seq, dict)
-        # 4. set vars
-        back_vars = getattr(self, 'set_api_vars_%s' % sub_func)(halo_request,back_api, seq, dict)
-        # 5. auth
-        back_auth = getattr(self, 'set_api_auth_%s' % sub_func)(halo_request,back_api, seq, dict)
-        # 6. set request data
-        back_data = getattr(self, 'set_api_data_%s' % sub_func)(halo_request,back_api, seq, dict)
-        # 7. Sending the request to the BANK API with params
-        back_response = getattr(self, 'execute_api_%s' % sub_func)(halo_request, back_api, back_vars,
-                                                                             back_headers, back_auth, back_data,
-                                                                             seq, dict)
-        # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = getattr(self, 'extract_json_%s' % sub_func)(halo_request,back_api, back_response, seq)
-        # return
-        return back_json
-
     def do_operation(self, halo_request:HaloRequest)->HaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
@@ -531,19 +412,13 @@ class AbsCommandHandler(AbsBaseHandler):
     def processing_engine1(self, halo_request):
         if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
-                if halo_request.sub_func:
-                    return self.do_operation_3_bq(halo_request, halo_request.sub_func.lower())
                 return self.do_operation_3(halo_request)
             if self.business_event.get_business_event_type() == SEQ:
                 if self.business_event.keys():
-                    if halo_request.sub_func:
-                        return self.do_operation_2_bq(halo_request, halo_request.sub_func.lower())
                     return self.do_operation_2(halo_request)
                 else:
                     raise BusinessEventMissingSeqException(self.service_operation)
         else:
-            if halo_request.sub_func:
-                return self.do_operation_1_bq(halo_request, halo_request.sub_func.lower())
             return self.do_operation_1(halo_request)
 
     def set_businss_event(self, halo_request, event_category):
@@ -566,14 +441,6 @@ class AbsCommandHandler(AbsBaseHandler):
                                 self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
                     #   if no entry use simple operation
        return self.business_event
-
-    def get_bq(self,vars):
-        if vars and "sub_func" in vars:
-            return self.validate_bq(vars["sub_func"]).lower()
-        return None
-
-    def validate_bq(self,bq):
-        return bq
 
     ######################################################################
 
