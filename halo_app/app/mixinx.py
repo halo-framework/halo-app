@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 class AbsBaseHandler(AbsBaseClass):
     __metaclass__ = ABCMeta
 
+    method_id = None
     business_event = None
     secure = False
     method_roles = None
