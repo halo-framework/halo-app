@@ -153,8 +153,9 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
         try:
             handler = self.command_handlers[command.method_id]
             ret = handler(command)
-            new_events = self.uow.collect_new_events()
-            self.queue.extend(new_events)
+            if self.uow.items:
+                new_events = self.uow.collect_new_events()
+                self.queue.extend(new_events)
             return ret
         except Exception:
             logger.exception('Exception handling command %s', command)

@@ -11,7 +11,7 @@ from halo_app.domain.repository import AbsRepository
 
 class AbsUnitOfWork(abc.ABC):
 
-    items: AbsRepository
+    items: AbsRepository = None
 
     def __enter__(self) -> AbsUnitOfWork:
         return self

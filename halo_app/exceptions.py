@@ -178,3 +178,6 @@ class BadSecurityTokenException(HaloException):
 
 class FilterValidationError(HaloException):
     pass
+
+class MissingMethodIdException(HaloException):
+    pass

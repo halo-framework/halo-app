@@ -113,6 +113,7 @@ class Sec(HaloSecurity):
 #ApiMngr.set_api_list(API_LIST)
 
 class A1(AbsCommandHandler):
+    method_id = "z0"
     repository = None
     domain_service = None
     infra_service = None
@@ -158,7 +159,7 @@ class A1(AbsCommandHandler):
             if halo_request.method_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 
-class A3(BoundaryService):
+class A3(AbsCommandHandler):
 
     def do_operation(self, halo_request):
         # 1. validate input params
@@ -184,6 +185,7 @@ class A3(BoundaryService):
         request_filter.do_filter(halo_request, halo_response)
 
 class A2(A1):
+    method_id = "z2"
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
@@ -283,14 +285,14 @@ class A2(A1):
 class A4(A2):
     secure = True
 
-class A5(BoundaryService):
+class A5(AbsCommandHandler):
     secure = True
 
 class A6(A5):
     pass
 
 
-class A7(BoundaryService):
+class A7(AbsCommandHandler):
     finder = None
 
     def __init__(self):
@@ -301,7 +303,8 @@ class A7(BoundaryService):
         items = self.finder.find(halo_query_request.vars)
         return {"1": {"a": "c"}}
 
-
+class A8(AbsCommandHandler):
+    method_id = "z8"
 
 from halo_app.app.filterx import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
@@ -369,12 +372,20 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config.from_pyfile('../settings.py')
         #app.config.from_object(Config)
         app.config.from_object(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
+                                app.config['API_CONFIG'])
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
         from halo_app import bootstrap
-        bootstrap.COMMAND_HANDLERS["z0"] = A1().run_command
+        bootstrap.COMMAND_HANDLERS["z0"] = A1.run_command_class#A1("z0").run_command
+        bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class#A2("z2").run_command
         self.boundary = bootstrap.bootstrap()
+        print("do setup")
 
 
-        #self.start()
+
 
     def test_000_start(self):
         from halo_app.const import LOC
@@ -423,23 +434,23 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_1_get_request_returns_exception(self):
-        with app.test_request_context(method='GET', path='/?abc=def'):
+    def test_1_run_handle(self):
+        with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = get_halo_context(request)
-                halo_request = SysUtil.create_request(halo_context, "z0", {'id':'1'})
+                halo_request = SysUtil.create_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.payload,{'a': 'b'})
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_2_delete_request_returns_dict(self):
-        with app.test_request_context(method='DELETE', path='/?abc=def'):
+    def test_2_run_seq(self):
+        with app.test_request_context(method='DELETE', path='/'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z2", {})
+            halo_request = SysUtil.create_request(halo_context, "z8", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.payload, {'1': None, '2': None, '3': None})
+            eq_(response.payload, {'1': {}, '2': {}, '3': {'msg': 'Your input parameters are one and two'}})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):

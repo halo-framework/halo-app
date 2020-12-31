@@ -1,6 +1,22 @@
 {
   "A1": {
     "base": {
+      "z1": {
+        "url": "base_seq.json",
+        "type": "seq"
+      }
+    }
+  },
+  "A8": {
+    "base": {
+      "z8": {
+        "url": "base_seq.json",
+        "type": "seq"
+      }
+    }
+  },
+  "A1x": {
+    "base": {
       "z3": {
         "url": "base_seq.json",
         "type": "seq"
@@ -23,7 +39,7 @@
       }
     }
   },
-  "A2": {
+  "A2x": {
     "base": {
       "GET": {
         "url": "base_seq.json",
@@ -53,7 +69,7 @@
       }
     }
   },
-  "A5": {
+  "A5x": {
     "base": {
       "GET": {
         "url": "base_seq_provider.json",
@@ -78,7 +94,7 @@
 
     }
   },
-  "A6": {
+  "A6x": {
     "base": {
       "GET": {
         "url": "base_seq_provider.json",

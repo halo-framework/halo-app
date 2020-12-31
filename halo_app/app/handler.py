@@ -45,6 +45,13 @@ class AbsBaseHandler(AbsBaseClass):
     secure = False
     method_roles = None
 
+    def __init__(self,method_id=None):
+        if not self.method_id:
+            if method_id:
+                self.method_id = method_id
+            else:
+                raise MissingMethodIdException(self.__class__.__name__)
+
     def create_response(self,halo_request, payload, headers):
         code = status.HTTP_200_OK
         if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value or halo_request.context.get(HaloContext.method) == HTTPChoice.put.value:
@@ -54,7 +61,9 @@ class AbsBaseHandler(AbsBaseClass):
     def validate_req(self, halo_request):
         logger.debug("in validate_req ")
         if halo_request:
-            return True
+            test = (halo_request.method_id and self.method_id and halo_request.method_id == self.method_id)
+            if test:
+                return True
         raise BadRequestError("Halo Request not valid")
 
     def validate_pre(self, halo_request):
@@ -445,13 +454,16 @@ class AbsCommandHandler(AbsBaseHandler):
 
     ######################################################################
 
-    def run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
+    def __run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
         self.uow = uow
         self.set_businss_event(halo_request, "x")
         ret:HaloResponse = self.do_operation(halo_request)
         return ret
 
-
+    @classmethod
+    def run_command_class(cls,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
+        handler = cls()
+        return handler.__run_command(halo_request,uow)
 
 
 
