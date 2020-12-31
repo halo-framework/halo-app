@@ -16,8 +16,8 @@ from halo_app.const import HTTPChoice
 settings = settingsx()
 
 ############################################
-from halo_app.app.mixinx import AbsCommandHandler
-from halo_app.app.viewsx import AbsService
+from halo_app.app.handler import AbsCommandHandler
+from halo_app.app.boundary import AbsBoundaryService, BoundaryService
 from flask.views import MethodView
 from flask import Response
 import json
@@ -37,5 +37,5 @@ class TestMixinX(AbsCommandHandler, MethodView):
         # 8. return json response
         return dict
 
-class TestLinkX(TestMixinX, AbsService):
+class TestLinkX(TestMixinX, BoundaryService):
     pass

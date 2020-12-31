@@ -2,7 +2,9 @@ from __future__ import print_function
 import abc
 import logging
 # halo
+from halo_app.domain.command import HaloCommand
 from halo_app.classes import AbsBaseClass
+from halo_app.domain.event import AbsHaloEvent
 from halo_app.exceptions import MissingHaloContextException
 from halo_app.reflect import Reflect
 from halo_app.security import HaloSecurity
@@ -41,13 +43,13 @@ class HaloRequest(AbsBaseClass,abc.ABC):
 class HaloCommandRequest(HaloRequest):
     command = None
 
-    def __init__(self, halo_command, secure=False, method_roles=None):
+    def __init__(self, halo_command:HaloCommand, secure=False, method_roles=None):
         super(HaloCommandRequest,self).__init__(halo_command.context,halo_command.name,halo_command.vars,secure,method_roles)
         self.command = halo_command
 
-class HaloQueryRequest(HaloRequest):
-    query = None
+class HaloEventRequest(HaloRequest):
+    event = None
 
-    def __init__(self, halo_query,secure=False, method_roles=None):
-        super(HaloQueryRequest,self).__init__(halo_query.context,halo_query.name,halo_query.vars,secure,method_roles)
-        self.query = halo_query
+    def __init__(self, halo_event:AbsHaloEvent,secure=False, method_roles=None):
+        super(HaloEventRequest, self).__init__(halo_event.context, halo_event.name, halo_event.vars, secure, method_roles)
+        self.event = halo_event

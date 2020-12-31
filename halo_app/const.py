@@ -30,7 +30,6 @@ class LOGChoice(Enum):  # A subclass of Enum
     milliseconds = "milliseconds"
     error_performance_data = "error_performance_data"
     function = "function"
-    circuit_breaker = "circuit_breaker"
     saga = "saga"
     url = "url"
 

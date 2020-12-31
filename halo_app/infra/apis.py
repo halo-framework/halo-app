@@ -25,26 +25,6 @@ Rpc = "rpc"
 
 logger = logging.getLogger(__name__)
 
-from halo_app.circuitbreaker import CircuitBreaker
-class MyCircuitBreaker(CircuitBreaker):
-    def __init__(self):
-        print("init MyCircuitBreaker:")
-        FAILURE_THRESHOLD =  self.get_failure_threshold()
-        RECOVERY_TIMEOUT = self.get_recovery_timeout()
-        EXPECTED_EXCEPTION = Exception
-        super(MyCircuitBreaker, self).__init__(FAILURE_THRESHOLD,RECOVERY_TIMEOUT,EXPECTED_EXCEPTION)
-
-    def get_failure_threshold(self):
-        FAILURE_THRESHOLD = 3
-        if settings.HTTP_MAX_RETRY:
-            FAILURE_THRESHOLD = settings.HTTP_MAX_RETRY
-        return FAILURE_THRESHOLD
-
-    def get_recovery_timeout(self):
-        RECOVERY_TIMEOUT = 15
-        if settings.HTTP_RETRY_SLEEP:
-            RECOVERY_TIMEOUT = settings.HTTP_RETRY_SLEEP
-        return RECOVERY_TIMEOUT
 
 class AbsResponse(AbsBaseClass):
     content = None
@@ -85,8 +65,6 @@ class AbsBaseApi(AbsBaseClass):
             self.session = session
         else:
             self.session = requests.session()
-        #if settings.CIRCUIT_BREAKER:
-            #self.cb._name = self.name
 
     def get_url_str(self):
         """
@@ -137,7 +115,7 @@ class AbsBaseApi(AbsBaseClass):
                     datay = ""
             else:
                 datay = ""
-            messageDict = {"method":method,"url":url,"data":datay,"headers":headers,"auth":auth}
+            messageDict = {"method":method,"url":url,"views":datay,"headers":headers,"auth":auth}
             print("messageDict="+str(messageDict)+" version:"+self.version)
             ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=self.version)
             print("ret:"+str(ret))
@@ -153,13 +131,7 @@ class AbsBaseApi(AbsBaseClass):
 class AbsRestApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
-    def do_cb_request(self,method, url, timeout, data=None, headers=None, auth=None):
-        return self.session.request(method, url, data=data, headers=headers,
-                         timeout=timeout, auth=auth)
-
     def do_request(self, method, url, timeout, data=None, headers=None, auth=None):
-        if settings.CIRCUIT_BREAKER:
-            return self.do_cb_request(method, url, timeout, data, headers, auth)
         return self.session.request(method, url, data=data, headers=headers,
                                 timeout=timeout, auth=auth)
 
@@ -420,12 +392,7 @@ class AbsRestApi(AbsBaseApi):
 class AbsSoapApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
-    def do_cb_request(self,method, timeout, data=None, headers=None, auth=None):
-        return self.exec_soap(method,timeout, data, headers, auth)
-
     def do_request(self,method,timeout, data=None, headers=None, auth=None):
-        if settings.CIRCUIT_BREAKER:
-            return self.do_cb_request(method,timeout, data, headers, auth)
         return self.exec_soap(method,timeout, data, headers, auth)
 
 
@@ -625,7 +592,7 @@ def create_api_class(name,bases,attributes=None):
         # constructor
         #"__init__": constructor,
 
-        # data members
+        # views members
         #"string_attribute": "Geeks 4 geeks !",
         #"int_attribute": 1706256,
         "name" : name,

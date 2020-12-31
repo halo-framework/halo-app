@@ -8,7 +8,6 @@ from flask import Flask, request
 from nose.tools import eq_
 
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler
-from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.views.finder import AbsFinder
 from halo_app.domain.service import AbsDomainService
@@ -36,7 +35,7 @@ import unittest
 
 fake = Faker()
 app = Flask(__name__)
-boundary = None
+
 
 
 ##################################### test #########################
@@ -112,7 +111,7 @@ class Sec(HaloSecurity):
 
 #ApiMngr.set_api_list(API_LIST)
 
-class A1(AbsCommandHandler):
+class A1(BoundaryService,AbsCommandHandler):
     repository = None
     domain_service = None
     infra_service = None
@@ -123,13 +122,11 @@ class A1(AbsCommandHandler):
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork) ->dict:
-        with uow:
-            item = self.repository.load(halo_command_request.vars['id'])
-            entity = self.domain_service.validate(item)
-            self.infra_service.send(entity)
-            return {"1":{"a":"b"}}
-            uow.commit()
+    def handle(self,halo_command_request:HaloCommandRequest) ->dict:
+        item = self.repository.load(halo_command_request.vars['id'])
+        entity = self.domain_service.validate(item)
+        self.infra_service.send(entity)
+        return {"1":{"a":"b"}}
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
@@ -158,7 +155,7 @@ class A1(AbsCommandHandler):
             if halo_request.method_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 
-class A3(BoundaryService):
+class A3(BoundaryService,AbsCommandHandler):
 
     def do_operation(self, halo_request):
         # 1. validate input params
@@ -283,14 +280,14 @@ class A2(A1):
 class A4(A2):
     secure = True
 
-class A5(BoundaryService):
+class A5(BoundaryService,AbsCommandHandler):
     secure = True
 
 class A6(A5):
     pass
 
 
-class A7(BoundaryService):
+class A7(BoundaryService, AbsEventHandler):
     finder = None
 
     def __init__(self):
@@ -367,12 +364,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +  os.path.join(app.config['BASEDIR'], TEST_DB)
         #self.app = app#.test_client()
         #app.config.from_pyfile('../settings.py')
-        #app.config.from_object(Config)
-        app.config.from_object(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
-        from halo_app import bootstrap
-        bootstrap.COMMAND_HANDLERS["z0"] = A1().run_command
-        self.boundary = bootstrap.bootstrap()
-
+        app.config.from_object('settings')
+        self.a1 = A1()
+        self.a2 = A2()
+        self.a3 = A3()
+        self.a4 = A4()
+        self.a5 = A5()
+        self.a6 = A6()
+        self.a7 = A7()
 
         #self.start()
 
@@ -428,7 +427,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_context = get_halo_context(request)
                 halo_request = SysUtil.create_request(halo_context, "z0", {'id':'1'})
-                response = self.boundary.execute(halo_request)
+                response = self.a1.execute(halo_request)
                 eq_(response.payload,{'a': 'b'})
             except Exception as e:
                 print(str(e))
@@ -438,26 +437,26 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z2", {})
-            response = self.boundary.execute(halo_request)
+            response = self.a1.execute(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             halo_context = get_halo_context(request)
             halo_request = SysUtil.create_request(halo_context, "z3", {})
-            response = self.boundary.execute(halo_request)
+            response = self.a1.execute(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_4_cli(self):
         halo_context = HaloContext()
         halo_request = SysUtil.create_request(halo_context, "z3", {})
-        response = self.boundary.execute(halo_request)
+        response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_41_cli_command(self):
         halo_context = HaloContext()
         halo_request = SysUtil.create_request(halo_context, "z3", {})
-        response = self.boundary.execute(halo_request)
+        response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_42_cli_query(self):

@@ -54,3 +54,10 @@ Flask-DebugToolbar==0.10.1
 wheel
 
 flask-filter
+
+#####
+pytest-icdiff
+mypy
+pylint
+redis
+tenacity

@@ -106,7 +106,7 @@ class BaseUtil(AbsBaseClass):
         :param event:
         :return:
         """
-        #@todo refactor provider data into the method
+        #@todo refactor provider views into the method
         if cls.event_req_context:
             logger.debug("cached event req_context", extra=cls.event_req_context)
             return cls.event_req_context
@@ -162,7 +162,7 @@ class BaseUtil(AbsBaseClass):
                HaloContext.items[HaloContext.CORRELATION]: correlate_id, HaloContext.items[HaloContext.DEBUG_LOG]: debug_flag}
         if HaloContext.items[HaloContext.API_KEY] in event:
             ret[HaloContext.items[HaloContext.API_KEY]] = event[HaloContext.items[HaloContext.API_KEY]]
-        # @TODO get all data for request context
+        # @TODO get all views for request context
         cls.event_req_context = ret
         return cls.event_req_context
 

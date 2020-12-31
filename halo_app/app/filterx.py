@@ -86,7 +86,7 @@ class RequestFilter(AbsFilter):
             logger.info("event filter error:"+str(e))
 
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
-        # context data
+        # context views
         for key in HaloContext.items.keys():
             if HaloContext.items[key] in halo_request.context.keys():
                 event.put(HaloContext.items[key],halo_request.context.get(HaloContext.items[key]))

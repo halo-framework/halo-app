@@ -1,4 +1,6 @@
 from __future__ import print_function
+# pylint: disable=attribute-defined-outside-init
+from __future__ import annotations
 
 from abc import ABCMeta
 

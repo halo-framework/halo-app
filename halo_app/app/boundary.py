@@ -12,16 +12,13 @@ from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloCommandRequest
+from halo_app.app.request import HaloRequest, HaloCommandRequest, HaloEventRequest
 from halo_app.app.response import HaloResponse
 from ..classes import AbsBaseClass
 from ..settingsx import settingsx
 
 settings = settingsx()
-# aws
-# other
 
-# Create your views here.
 logger = logging.getLogger(__name__)
 
 class AbsBoundaryService(AbsBaseClass,abc.ABC):
@@ -29,7 +26,7 @@ class AbsBoundaryService(AbsBaseClass,abc.ABC):
     the only port exposed from the boundry
     """
     @abc.abstractmethod
-    def execute(self, halo_request: HaloRequest)->HaloResponse:
+    def execute(self, halo_request: HaloCommandRequest)->HaloResponse:
         pass
 
 class BoundaryService(AbsBoundaryService,abc.ABC):
@@ -43,10 +40,13 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
         Only admin users are able to access this view.
         """
 
-    def __init__(self, **kwargs):
-        super(BoundaryService, self).__init__(**kwargs)
+    def __init__(self, uow,event_handlers,command_handlers):
+        super(BoundaryService, self).__init__()
+        self.uow = uow
+        self.event_handlers = event_handlers
+        self.command_handlers = command_handlers
 
-    def execute(self, halo_request: HaloRequest)->HaloResponse:
+    def execute(self, halo_request: HaloCommandRequest)->HaloResponse:
         """
 
         :param vars:
@@ -115,24 +115,49 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
                 logger.debug("process_finally - back to orig:" + str(orig_log_level),
                              extra=log_json(halo_context))
 
-    def __process(self,halo_request:HaloRequest)->HaloResponse:
+    def __process1(self,halo_request:HaloRequest)->HaloResponse:
         if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
             return self.run_command(halo_request)
-        return self.run_query(halo_request)
+        return self.run_event(halo_request)
 
 
+    def __process(self,halo_request:HaloCommandRequest)->HaloResponse:
+        result = None
+        self.queue = [halo_request]
+        while self.queue:
+            message = self.queue.pop(0)
+            if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
+                result = self.__process_command(halo_request)
+            elif isinstance(halo_request,HaloEventRequest) or issubclass(halo_request.__class__,HaloEventRequest):
+                self.__process_event(message)
+            else:
+                raise Exception(f'{message} was not an Event or Command')
+        return result
 
-class GlobalService():
 
-    data_map = None
+    def __process_event(self, event: HaloEventRequest):
+        for handler in self.event_handlers[type(event)]:
+            try:
+                logger.debug('handling event %s with handler %s', event, handler)
+                handler.run_event(event)
+                new_events = self.uow.collect_new_events()
+                new_requests = Util.create_requests(new_events)
+                self.queue.extend(new_requests)
+            except Exception:
+                logger.exception('Exception handling event %s', event)
+                continue
 
-    def __init__(self, data_map):
-        self.data_map = data_map
 
-    @abstractmethod
-    def load_global_data(self):
-        pass
+    def __process_command(self, command: HaloCommandRequest)->HaloResponse:
+        logger.debug('handling command %s', command)
+        try:
+            handler = self.command_handlers[command.method_id]
+            ret = handler(command)
+            new_events = self.uow.collect_new_events()
+            self.queue.extend(new_events)
+            return ret
+        except Exception:
+            logger.exception('Exception handling command %s', command)
+            raise
 
-def load_global_data(class_name,data_map):
-    clazz = Reflect.instantiate(class_name, GlobalService, data_map)
-    clazz.load_global_data()
+

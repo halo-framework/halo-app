@@ -194,11 +194,11 @@ class Util(AbsBaseClass):
             if e_msg is not None and e_msg != 'None' and e_msg != "":
                 error_detail = e_msg
         error_data = {}
-        if hasattr(e, 'data'):
+        if hasattr(e, 'views'):
             error_data = json.dumps(e.data)
         payload = {"error":
                        {"error_code": error_code, "error_message": message, "error_detail": error_detail,
-                             "data": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}
+                             "views": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}
                    }
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
             payload["stack"] = json.dumps(e.stack)

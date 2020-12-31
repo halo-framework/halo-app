@@ -15,9 +15,33 @@ if 'HALO_STAGE' in os.environ:
 else:
     STAGE = LOC
 THE_ENV = os.path.join(BASE_DIR, '..', 'env', '.env.'+STAGE)
-env.read_env(path=THE_ENV)
-print('The .env file has been loaded. env: ' + str(THE_ENV))
+env.read_env(path=THE_ENV,verbose=True)
+print('The .env file has been loaded. path= ' + str(THE_ENV))
+print(env.dump())
 
+def get_postgres_uri():
+    host = os.environ.get('DB_HOST', 'localhost')
+    port = 54321 if host == 'localhost' else 5432
+    password = os.environ.get('DB_PASSWORD', 'abc123')
+    user, db_name = 'allocation', 'allocation'
+    return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+
+
+def get_api_url():
+    host = os.environ.get('API_HOST', 'localhost')
+    port = 5005 if host == 'localhost' else 80
+    return f"http://{host}:{port}"
+
+def get_redis_host_and_port():
+    host = os.environ.get('REDIS_HOST', 'localhost')
+    port = 63791 if host == 'localhost' else 6379
+    return dict(host=host, port=port)
+
+def get_email_host_and_port():
+    host = os.environ.get('EMAIL_HOST', 'localhost')
+    port = 11025 if host == 'localhost' else 587#fix
+    http_port = 18025 if host == 'localhost' else 8025
+    return dict(host=host, port=port, http_port=http_port)
 
 class Config(object):
 
@@ -89,7 +113,7 @@ class Config(object):
     FUNC_NAME='halo_app' #env var HALO_FUNC_NAME
 
 
-    #@TODO load config data from env var if possible and if not from env file
+    #@TODO load config views from env var if possible and if not from env file
     SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
     PROVIDER = env.str('PROVIDER')
     AWS_REGION = env.str('AWS_REGION')
@@ -342,7 +366,6 @@ class Config(object):
     HALO_CONTEXT_CLASS = None
     REQUEST_FILTER_CLASS = None
     REQUEST_FILTER_CLEAR_CLASS = None
-    CIRCUIT_BREAKER = False
     HALO_SECURITY_CLASS = None
     SECURITY_FLAG = False
     SESSION_MINUTES = 30

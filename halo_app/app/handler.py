@@ -8,14 +8,14 @@ from jsonpath_ng import parse
 # aws
 # common
 # app
-
+from .uow import AbsUnitOfWork
 from .utilx import Util
 from halo_app.app.context import HaloContext
 from ..errors import status
 from ..const import HTTPChoice, ASYNC
 from ..exceptions import *
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloQueryRequest, HaloCommandRequest
+from halo_app.app.request import HaloRequest, HaloEventRequest, HaloCommandRequest
 from halo_app.app.response import HaloResponse
 from ..settingsx import settingsx
 from ..classes import AbsBaseClass
@@ -209,7 +209,7 @@ class AbsBaseHandler(AbsBaseClass):
             return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
-class AbsQueryHandler(AbsBaseHandler):
+class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
     def do_operation(self, halo_request:HaloRequest)->HaloResponse:
@@ -233,13 +233,13 @@ class AbsQueryHandler(AbsBaseHandler):
         # 9. return json response
         return halo_response
 
-    def data_engine(self,halo_request:HaloQueryRequest)->dict:
+    def data_engine(self, halo_request:HaloEventRequest)->dict:
         return self.run(halo_request)
 
-    def run(self, halo_query_request: HaloQueryRequest) -> dict:
+    def run(self, halo_query_request: HaloEventRequest) -> dict:
         raise HaloMethodNotImplementedException("method run in Query")
 
-    def run_query(self,halo_request:HaloQueryRequest)->HaloResponse:
+    def run_query(self, halo_request:HaloEventRequest)->HaloResponse:
         ret:HaloResponse = self.do_operation(halo_request)
         return ret
 
@@ -272,17 +272,17 @@ class AbsCommandHandler(AbsBaseHandler):
         # 9. return json response
         return halo_response
 
-    def do_operation_1(self, halo_request):  # basic maturity - single request
+    def do_operation_1(self, halo_request,foi=None):  # basic maturity - single request
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = self.set_back_api(halo_request)
+        back_api = self.set_back_api(halo_request,foi)
         # 2. array to store the headers required for the API Access
         back_headers = self.set_api_headers(halo_request,back_api)
         # 3. Set request params
         back_vars = self.set_api_vars(halo_request,back_api)
         # 4. Set request auth
         back_auth = self.set_api_auth(halo_request,back_api)
-        # 5. Set request data
+        # 5. Set request views
         back_data = self.set_api_data(halo_request,back_api)
         # 6. Sending the request to the BANK API with params
         back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
@@ -323,7 +323,7 @@ class AbsCommandHandler(AbsBaseHandler):
         back_vars = self.set_api_vars(halo_request,back_api, seq, dict)
         # 5. auth
         back_auth = self.set_api_auth(halo_request,back_api, seq, dict)
-        # 6. set request data
+        # 6. set request views
         back_data = self.set_api_data(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         status = get_provider().add_to_queue(halo_request, back_api, back_vars, back_headers, back_auth,
@@ -337,7 +337,7 @@ class AbsCommandHandler(AbsBaseHandler):
         back_vars = self.set_api_vars(halo_request,back_api, seq, dict)
         # 5. auth
         back_auth = self.set_api_auth(halo_request,back_api, seq, dict)
-        # 6. set request data
+        # 6. set request views
         back_data = self.set_api_data(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
@@ -393,7 +393,7 @@ class AbsCommandHandler(AbsBaseHandler):
         if self.business_event:
             return self.processing_engine_dtl(halo_request)
         else:
-            return self.handle(halo_request)
+            return self.handle(halo_request,self.uow)
 
     def processing_engine_dtl(self, halo_request:HaloCommandRequest)->dict:
         if self.business_event:
@@ -407,7 +407,7 @@ class AbsCommandHandler(AbsBaseHandler):
             else:
                 return self.do_operation_1(halo_request)
 
-    def handle(self,halo_command_request:HaloCommandRequest)->dict:
+    def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork)->dict:
         raise HaloMethodNotImplementedException("method handle in command")
 
     def processing_engine1(self, halo_request):
@@ -445,7 +445,8 @@ class AbsCommandHandler(AbsBaseHandler):
 
     ######################################################################
 
-    def run_command(self,halo_request:HaloCommandRequest)->HaloResponse:
+    def run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
+        self.uow = uow
         self.set_businss_event(halo_request, "x")
         ret:HaloResponse = self.do_operation(halo_request)
         return ret
