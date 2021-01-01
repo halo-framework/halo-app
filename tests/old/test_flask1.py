@@ -426,7 +426,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 halo_context = get_halo_context(request)
-                halo_request = SysUtil.create_request(halo_context, "z0", {'id':'1'})
+                halo_request = SysUtil.create_command_request(halo_context, "z0", {'id': '1'})
                 response = self.a1.execute(halo_request)
                 eq_(response.payload,{'a': 'b'})
             except Exception as e:
@@ -436,39 +436,39 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_delete_request_returns_dict(self):
         with app.test_request_context(method='DELETE', path='/?abc=def'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z2", {})
+            halo_request = SysUtil.create_command_request(halo_context, "z2", {})
             response = self.a1.execute(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_3_put_request_returns_dict(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z3", {})
+            halo_request = SysUtil.create_command_request(halo_context, "z3", {})
             response = self.a1.execute(halo_request)
             eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_4_cli(self):
         halo_context = HaloContext()
-        halo_request = SysUtil.create_request(halo_context, "z3", {})
+        halo_request = SysUtil.create_command_request(halo_context, "z3", {})
         response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_41_cli_command(self):
         halo_context = HaloContext()
-        halo_request = SysUtil.create_request(halo_context, "z3", {})
+        halo_request = SysUtil.create_command_request(halo_context, "z3", {})
         response = self.a1.execute(halo_request)
         eq_(response.payload, {'1': None, '2': None, '3': None})
 
     def test_42_cli_query(self):
         halo_context = HaloContext()
-        halo_request = SysUtil.create_request(halo_context, "z3", {},OPType.query)
+        halo_request = SysUtil.create_command_request(halo_context, "z3", {}, OPType.query)
         response = self.a7.execute(halo_request)
         eq_(response.payload, {'a': 'c'})
 
     def test_5_query_request_returns_dict(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z3", request.args,OPType.query)
+            halo_request = SysUtil.create_command_request(halo_context, "z3", request.args, OPType.query)
             response = self.a7.execute(halo_request)
             eq_(response.payload, {'a': 'c'})
 
@@ -637,7 +637,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
@@ -646,7 +646,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
 
@@ -656,7 +656,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
 
     def test_903_event_filter(self):
@@ -665,7 +665,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
 
     def test_904_event_filter(self):
@@ -674,7 +674,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z10", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z10", request.args)
             response = self.a2.execute(halo_request)
 
     def test_905_filter(self):
@@ -847,21 +847,21 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_98_run_simple_delete(self):
         with app.test_request_context(method='DELETE', path="/start?id=a"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_990_run_seq_get(self):
         with app.test_request_context(method='GET', path="/?id=a"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_991_load_saga(self):
         with app.test_request_context(method='POST', path="/"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             with open("../env/config/saga.json") as f:
                 jsonx = json.load(f)
             sagax = saga.load_saga("test",halo_request, jsonx, app.config['SAGA_SCHEMA'])
@@ -870,21 +870,21 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9920_run_saga(self):
         with app.test_request_context(method='POST', path="/?id=a"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9921_run_saga_bq(self):
         with app.test_request_context(method='POST', path="/tst?id=deposit"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z3", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z3", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_201_CREATED)
 
     def test_9922_run_saga_bq_error(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z4", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 eq_(1,2)
@@ -894,7 +894,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9923_trans_json(self):
         with app.test_request_context(method='GET', path="/tst"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 eq_(response.payload, [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}])
@@ -904,7 +904,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9930_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 assert False
@@ -914,7 +914,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9931_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 assert False
@@ -925,7 +925,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9932_all_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 assert False
@@ -935,7 +935,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9933_all_rollback_saga_bq(self):
         with app.test_request_context(method='PUT', path="/test?sub_func=deposit"):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 assert False
@@ -1078,21 +1078,21 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9991_tst2_get(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a3.do_process(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
     def test_99911_filter(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a3.do_process(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
@@ -1101,7 +1101,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
 
@@ -1110,7 +1110,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 return False
@@ -1124,7 +1124,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.a2.execute(halo_request)
             eq_(response.status_code, status.HTTP_200_OK)
 
@@ -1134,7 +1134,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a2.execute(halo_request)
                 return False
@@ -1168,7 +1168,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_99991_security_need_token(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a4.execute(halo_request)
                 eq_(1,2)
@@ -1183,7 +1183,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a4.execute(halo_request)
                 eq_(1,2)
@@ -1199,7 +1199,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.a4.execute(halo_request)
                 eq_(1,2)
@@ -1216,7 +1216,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = []
                 response = self.a4.execute(halo_request)
@@ -1234,7 +1234,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = ['tst1']
                 response = self.a4.execute(halo_request)
@@ -1253,7 +1253,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = ['tst']
                 response = self.a4.execute(halo_request)
@@ -1273,7 +1273,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a5.method_roles = ['tst']
                 response = self.a5.execute(halo_request)
@@ -1292,7 +1292,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a6.method_roles = ['tst']
                 response = self.a6.execute(halo_request)
@@ -1312,7 +1312,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a5.method_roles = ['tst']
                 response = self.a5.execute(halo_request)
@@ -1334,7 +1334,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = get_halo_context(request)
-            halo_request = SysUtil.create_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a6.method_roles = ['tst']
                 response = self.a6.execute(halo_request)

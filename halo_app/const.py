@@ -34,7 +34,13 @@ class LOGChoice(Enum):  # A subclass of Enum
     url = "url"
 
 class OPType(Enum):  # A subclass of Enum
-    query = "QUERY"
+    event = "EVENT"
     command = "COMMAND"
 
 ASYNC = "async"
+
+class BusinessEventCategory(Enum):  # A subclass of Enum
+    EMPTY = "empty"
+    API = "api"
+    SEQ = "seq"
+    SAGA = "saga"

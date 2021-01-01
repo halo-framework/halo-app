@@ -138,6 +138,8 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
     def __process_event(self, event: HaloEventRequest):
         for handler in self.event_handlers[type(event)]:
             try:
+                #@todo for attempt in Retrying: implement retry for event failier
+                #  configure boundry to retry operations up to three times, with an exponentially increasing wait between attempts
                 logger.debug('handling event %s with handler %s', event, handler)
                 handler.run_event(event)
                 new_events = self.uow.collect_new_events()
@@ -147,10 +149,24 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
                 logger.exception('Exception handling event %s', event)
                 continue
 
+    def __process_event_retry(self, event: HaloEventRequest):
+        for handler in self.event_handlers[type(event)]:
+            try:
+                #@todo for attempt in Retrying: implement retry for event failier
+                #  configure boundry to retry operations up to three times, with an exponentially increasing wait between attempts
+                logger.debug('handling event %s with handler %s', event, handler)
+                handler.run_event(event)
+                new_events = self.uow.collect_new_events()
+                new_requests = Util.create_requests(new_events)
+                self.queue.extend(new_requests)
+            except Exception:
+                logger.exception('Exception handling event %s', event)
+                continue
 
     def __process_command(self, command: HaloCommandRequest)->HaloResponse:
         logger.debug('handling command %s', command)
         try:
+            # The command dispatcher expects just one handler per command.
             handler = self.command_handlers[command.method_id]
             ret = handler(command)
             if self.uow.items:

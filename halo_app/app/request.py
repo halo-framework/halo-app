@@ -18,7 +18,6 @@ settings = settingsx()
 class HaloRequest(AbsBaseClass,abc.ABC):
 
     method_id = None
-    vars = None
     context = None
     security = None
     sub_func = None
@@ -44,12 +43,12 @@ class HaloCommandRequest(HaloRequest):
     command = None
 
     def __init__(self, halo_command:HaloCommand, secure=False, method_roles=None):
-        super(HaloCommandRequest,self).__init__(halo_command.context,halo_command.name,halo_command.vars,secure,method_roles)
+        super(HaloCommandRequest,self).__init__(halo_command.context,halo_command.name,secure,method_roles)
         self.command = halo_command
 
 class HaloEventRequest(HaloRequest):
     event = None
 
     def __init__(self, halo_event:AbsHaloEvent,secure=False, method_roles=None):
-        super(HaloEventRequest, self).__init__(halo_event.context, halo_event.name, halo_event.vars, secure, method_roles)
+        super(HaloEventRequest, self).__init__(halo_event.context, halo_event.name, secure, method_roles)
         self.event = halo_event

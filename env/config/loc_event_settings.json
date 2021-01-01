@@ -2,8 +2,12 @@
   "A1": {
     "base": {
       "z1": {
-        "url": "base_seq.json",
-        "type": "seq"
+        "url": "api1.json",
+        "type": "api"
+      },
+      "z1a": {
+        "url": "api1.json",
+        "type": "empty"
       }
     }
   },
@@ -12,6 +16,14 @@
       "z8": {
         "url": "base_seq.json",
         "type": "seq"
+      }
+    }
+  },
+  "A3": {
+    "base": {
+      "z3": {
+        "url": "saga.json",
+        "type": "saga"
       }
     }
   },

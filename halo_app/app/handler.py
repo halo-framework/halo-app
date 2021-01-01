@@ -12,14 +12,14 @@ from .uow import AbsUnitOfWork
 from .utilx import Util
 from halo_app.app.context import HaloContext
 from ..errors import status
-from ..const import HTTPChoice, ASYNC
+from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..exceptions import *
 from ..reflect import Reflect
 from halo_app.app.request import HaloRequest, HaloEventRequest, HaloCommandRequest
 from halo_app.app.response import HaloResponse
 from ..settingsx import settingsx
 from ..classes import AbsBaseClass
-from .servicex import SAGA,SEQ,FoiBusinessEvent,SagaBusinessEvent
+from .business_event import BusinessEventCategory, FoiBusinessEvent, SagaBusinessEvent, ApiBusinessEvent, BusinessEvent
 from halo_app.infra.apis import ApiMngr
 from .filterx import RequestFilter
 from halo_app.providers.providers import get_provider
@@ -40,17 +40,12 @@ logger = logging.getLogger(__name__)
 class AbsBaseHandler(AbsBaseClass):
     __metaclass__ = ABCMeta
 
-    method_id = None
     business_event = None
     secure = False
     method_roles = None
 
     def __init__(self,method_id=None):
-        if not self.method_id:
-            if method_id:
-                self.method_id = method_id
-            else:
-                raise MissingMethodIdException(self.__class__.__name__)
+        pass
 
     def create_response(self,halo_request, payload, headers):
         code = status.HTTP_200_OK
@@ -61,9 +56,7 @@ class AbsBaseHandler(AbsBaseClass):
     def validate_req(self, halo_request):
         logger.debug("in validate_req ")
         if halo_request:
-            test = (halo_request.method_id and self.method_id and halo_request.method_id == self.method_id)
-            if test:
-                return True
+            return True
         raise BadRequestError("Halo Request not valid")
 
     def validate_pre(self, halo_request):
@@ -71,11 +64,11 @@ class AbsBaseHandler(AbsBaseClass):
             return True
         raise HaloException("Fail pre validation for Halo Request")
 
-    def set_back_api(self, halo_request, foi=None):
-        if foi:
-            foi_name = foi["name"]
-            foi_op = foi["op"]
-            foi_conn = foi["conn"]
+    def set_back_api(self, halo_request,api):
+        if api:
+            foi_name = api["name"]
+            foi_op = api["op"]
+            foi_conn = api["conn"]
             #api = ApiMngr.get_api(foi_name)
             #instance = Reflect.instantiate(api, AbsBaseApi, halo_request.context)
             instance = ApiMngr.get_api_instance(foi_name, halo_request.context)
@@ -281,10 +274,14 @@ class AbsCommandHandler(AbsBaseHandler):
         # 9. return json response
         return halo_response
 
-    def do_operation_1(self, halo_request,foi=None):  # basic maturity - single request
+    def do_operation_1(self, halo_request):  # basic maturity - single request
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = self.set_back_api(halo_request,foi)
+        if self.business_event.EVENT_CATEGORY == BusinessEventCategory.EMPTY:
+            api = None
+        else:
+            api = self.business_event.get()['1']
+        back_api = self.set_back_api(halo_request,api)
         # 2. array to store the headers required for the API Access
         back_headers = self.set_api_headers(halo_request,back_api)
         # 3. Set request params
@@ -380,13 +377,13 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def do_operation_3(self, halo_request):  # high maturity - saga transactions
         logger.debug("do_operation_3")
-        sagax = load_saga("test",halo_request, self.business_event.saga, settings.SAGA_SCHEMA)
+        sagax = load_saga("test",halo_request, self.business_event.get_saga(), settings.SAGA_SCHEMA)
         payloads = {}
         apis = {}
         counter = 1
-        for state in self.business_event.saga["States"]:
-            if 'Resource' in self.business_event.saga["States"][state]:
-                api_name = self.business_event.saga["States"][state]['Resource']
+        for state in self.business_event.get_saga()["States"]:
+            if 'Resource' in self.business_event.get_saga()["States"][state]:
+                api_name = self.business_event.get_saga()["States"][state]['Resource']
                 logger.debug(api_name)
                 payloads[state] = {"request": halo_request, 'seq': str(counter),"state":state}
                 apis[state] = self.do_saga_work
@@ -406,33 +403,23 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def processing_engine_dtl(self, halo_request:HaloCommandRequest)->dict:
         if self.business_event:
-            if self.business_event.get_business_event_type() == SAGA:
+            if self.business_event.get_business_category() == BusinessEventCategory.SAGA:
                 return self.do_operation_3(halo_request)
-            if self.business_event.get_business_event_type() == SEQ:
+            if self.business_event.get_business_category() == BusinessEventCategory.SEQ:
                 if self.business_event.keys():
                     return self.do_operation_2(halo_request)
                 else:
                     raise BusinessEventMissingSeqException(self.service_operation)
             else:
                 return self.do_operation_1(halo_request)
+        raise HaloBusinessEventNotImplementedException("business_event for command method id:"+halo_request.method_id)
 
     def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork)->dict:
         raise HaloMethodNotImplementedException("method handle in command")
 
-    def processing_engine1(self, halo_request):
-        if self.business_event:
-            if self.business_event.get_business_event_type() == SAGA:
-                return self.do_operation_3(halo_request)
-            if self.business_event.get_business_event_type() == SEQ:
-                if self.business_event.keys():
-                    return self.do_operation_2(halo_request)
-                else:
-                    raise BusinessEventMissingSeqException(self.service_operation)
-        else:
-            return self.do_operation_1(halo_request)
 
-    def set_businss_event(self, halo_request, event_category):
-       self.service_operation = self.__class__.__name__#request.endpoint
+    def set_businss_event(self, halo_request:HaloCommandRequest, event_category:BusinessEventCategory=None):
+       self.service_operation = self.__class__.__name__
        if not self.business_event:
             if settings.BUSINESS_EVENT_MAP:
                 if self.service_operation in settings.BUSINESS_EVENT_MAP:
@@ -443,20 +430,25 @@ class AbsCommandHandler(AbsBaseHandler):
                         #@todo add schema to all event config files
                         if service_list and halo_request.method_id in service_list.keys():
                             service_map = service_list[halo_request.method_id]
-                            if SEQ in service_map:
-                                dict = service_map[SEQ]
-                                self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
-                            if SAGA in service_map:
-                                saga = service_map[SAGA]
-                                self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
+                            if BusinessEventCategory.EMPTY.value in service_map:
+                                dict = service_map[BusinessEventCategory.EMPTY.value]
+                                self.business_event = BusinessEvent(self.service_operation,BusinessEventCategory.EMPTY)
+                            if BusinessEventCategory.API.value in service_map:
+                                dict = service_map[BusinessEventCategory.API.value]
+                                self.business_event = ApiBusinessEvent(self.service_operation,BusinessEventCategory.API, dict)
+                            if BusinessEventCategory.SEQ.value in service_map:
+                                dict = service_map[BusinessEventCategory.SEQ.value]
+                                self.business_event = FoiBusinessEvent(self.service_operation,BusinessEventCategory.SEQ, dict)
+                            if BusinessEventCategory.SAGA.value in service_map:
+                                saga = service_map[BusinessEventCategory.SAGA.value]
+                                self.business_event = SagaBusinessEvent(self.service_operation, BusinessEventCategory.SAGA, saga)
                     #   if no entry use simple operation
-       return self.business_event
 
     ######################################################################
 
     def __run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
         self.uow = uow
-        self.set_businss_event(halo_request, "x")
+        self.set_businss_event(halo_request, BusinessEventCategory.EMPTY)
         ret:HaloResponse = self.do_operation(halo_request)
         return ret
 

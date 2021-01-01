@@ -31,3 +31,4 @@ class AbsHaloDomainEvent(AbsHaloEvent):
         self.agg_root_id = agg_root_id
 
 
+# concre events are data classes as opose to commands
