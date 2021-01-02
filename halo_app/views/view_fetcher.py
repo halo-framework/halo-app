@@ -7,9 +7,12 @@ class AbsViewFetcher(AbsBaseClass):
     sql_query = ''
     dict_params = {}
 
-    def query(self,params:dict,uow:AbsUnitOfWork,filters:[Filter]=None)->[dict]:
+    def set_sql_query(self):
+        return self.sql_query
 
+    def query(self,params:dict,uow:AbsUnitOfWork,filters:[Filter]=None)->[dict]:
+        sql_query = self.set_sql_query()
         with uow:
-            results = list(uow.session.execute(self.sql_query,self.dict_params))
+            results = list(uow.session.execute(sql_query,self.dict_params))
         return results
 
