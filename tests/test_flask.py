@@ -11,7 +11,7 @@ from halo_app.app.handler import AbsCommandHandler, AbsEventHandler
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.domain.event import AbsHaloEvent
-from halo_app.views.finder import AbsFinder
+from halo_app.views.view_builder import AbsViewBuilder,AbsViewFetcher
 from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
@@ -281,7 +281,7 @@ class A7(AbsCommandHandler):
 
     def __init__(self):
         super(A7, self).__init__()
-        self.finder = AbsFinder()
+        self.finder = AbsViewBuilder(AbsViewFetcher())
 
     def run(self, halo_query_request: HaloEventRequest) -> dict:
         items = self.finder.find(halo_query_request.vars)
