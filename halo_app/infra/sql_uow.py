@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app import config
-from halo_app.infra.ItemRepository import SqlAlchemyRepository
+from halo_app.infra.item_repository import SqlAlchemyRepository
 from halo_app.settingsx import settingsx
 
 settings = settingsx()

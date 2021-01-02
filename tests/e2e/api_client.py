@@ -1,5 +1,5 @@
 import requests
-from allocation import config
+from halo_app import config
 
 
 def post_to_add_batch(ref, sku, qty, eta):

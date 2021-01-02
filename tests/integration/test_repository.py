@@ -1,6 +1,6 @@
 import pytest
-from allocation.adapters import repository
-from allocation.domain import model
+from halo_app.domain import model
+from halo_app.infra import item_repository as repository
 
 pytestmark = pytest.mark.usefixtures('mappers')
 
