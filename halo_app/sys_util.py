@@ -1,11 +1,12 @@
 from __future__ import print_function
 
 import os
+
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.command import HaloCommand
 from halo_app.domain.event import AbsHaloEvent
 from halo_app.const import LOC, OPType
-from halo_app.app.context import HaloContext
+from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, HaloRequest
 
 
@@ -30,3 +31,12 @@ class SysUtil(AbsBaseClass):
     def create_event_request(halo_event: AbsHaloEvent,
                                security=None, roles=None) -> HaloRequest:
         return HaloEventRequest(halo_event, security, roles)
+
+    @staticmethod
+    def get_halo_context(request):
+        context = InitCtxFactory.get_initial_context({})
+        for i in request.headers.keys():
+            if type(i) == str:
+                context.put(i.lower(), request.headers[i])
+        context.put(HaloContext.method, request.method)
+        return context

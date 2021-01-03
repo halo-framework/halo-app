@@ -29,8 +29,7 @@ class AbsBoundaryService(AbsBaseClass,abc.ABC):
     def execute(self, halo_request: HaloCommandRequest)->HaloResponse:
         pass
 
-class BoundaryService(AbsBoundaryService,abc.ABC):
-    __metaclass__ = ABCMeta
+class BoundaryService(AbsBoundaryService):
 
     """
         the only point of communication with left-side driver
@@ -135,18 +134,18 @@ class BoundaryService(AbsBoundaryService,abc.ABC):
         return result
 
 
-    def __process_event(self, event: HaloEventRequest):
-        for handler in self.event_handlers[type(event)]:
+    def _process_event(self, request: HaloEventRequest):
+        for handler in self.event_handlers[type(request.event)]:
             try:
                 #@todo for attempt in Retrying: implement retry for event failier
                 #  configure boundry to retry operations up to three times, with an exponentially increasing wait between attempts
-                logger.debug('handling event %s with handler %s', event, handler)
-                handler.run_event(event)
+                logger.debug('handling event %s with handler %s', request.event, handler)
+                handler(request)
                 new_events = self.uow.collect_new_events()
                 new_requests = Util.create_requests(new_events)
                 self.queue.extend(new_requests)
             except Exception:
-                logger.exception('Exception handling event %s', event)
+                logger.exception('Exception handling event %s', request.event)
                 continue
 
     def __process_event_retry(self, event: HaloEventRequest):

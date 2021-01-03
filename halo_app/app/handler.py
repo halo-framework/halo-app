@@ -236,14 +236,19 @@ class AbsEventHandler(AbsBaseHandler):
         return halo_response
 
     def data_engine(self, halo_request:HaloEventRequest)->dict:
-        return self.run(halo_request)
+        return self.handle(halo_request,self.uow)
 
-    def run(self, halo_query_request: HaloEventRequest) -> dict:
-        raise HaloMethodNotImplementedException("method run in Query")
+    def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork):
+        raise HaloMethodNotImplementedException("method handle in command")
 
-    def run_query(self, halo_request:HaloEventRequest)->HaloResponse:
+    def __run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
+        self.uow = uow
         ret:HaloResponse = self.do_operation(halo_request)
-        return ret
+
+    @classmethod
+    def run_event_class(cls,halo_request:HaloEventRequest,uow:AbsUnitOfWork)->HaloResponse:
+        handler = cls()
+        return handler.__run_event(halo_request,uow)
 
 class AbsCommandHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
