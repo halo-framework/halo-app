@@ -357,9 +357,12 @@ class Config(object):
 
     LOG_SAMPLE_RATE = 0.05 # 5%
 
-
     SSM_TYPE = env.str('SSM_TYPE',default='NONE')
     print('SSM_TYPE='+SSM_TYPE)
+
+    file_path = os.path.join(BASE_DIR, 'schema', "saga_schema.json")
+    with open(file_path) as f1:
+        SAGA_SCHEMA = json.load(f1)
 
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]

@@ -1,6 +1,6 @@
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.classes import AbsBaseClass
-from halo_app.views.filters import Filter
+from halo_app.views.query_filters import Filter
 
 
 class AbsViewFetcher(AbsBaseClass):

@@ -8,6 +8,7 @@ from flask import Flask, request
 from nose.tools import eq_
 
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler
+from halo_app.app.response import HaloResponse
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.domain.event import AbsHaloEvent
@@ -134,7 +135,7 @@ class A0(AbsCommandHandler):
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
-            if halo_request.method_id == "z1" or halo_request.method_id == "z1a":
+            if halo_request.method_id == "z1" or halo_request.method_id == "z1a" or halo_request.method_id == "z5":
                 return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
                 #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A0,self).set_back_api(halo_request,foi)
@@ -162,14 +163,12 @@ class A1(A0):
     pass
 
 class A3(AbsCommandHandler):
-    method_id = "z3"
 
     def do_filter(self, halo_request, halo_response):  #
         request_filter = self.get_request_filter(halo_request)
         request_filter.do_filter(halo_request, halo_response)
 
 class A2(A1):
-    method_id = "z2"
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
         if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
@@ -266,6 +265,12 @@ class A2(A1):
 }
             return  super(A2,self).create_resp_payload(halo_request, dict_back_json)
 
+    def create_response(self,halo_request, payload, headers):
+        code = 200
+        if halo_request.method_id == "z4" or halo_request.method_id == "z5" or halo_request.method_id == "z6":
+            code = 500
+        return HaloResponse(halo_request, payload, code, headers)
+
 class A4(A2):
     secure = True
 
@@ -307,7 +312,7 @@ class TestHaloEvent(AbsHaloEvent):
         self.xid = xid
 
 
-from halo_app.app.filterx import RequestFilter,RequestFilterClear
+from halo_app.app.anlytx_filter import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         event.put(HaloContext.items.get(HaloContext.CORRELATION), halo_request.context.get(HaloContext.items.get(HaloContext.CORRELATION)))
@@ -376,6 +381,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
         bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+        bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
         bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
         self.boundary = bootstrap.bootstrap()
         self.fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.event_handlers,self.boundary.command_handlers)
@@ -739,7 +747,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.views.filters import Filter
+                from halo_app.views.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -766,7 +774,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.views.filters import Filter
+                from halo_app.views.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -793,7 +801,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.views.filters import Filter
+                from halo_app.views.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -823,7 +831,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.views.filters import Filter
+                from halo_app.views.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -876,8 +884,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
             halo_context = SysUtil.get_halo_context(request)
-            ret = Util.get_debug_enable(halo_context)
-            eq_(ret, 'true')
+            ret = Util.isDebugEnabled(halo_context)
+            eq_(ret, True)
 
     def test_32_debug_event(self):
         event = {HaloContext.items[HaloContext.DEBUG_LOG]: 'true'}
@@ -886,8 +894,19 @@ class TestUserDetailTestCase(unittest.TestCase):
         ret = BaseUtil.get_correlation_from_event(event)
         eq_(ret[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
+    def test_33_trans_json(self):
+        with app.test_request_context(method='GET', path="/tst"):
+            halo_context = SysUtil.get_halo_context(request)
+            halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
+            try:
+                response = self.boundary.execute(halo_request)
+                eq_(response.payload, [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}])
+            except Exception as e:
+                eq_(e.__class__.__name__, "InternalServerError")
 
-    def test_33_load_saga(self):
+    # saga load + errors ###########
+
+    def test_34_load_saga(self):
         with app.test_request_context(method='POST', path="/"):
             halo_context = SysUtil.get_halo_context(request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -896,47 +915,37 @@ class TestUserDetailTestCase(unittest.TestCase):
             sagax = saga.load_saga("test",halo_request, jsonx, app.config['SAGA_SCHEMA'])
             eq_(len(sagax.actions), 6)
 
-    def test_34_run_saga_bq_error(self):
+    def test_35_run_saga_error(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
             halo_context = SysUtil.get_halo_context(request)
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(1,2)
-            except Exception as e:
-                eq_(e.__class__.__name__, "InternalServerError")
-
-    def test_35_trans_json(self):
-        with app.test_request_context(method='GET', path="/tst"):
-            halo_context = SysUtil.get_halo_context(request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
-            try:
-                response = self.boundary.execute(halo_request)
-                eq_(response.payload, [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}])
+                eq_(response.code,500)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
     def test_36_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
             halo_context = SysUtil.get_halo_context(request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                assert False
+                eq_(response.code,500)
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiError")
 
     def test_37_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):
             halo_context = SysUtil.get_halo_context(request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z6", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                assert False
+                eq_(response.code,500)
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
 
-
+    # finish saga
 
     def test_38_ssm_aws(self):  # @TODO test without HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1057,7 +1066,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             config = get_app_config(app.config['SSM_TYPE'])
             t = config.get_param('halo_app')
             print("t="+str(t))
-            eq_(str(t), '<Section: FUNC_NAME>')#'<Section: DEFAULT>')
+            eq_(str(t), '<Section: halo_app>')#'<Section: DEFAULT>')
 
 
 
@@ -1098,7 +1107,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = SysUtil.get_halo_context(request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.status_code, status.HTTP_200_OK)
+            eq_(response.code, status.HTTP_200_OK)
 
     def test_48_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1115,7 +1124,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_49_NOCORR(self):
         from halo_app.app.globals import load_global_data
-        app.config["INIT_CLASS_NAME"] = 'halo_app.app.viewsx.GlobalService'
+        app.config["INIT_CLASS_NAME"] = 'halo_app.app.globals.GlobalService'
         app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
             "C:\\dev\\projects\\halo\\halo_app\\halo_app\\env\\config\\flask_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])

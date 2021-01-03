@@ -21,7 +21,7 @@ from ..settingsx import settingsx
 from ..classes import AbsBaseClass
 from .business_event import BusinessEventCategory, FoiBusinessEvent, SagaBusinessEvent, ApiBusinessEvent, BusinessEvent
 from halo_app.infra.apis import ApiMngr
-from .filterx import RequestFilter
+from .anlytx_filter import RequestFilter
 from halo_app.providers.providers import get_provider
 from halo_app.saga import SagaRollBack, load_saga
 

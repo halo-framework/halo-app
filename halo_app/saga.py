@@ -41,11 +41,12 @@ class SagaError(HaloError):
     Raised when an action failed and at least one compensation also failed.
     """
 
-    def __init__(self, exception, compensation_exceptions):
+    def __init__(self, message,exception, compensation_exceptions):
         """
         :param exception: BaseException the exception that caused this SagaException
         :param compensation_exceptions: list[BaseException] all exceptions that happened while executing compensations
         """
+        super(SagaError, self).__init__(message, exception)
         self.action = exception
         self.compensations = compensation_exceptions
 

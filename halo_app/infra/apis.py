@@ -131,7 +131,12 @@ class AbsBaseApi(AbsBaseClass):
 class AbsRestApi(AbsBaseApi):
     __metaclass__ = ABCMeta
 
+    def __init__(self,halo_context, method=None,session=None):
+        super(AbsRestApi,self).__init__(halo_context,method,session)
+
     def do_request(self, method, url, timeout, data=None, headers=None, auth=None):
+        if not self.session:
+            self.session = requests.session()
         return self.session.request(method, url, data=data, headers=headers,
                                 timeout=timeout, auth=auth)
 
@@ -391,6 +396,9 @@ class AbsRestApi(AbsBaseApi):
 
 class AbsSoapApi(AbsBaseApi):
     __metaclass__ = ABCMeta
+
+    def __init__(self,halo_context, method=None,session=None):
+        super(AbsSoapApi,self).__init__(halo_context,method,session)
 
     def do_request(self,method,timeout, data=None, headers=None, auth=None):
         return self.exec_soap(method,timeout, data, headers, auth)

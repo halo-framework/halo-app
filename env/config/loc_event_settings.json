@@ -51,23 +51,19 @@
       }
     }
   },
-  "A2x": {
+  "A2": {
     "base": {
-      "GET": {
-        "url": "base_seq.json",
-        "type": "seq"
-      },
-      "POST": {
-        "url": "base_seq.json",
-        "type": "seq"
-      },
-      "PUT": {
-        "url": "saga_rlbk.json",
-        "type": "saga"
-      },
-      "PATCH": {
+      "z6": {
         "url": "saga_rlbk_brk.json",
         "type": "saga"
+      },
+      "z4": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      },
+      "z5": {
+        "url": "saga_rlbk.json",
+        "type": "empty"
       }
     },
     "deposit": {
