@@ -13,10 +13,10 @@ class AbsViewBuilder(AbsBaseClass):
         super(AbsViewBuilder,self).__init__()
         self.view_fetcher = fetcher
 
-    def process_date(self,data:[dict])->[Dto]:
+    def process_data(self,data:[dict])->[Dto]:
         return []
 
     def find(self,params:dict,uow:AbsUnitOfWork,filters:[Filter]=None)->[Dto]:
         data:[dict] = self.view_fetcher.query(params,uow,filters)
-        results:[Dto] = self.process_date(data)
+        results:[Dto] = self.process_data(data)
         return results

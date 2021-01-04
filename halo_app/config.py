@@ -364,6 +364,9 @@ class Config(object):
     with open(file_path) as f1:
         SAGA_SCHEMA = json.load(f1)
 
+    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL',default="REPEATABLE READ")
+
+
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
     HALO_CONTEXT_CLASS = None
@@ -436,7 +439,11 @@ class Config(object):
                 raise e
 
 
-
+    host = os.environ.get('DB_HOST', 'localhost')
+    port = 54321 if host == 'localhost' else 5432
+    password = os.environ.get('DB_PASSWORD', 'abc123')
+    user, db_name = 'allocation', 'allocation'
+    POSTGRES_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
 print('== The base settings file has been loaded.')
 

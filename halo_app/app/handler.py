@@ -241,7 +241,7 @@ class AbsEventHandler(AbsBaseHandler):
     def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork):
         raise HaloMethodNotImplementedException("method handle in command")
 
-    def __run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
+    def _run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
         self.uow = uow
         ret:HaloResponse = self.do_operation(halo_request)
 

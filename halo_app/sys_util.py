@@ -22,7 +22,7 @@ class SysUtil(AbsBaseClass):
         return LOC
 
     @staticmethod
-    def create_command_request(halo_context: HaloContext, method_id: str, vars: dict, op_type: OPType = OPType.command,
+    def create_command_request(halo_context: HaloContext, method_id: str, vars: dict,
                                security=None, roles=None) -> HaloRequest:
         halo_command = HaloCommand(halo_context, method_id, vars)
         return HaloCommandRequest(halo_command, security, roles)

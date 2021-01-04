@@ -280,23 +280,20 @@ class A5(AbsCommandHandler):
 class A6(A5):
     pass
 
-
-class A7(AbsCommandHandler):
+class A7(AbsViewBuilder):
     finder = None
 
-    def __init__(self):
-        super(A7, self).__init__()
-        self.finder = AbsViewBuilder(AbsViewFetcher())
+    def __init__(self,fetcher):
+        super(A7, self).__init__(fetcher)
 
     def run(self, halo_query_request: HaloEventRequest) -> dict:
         items = self.finder.find(halo_query_request.vars)
         return {"1": {"a": "c"}}
 
 class A8(AbsCommandHandler):
-    method_id = "z8"
+    pass
 
 class A9(AbsEventHandler):
-    method_id = "z9"
 
     def handle(self, halo_event_request: HaloEventRequest, uow: AbsUnitOfWork):
         if halo_event_request.event.xid != '12':
@@ -368,6 +365,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         #self.app = app#.test_client()
         #app.config.from_pyfile('../settings.py')
         app.config.from_object(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
+        from halo_app.settingsx import settingsx
+        settings = settingsx()
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
@@ -380,7 +379,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
         bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
-        bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+        #bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
         bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
         bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
         bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
@@ -515,7 +514,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'tst_get': 'good'})
 
-    def test_7_cli_api_from_method(self):
+    def test_7a_cli_api_from_method(self):
         halo_context = HaloContext()
         halo_request = SysUtil.create_command_request(halo_context, "z1a", {"id": "1"})
         response = self.boundary.execute(halo_request)
@@ -532,6 +531,14 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_request = SysUtil.create_command_request(halo_context, "z3", {})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
+
+    def test_9a_cli_view(self):
+        halo_context = HaloContext()
+        a7 = A7(AbsViewFetcher())
+        halo_request = SysUtil.create_command_request(halo_context, "z3", {})
+        response = self.boundary.execute(halo_request)
+        eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
+
 
 
     def test_10_event(self):
