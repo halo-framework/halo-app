@@ -214,7 +214,7 @@ class AbsBaseHandler(AbsBaseClass):
 class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
-    def do_operation(self, halo_request:HaloRequest)->HaloResponse:
+    def do_operation(self, halo_request:HaloRequest):
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -224,10 +224,8 @@ class AbsEventHandler(AbsBaseHandler):
         # 4. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(halo_request, dict)
         logger.debug("payload=" + str(payload))
-        # 5. setup headers for reply
-        headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
-        halo_response = self.create_response(halo_request, payload, headers)
+        halo_response = self.create_response(halo_request, payload, {})
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter

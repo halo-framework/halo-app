@@ -32,11 +32,3 @@ class SysUtil(AbsBaseClass):
                                security=None, roles=None) -> HaloRequest:
         return HaloEventRequest(halo_event, security, roles)
 
-    @staticmethod
-    def get_halo_context(request):
-        context = InitCtxFactory.get_initial_context({})
-        for i in request.headers.keys():
-            if type(i) == str:
-                context.put(i.lower(), request.headers[i])
-        context.put(HaloContext.method, request.method)
-        return context
