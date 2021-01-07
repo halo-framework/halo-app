@@ -500,9 +500,9 @@ class ApiMngr(AbsBaseClass):
         raise NoApiDefinitionError(name)
 
     @staticmethod
-    def get_api_instance(name, *args):
+    def get_api_instance(name:str,ctx:HaloContext, *args):
         global api_dict
-        ctx = args[0]
+        #ctx = args[0]
         id = None
         if HaloContext.items[HaloContext.CORRELATION] in ctx.keys():
             id = ctx.get(HaloContext.items[HaloContext.CORRELATION])
@@ -515,8 +515,12 @@ class ApiMngr(AbsBaseClass):
                 return api_dict[class_name+id]
             else:
                 session = requests.session()
-                params = [x for x in args]
+                params = []
+                params.append(ctx)
+                params.append("")
                 params.append(session)
+                for x in args:
+                    params.append(x)
                 api = Reflect.instantiate(class_name, AbsBaseApi, *params)
                 lock.acquire()
                 try:
