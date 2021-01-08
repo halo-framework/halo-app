@@ -184,3 +184,6 @@ class FilterValidationError(HaloException):
 
 class MissingMethodIdException(HaloException):
     pass
+
+class CommandNotMappedError(HaloError):
+    pass

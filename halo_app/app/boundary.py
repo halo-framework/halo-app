@@ -7,7 +7,7 @@ import logging
 import traceback
 from abc import ABCMeta,abstractmethod
 # app
-from ..exceptions import HaloError
+from ..exceptions import HaloError, CommandNotMappedError
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
@@ -149,6 +149,9 @@ class BoundaryService(AbsBoundaryService):
                 continue
 
     def __process_event_retry(self, event: HaloEventRequest):
+        if type(event) not in self.event_handlers:
+            logger.exception('event %s not mapped to handler', type(event))
+            return
         for handler in self.event_handlers[type(event)]:
             try:
                 #@todo for attempt in Retrying: implement retry for event failier
@@ -164,6 +167,8 @@ class BoundaryService(AbsBoundaryService):
 
     def __process_command(self, command: HaloCommandRequest)->HaloResponse:
         logger.debug('handling command %s', command)
+        if command.method_id not in self.command_handlers:
+            raise CommandNotMappedError("command method_id" + command.method_id)
         try:
             # The command dispatcher expects just one handler per command.
             handler = self.command_handlers[command.method_id]
