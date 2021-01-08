@@ -500,7 +500,7 @@ class ApiMngr(AbsBaseClass):
         raise NoApiDefinitionError(name)
 
     @staticmethod
-    def get_api_instance(name:str,ctx:HaloContext, *args):
+    def get_api_instance(name:str,ctx:HaloContext,method:str="", *args):
         global api_dict
         #ctx = args[0]
         id = None
@@ -517,7 +517,7 @@ class ApiMngr(AbsBaseClass):
                 session = requests.session()
                 params = []
                 params.append(ctx)
-                params.append("")
+                params.append(method)
                 params.append(session)
                 for x in args:
                     params.append(x)

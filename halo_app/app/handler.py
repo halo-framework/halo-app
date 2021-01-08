@@ -71,8 +71,7 @@ class AbsBaseHandler(AbsBaseClass):
             foi_conn = api["conn"]
             #api = ApiMngr.get_api(foi_name)
             #instance = Reflect.instantiate(api, AbsBaseApi, halo_request.context)
-            instance = ApiMngr.get_api_instance(foi_name, halo_request.context)
-            instance.op = foi_op
+            instance = ApiMngr.get_api_instance(foi_name, halo_request.context,foi_op)
             instance.conn = foi_conn
             return instance
         raise NoApiClassException("api class not defined")
