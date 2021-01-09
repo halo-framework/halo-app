@@ -11,9 +11,7 @@ settings = settingsx()
 
 DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
     settings.POSTGRES_URL,
-    isolation_level=settings.ISOLATION_LEVEL,
-    #config.get_postgres_uri(),
-    #isolation_level="REPEATABLE READ",
+    isolation_level=settings.ISOLATION_LEVEL
 ))
 
 class SqlAlchemyUnitOfWork(AbsUnitOfWork):

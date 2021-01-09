@@ -13,6 +13,7 @@ from halo_app.app.response import HaloResponse
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.domain.event import AbsHaloEvent
+from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.views.view_builder import AbsViewBuilder,AbsViewFetcher
 from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
@@ -35,7 +36,7 @@ from halo_app.sys_util import SysUtil
 from halo_app.app.request import HaloRequest
 import unittest
 #6,7,9923,9941 failing
-
+from tests.conftest import sqlite_session_factory
 
 fake = Faker()
 app = Flask(__name__)
@@ -542,12 +543,19 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9a_cli_view(self):
         halo_context = HaloContext()
+        uow = SqlAlchemyUnitOfWork(sqlite_session_factory)
+        #with uow:
         a7 = A7(AbsViewFetcher())
-        halo_request = SysUtil.create_command_request(halo_context, "z3", {})
-        response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
+        response = a7.find(halo_context,{},uow)
+        eq_(response.code,status.HTTP_200_OK)
 
-
+    def test_9b_cli_view_error(self):
+        halo_context = HaloContext()
+        uow = SqlAlchemyUnitOfWork(sqlite_session_factory)
+        #with uow:
+        a7 = A7(AbsViewFetcher())
+        response = a7.find(halo_context,{},uow)
+        eq_(response.code,status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_10_event(self):
         halo_context = HaloContext()
