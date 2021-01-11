@@ -7,12 +7,12 @@ import logging
 import traceback
 from abc import ABCMeta,abstractmethod
 # app
-from ..exceptions import HaloError, CommandNotMappedError
+from ..exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloCommandRequest, HaloEventRequest
+from halo_app.app.request import HaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.app.response import HaloResponse
 from ..classes import AbsBaseClass
 from ..settingsx import settingsx
@@ -26,7 +26,7 @@ class AbsBoundaryService(AbsBaseClass,abc.ABC):
     the only port exposed from the boundry
     """
     @abc.abstractmethod
-    def execute(self, halo_request: HaloCommandRequest)->HaloResponse:
+    def execute(self, halo_request: HaloRequest)->HaloResponse:
         pass
 
 class BoundaryService(AbsBoundaryService):
@@ -39,13 +39,14 @@ class BoundaryService(AbsBoundaryService):
         Only admin users are able to access this view.
         """
 
-    def __init__(self, uow,event_handlers,command_handlers):
+    def __init__(self, uow,event_handlers,command_handlers,query_handlers):
         super(BoundaryService, self).__init__()
         self.uow = uow
         self.event_handlers = event_handlers
         self.command_handlers = command_handlers
+        self.query_handlers = query_handlers
 
-    def execute(self, halo_request: HaloCommandRequest)->HaloResponse:
+    def execute(self, halo_request: HaloRequest)->HaloResponse:
         """
 
         :param vars:
@@ -58,6 +59,8 @@ class BoundaryService(AbsBoundaryService):
         http_status_code = 500
 
         try:
+            if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
+                raise HaloException(f'{halo_request} was not a Query or Command request')
             ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,
@@ -120,7 +123,7 @@ class BoundaryService(AbsBoundaryService):
         return self.run_event(halo_request)
 
 
-    def __process(self,halo_request:HaloCommandRequest)->HaloResponse:
+    def __process(self,halo_request:HaloRequest)->HaloResponse:
         result = None
         self.queue = [halo_request]
         while self.queue:
@@ -129,8 +132,10 @@ class BoundaryService(AbsBoundaryService):
                 result = self.__process_command(halo_request)
             elif isinstance(halo_request,HaloEventRequest) or issubclass(halo_request.__class__,HaloEventRequest):
                 self.__process_event(message)
+            elif isinstance(halo_request,HaloQueryRequest) or issubclass(halo_request.__class__,HaloQueryRequest):
+                self.__process_query(message)
             else:
-                raise Exception(f'{message} was not an Event or Command')
+                raise Exception(f'{message} was not an Event or Command or Query')
         return result
 
 
@@ -179,6 +184,19 @@ class BoundaryService(AbsBoundaryService):
             return ret
         except Exception:
             logger.exception('Exception handling command %s', command)
+            raise
+
+    def __process_query(self, query: HaloQueryRequest)->HaloResponse:
+        logger.debug('handling query %s', query)
+        if query.method_id not in self.query_handlers:
+            raise QueryNotMappedError("query method_id" + query.method_id)
+        try:
+            # The query dispatcher expects just one handler per command.
+            handler = self.query_handlers[query.method_id]
+            ret = handler(query)
+            return ret
+        except Exception:
+            logger.exception('Exception handling query %s', query)
             raise
 
 

@@ -187,3 +187,6 @@ class MissingMethodIdException(HaloException):
 
 class CommandNotMappedError(HaloError):
     pass
+
+class QueryNotMappedError(HaloError):
+    pass

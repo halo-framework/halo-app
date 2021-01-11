@@ -8,13 +8,13 @@ from flask import Flask, request
 from nose.tools import eq_
 
 from halo_app.app.context import InitCtxFactory
-from halo_app.app.handler import AbsCommandHandler, AbsEventHandler
+from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.response import HaloResponse
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.domain.event import AbsHaloEvent
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
-from halo_app.views.view_builder import AbsViewBuilder,AbsViewFetcher
+from halo_app.views.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
@@ -25,7 +25,7 @@ from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.boundary import BoundaryService
-from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest
+from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.infra.apis import load_api_config
 from halo_app.models import AbsDbMixin
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
@@ -282,15 +282,6 @@ class A5(AbsCommandHandler):
 class A6(A5):
     pass
 
-class A7(AbsViewBuilder):
-    finder = None
-
-    def __init__(self,fetcher):
-        super(A7, self).__init__(fetcher)
-
-    def run(self, halo_query_request: HaloEventRequest) -> dict:
-        items = self.finder.find(halo_query_request.vars)
-        return {"1": {"a": "c"}}
 
 class A8(AbsCommandHandler):
     pass
@@ -303,6 +294,13 @@ class A9(AbsEventHandler):
             raise Exception("id not good")
         print("success:"+halo_event_request.event.xid)
 
+class A10(AbsQueryHandler):
+    def set_query_data(self,halo_query_request: HaloQueryRequest):
+        orderid = 1
+        sku = 2
+        return 'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',dict(orderid=orderid, sku=sku)
+
+
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
 
@@ -310,6 +308,10 @@ class TestHaloEvent(AbsHaloEvent):
         super(TestHaloEvent, self).__init__(ctx, mid)
         self.xid = xid
 
+class TestHaloQuery(HaloQuery):
+
+    def __init__(self, ctx, name,vars):
+        super(TestHaloQuery, self).__init__(ctx, name,vars)
 
 from halo_app.app.anlytx_filter import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
@@ -394,6 +396,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
         bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
         bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+        bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
         self.boundary = bootstrap.bootstrap()
         print("do setup")
 
@@ -543,25 +546,23 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9a_cli_view(self):
         halo_context = HaloContext()
-        uow = SqlAlchemyUnitOfWork(sqlite_session_factory)
-        #with uow:
-        a7 = A7(AbsViewFetcher())
-        response = a7.find(halo_context,{},uow)
+        t = TestHaloQuery(halo_context,"q1",{})
+        halo_request = SysUtil.create_query_request(t)
+        response = self.boundary.execute(halo_request)
         eq_(response.code,status.HTTP_200_OK)
 
     def test_9b_cli_view_error(self):
         halo_context = HaloContext()
-        uow = SqlAlchemyUnitOfWork(sqlite_session_factory)
-        #with uow:
-        a7 = A7(AbsViewFetcher())
-        response = a7.find(halo_context,{},uow)
+        t = TestHaloQuery(halo_context, "q2", {})
+        halo_request = SysUtil.create_query_request(t)
+        response = self.boundary.execute(halo_request)
         eq_(response.code,status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_10_event(self):
         halo_context = HaloContext()
         halo_event = TestHaloEvent(halo_context, "z9","12")
         halo_request = SysUtil.create_event_request(halo_event)
-        fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.event_handlers,self.boundary.command_handlers)
+        fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
 

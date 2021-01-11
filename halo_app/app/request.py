@@ -10,6 +10,7 @@ from halo_app.reflect import Reflect
 from halo_app.security import HaloSecurity
 from halo_app.app.context import HaloContext
 from halo_app.settingsx import settingsx
+from halo_app.views.query import AbsHaloQuery
 
 logger = logging.getLogger(__name__)
 
@@ -52,3 +53,10 @@ class HaloEventRequest(HaloRequest):
     def __init__(self, halo_event:AbsHaloEvent,secure=False, method_roles=None):
         super(HaloEventRequest, self).__init__(halo_event.context, halo_event.name, secure, method_roles)
         self.event = halo_event
+
+class HaloQueryRequest(HaloRequest):
+    query = None
+
+    def __init__(self, halo_query:AbsHaloQuery,secure=False, method_roles=None):
+        super(HaloQueryRequest, self).__init__(halo_query.context, halo_query.name, secure, method_roles)
+        self.query = halo_query

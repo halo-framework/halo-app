@@ -15,7 +15,7 @@ from ..errors import status
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..exceptions import *
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloEventRequest, HaloCommandRequest
+from halo_app.app.request import HaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
 from halo_app.app.response import HaloResponse
 from ..settingsx import settingsx
 from ..classes import AbsBaseClass
@@ -24,6 +24,7 @@ from halo_app.infra.apis import ApiMngr
 from .anlytx_filter import RequestFilter
 from halo_app.providers.providers import get_provider
 from halo_app.saga import SagaRollBack, load_saga
+from ..views.query_filters import Filter
 
 settings = settingsx()
 
@@ -210,6 +211,52 @@ class AbsBaseHandler(AbsBaseClass):
             return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
+class AbsQueryHandler(AbsBaseHandler):
+    __metaclass__ = ABCMeta
+
+    def do_operation(self, halo_request:HaloRequest)->HaloResponse:
+        # 1. validate input params
+        self.validate_req(halo_request)
+        # 2. run pre conditions
+        self.validate_pre(halo_request)
+        # 3. processing engine
+        dict_dto = self.data_engine(halo_request)
+        # 4. Build the payload target response structure which is Compliant
+        payload = self.create_resp_payload(halo_request, dict_dto)
+        logger.debug("payload=" + str(payload))
+        # 5. setup headers for reply
+        headers = self.set_resp_headers(halo_request)
+        # 6. build json and add to halo response
+        halo_response = self.create_response(halo_request, payload, headers)
+        # 7. post condition
+        self.validate_post(halo_request, halo_response)
+        # 8. do filter
+        #self.do_filter(halo_request,halo_response)
+        # 9. return json response
+        return halo_response
+
+    def data_engine(self,halo_request:HaloQueryRequest)->dict:
+        return self.run(halo_request,self.uow)
+
+    def set_query_data(self,halo_query_request: HaloQueryRequest):
+        raise HaloMethodNotImplementedException("method set_query_data in Query")
+
+    def run(self, halo_query_request: HaloQueryRequest,uow:AbsUnitOfWork) -> dict:
+        query_str, dict_params = self.set_query_data(halo_query_request)
+        with uow:
+            results = list(uow.session.execute(query_str, dict_params))
+        return results
+
+    def __run_query(self,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->HaloResponse:
+        self.uow = uow
+        ret:HaloResponse = self.do_operation(halo_request)
+        return ret
+
+    @classmethod
+    def run_query_class(cls,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->HaloResponse:
+        handler = cls()
+        return handler.__run_query(halo_request,uow)
+
 class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
@@ -219,7 +266,7 @@ class AbsEventHandler(AbsBaseHandler):
         # 2. run pre conditions
         self.validate_pre(halo_request)
         # 3. processing engine
-        dict = self.data_engine(halo_request)
+        dict = self.event_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(halo_request, dict)
         logger.debug("payload=" + str(payload))
@@ -232,7 +279,7 @@ class AbsEventHandler(AbsBaseHandler):
         # 9. return json response
         return halo_response
 
-    def data_engine(self, halo_request:HaloEventRequest)->dict:
+    def event_engine(self, halo_request:HaloEventRequest)->dict:
         return self.handle(halo_request,self.uow)
 
     def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork):

@@ -31,11 +31,16 @@ def bootstrap(
         command_type: inject_dependencies(handler, dependencies)
         for command_type, handler in COMMAND_HANDLERS.items()
     }
+    injected_query_handlers = {
+        query_type: inject_dependencies(handler, dependencies)
+        for query_type, handler in QUERY_HANDLERS.items()
+    }
 
     return BoundaryService(
         uow=uow,
         event_handlers=injected_event_handlers,
         command_handlers=injected_command_handlers,
+        query_handlers=injected_query_handlers,
     )
 
 
@@ -54,5 +59,9 @@ EVENT_HANDLERS = {
 }
 
 COMMAND_HANDLERS = {
+
+}
+
+QUERY_HANDLERS = {
 
 }
