@@ -24,7 +24,7 @@ from halo_app.infra.apis import ApiMngr
 from .anlytx_filter import RequestFilter
 from halo_app.providers.providers import get_provider
 from halo_app.saga import SagaRollBack, load_saga
-from ..views.query_filters import Filter
+from ..view.query_filters import Filter
 
 settings = settingsx()
 
@@ -337,7 +337,7 @@ class AbsCommandHandler(AbsBaseHandler):
         back_vars = self.set_api_vars(halo_request,back_api)
         # 4. Set request auth
         back_auth = self.set_api_auth(halo_request,back_api)
-        # 5. Set request views
+        # 5. Set request view
         back_data = self.set_api_data(halo_request,back_api)
         # 6. Sending the request to the BANK API with params
         back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,
@@ -378,7 +378,7 @@ class AbsCommandHandler(AbsBaseHandler):
         back_vars = self.set_api_vars(halo_request,back_api, seq, dict)
         # 5. auth
         back_auth = self.set_api_auth(halo_request,back_api, seq, dict)
-        # 6. set request views
+        # 6. set request view
         back_data = self.set_api_data(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         status = get_provider().add_to_queue(halo_request, back_api, back_vars, back_headers, back_auth,
@@ -392,7 +392,7 @@ class AbsCommandHandler(AbsBaseHandler):
         back_vars = self.set_api_vars(halo_request,back_api, seq, dict)
         # 5. auth
         back_auth = self.set_api_auth(halo_request,back_api, seq, dict)
-        # 6. set request views
+        # 6. set request view
         back_data = self.set_api_data(halo_request,back_api, seq, dict)
         # 7. Sending the request to the BANK API with params
         back_response = self.execute_api(halo_request, back_api, back_vars, back_headers, back_auth,

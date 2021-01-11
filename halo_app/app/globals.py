@@ -21,7 +21,7 @@ settings = settingsx()
 # aws
 # other
 
-# Create your views here.
+# Create your view here.
 logger = logging.getLogger(__name__)
 
 

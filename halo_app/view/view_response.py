@@ -1,7 +1,7 @@
 from flask import jsonify
 
 from halo_app.app.response import HaloResponse
-from halo_app.views.dto import AbsDto as Dto
+from halo_app.view.dto import AbsDto as Dto
 
 class HaloViewResponse(HaloResponse):
     def __init__(self, data:[Dto], code=None, headers=None):

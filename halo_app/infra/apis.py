@@ -115,7 +115,7 @@ class AbsBaseApi(AbsBaseClass):
                     datay = ""
             else:
                 datay = ""
-            messageDict = {"method":method,"url":url,"views":datay,"headers":headers,"auth":auth}
+            messageDict = {"method":method,"url":url,"view":datay,"headers":headers,"auth":auth}
             print("messageDict="+str(messageDict)+" version:"+self.version)
             ret = get_provider().invoke_sync(halo_context,messageDict,service_name,version=self.version)
             print("ret:"+str(ret))
@@ -604,7 +604,7 @@ def create_api_class(name,bases,attributes=None):
         # constructor
         #"__init__": constructor,
 
-        # views members
+        # view members
         #"string_attribute": "Geeks 4 geeks !",
         #"int_attribute": 1706256,
         "name" : name,

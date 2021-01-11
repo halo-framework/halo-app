@@ -66,7 +66,7 @@ class AbsBaseEvent(AbsBaseClass):
             pool = Pool(1)
             futures = []
             for x in range(1):
-                futures.append(pool.apply_async(requests.post, [url], {'views': messageDict}))
+                futures.append(pool.apply_async(requests.post, [url], {'view': messageDict}))
             for future in futures:
                 logger.debug("future:" + str(future.get()))
             return "sent event"

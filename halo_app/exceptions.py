@@ -18,7 +18,7 @@ class HaloException(Exception):
         msg = str(self.message)
         if self.original_exception:
             msg = msg + " ,original:" +str(self.original_exception)
-        return msg  # __str__() obviously expects a string to be returned, so make sure not to send any other views types
+        return msg  # __str__() obviously expects a string to be returned, so make sure not to send any other view types
 
 class HaloError(HaloException):
     __metaclass__ = ABCMeta
@@ -85,13 +85,13 @@ class CacheExpireError(CacheError):
 
 """
 class HaloHttpError(HaloError):
-    def __init__(self, message, detail=None,views=None, http_status=400):
-        super(HaloHttpError,self).__init__(message, detail,views)
+    def __init__(self, message, detail=None,view=None, http_status=400):
+        super(HaloHttpError,self).__init__(message, detail,view)
         self.status = http_status
 
 class ServerError(HaloHttpError):
-    def __init__(self, message, detail=None, views=None, http_status=500):
-        super(HaloHttpError, self).__init__(message, detail, views)
+    def __init__(self, message, detail=None, view=None, http_status=500):
+        super(HaloHttpError, self).__init__(message, detail, view)
         self.status = http_status
 """
 

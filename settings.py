@@ -242,7 +242,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'halo_app.halo_app.views': {
+        'halo_app.halo_app.view': {
             'level': 'INFO',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },

@@ -8,7 +8,7 @@ from halo_app.domain.event import AbsHaloEvent
 from halo_app.const import LOC, OPType
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, HaloRequest, HaloQueryRequest
-from halo_app.views.query import AbsHaloQuery
+from halo_app.view.query import AbsHaloQuery, HaloQuery
 
 
 class SysUtil(AbsBaseClass):
@@ -34,6 +34,6 @@ class SysUtil(AbsBaseClass):
         return HaloEventRequest(halo_event, security, roles)
 
     @staticmethod
-    def create_query_request(halo_query: AbsHaloQuery,
+    def create_query_request(halo_query: HaloQuery,
                                security=None, roles=None) -> HaloRequest:
         return HaloQueryRequest(halo_query, security, roles)

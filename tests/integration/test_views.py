@@ -3,7 +3,7 @@ from datetime import date
 from sqlalchemy.orm import clear_mappers
 from unittest import mock
 import pytest
-from halo_app import bootstrap, views
+from halo_app import bootstrap, view
 from halo_app.app.context import HaloContext
 from halo_app.domain import command
 from halo_app.app import uow as unit_of_work
@@ -35,7 +35,7 @@ def test_allocations_view(sqlite_boundry):
     sqlite_boundry.handle(command.Allocate('otherorder', 'sku1', 30))
     sqlite_boundry.handle(command.Allocate('otherorder', 'sku2', 10))
 
-    assert views.allocations('order1', sqlite_boundry.uow) == [
+    assert view.allocations('order1', sqlite_boundry.uow) == [
         {'sku': 'sku1', 'batchref': 'sku1batch'},
         {'sku': 'sku2', 'batchref': 'sku2batch'},
     ]
@@ -47,6 +47,6 @@ def test_deallocation(sqlite_boundry):
     sqlite_boundry.handle(command.Allocate('o1', 'sku1', 40))
     sqlite_boundry.handle(command.ChangeBatchQuantity('b1', 10))
 
-    assert views.allocations('o1', sqlite_boundry.uow) == [
+    assert view.allocations('o1', sqlite_boundry.uow) == [
         {'sku': 'sku1', 'batchref': 'b2'},
     ]

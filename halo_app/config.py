@@ -107,7 +107,7 @@ class Config(object):
     FUNC_NAME='halo_app' #env var HALO_FUNC_NAME
 
 
-    #@TODO load config views from env var if possible and if not from env file
+    #@TODO load config view from env var if possible and if not from env file
     SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
     PROVIDER = env.str('PROVIDER')
     AWS_REGION = env.str('AWS_REGION')
@@ -239,7 +239,7 @@ class Config(object):
             }
         },
         'loggers': {
-            'tester.api.views': {
+            'tester.api.view': {
                 'level': 'DEBUG',
                 'handlers': ['console', 'console_debug_false', 'mail_admins']
             },
