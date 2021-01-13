@@ -14,9 +14,9 @@ settings = settingsx()
 
 class HaloContext(AbsBaseClass):
 
-    method = "method"
     remote_addr = "remote_addr"
     host = "host"
+    client_type = "client_type"
 
     CORRELATION = "CORRELATION"
     USER_AGENT = "USER AGENT"
@@ -63,6 +63,7 @@ class HaloContext(AbsBaseClass):
 
 class InitCtxFactory(AbsBaseClass):
 
+    @staticmethod
     def get_initial_context(env:dict)->HaloContext:
         return HaloContext(env)
 

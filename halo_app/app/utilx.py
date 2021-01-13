@@ -11,6 +11,8 @@ from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.exceptions import CacheError, ProviderError
 from halo_app.providers.providers import get_provider,ONPREM
+from .response import HaloResponseFactory
+from ..entrypoints.client_type import ClientType
 from ..reflect import Reflect
 from ..settingsx import settingsx
 
@@ -36,11 +38,28 @@ def strx(str1):
 
 class Util(AbsBaseClass):
 
-    def init_halo_context(self):
-        context = Util.get_halo_context()
+    def init_halo_context(self,env:dict=None):
         if settings.HALO_CONTEXT_CLASS:
-            context = Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext)
+            context = Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext,env)
+        else:
+            context = InitCtxFactory.get_initial_context(env)
         return context
+
+    @classmethod
+    def get_client_type(self):
+        if settings.HALO_CLIENT_CLASS:
+            client_type_ins = Reflect.instantiate(settings.HALO_CLIENT_CLASS,ClientType)
+        else:
+            client_type_ins = ClientType()
+        return client_type_ins
+
+    @classmethod
+    def get_response_factory(self):
+        if settings.HALO_RESPONSE_FACTORY_CLASS:
+            response_factory_ins = Reflect.instantiate(settings.HALO_RESPONSE_FACTORY_CLASS, HaloResponseFactory)
+        else:
+            response_factory_ins = HaloResponseFactory()
+        return response_factory_ins
 
     @classmethod
     def get_timeout(cls, halo_context:HaloContext):
@@ -70,7 +89,7 @@ class Util(AbsBaseClass):
 
 
     @classmethod
-    def get_halo_context(cls, api_key=None,x_correlation_id=None,x_user_agent=None,dlog=None,request_id=None):
+    def get_halo_context1(cls, api_key=None,x_correlation_id=None,x_user_agent=None,dlog=None,request_id=None):
         """
         :param request:
         :param api_key:

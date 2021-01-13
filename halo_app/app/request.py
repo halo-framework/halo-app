@@ -2,6 +2,7 @@ from __future__ import print_function
 import abc
 import logging
 # halo
+from halo_app.app.exchange import AbsHaloExchange
 from halo_app.domain.command import HaloCommand
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.event import AbsHaloEvent
@@ -16,14 +17,13 @@ logger = logging.getLogger(__name__)
 
 settings = settingsx()
 
-class HaloRequest(AbsBaseClass,abc.ABC):
+class AbsHaloRequest(AbsHaloExchange):
 
     method_id = None
     context = None
     security = None
     sub_func = None
 
-    @abc.abstractmethod
     def __init__(self,halo_context, method_id,vars,secure=False,method_roles=None):
         self.method_id = method_id
         self.vars = vars
@@ -40,23 +40,26 @@ class HaloRequest(AbsBaseClass,abc.ABC):
             self.security.validate_method(method_roles)
 
 
-class HaloCommandRequest(HaloRequest):
+class HaloCommandRequest(AbsHaloRequest):
     command = None
+    usecase_id = None
 
     def __init__(self, halo_command:HaloCommand, secure=False, method_roles=None):
         super(HaloCommandRequest,self).__init__(halo_command.context,halo_command.name,secure,method_roles)
         self.command = halo_command
 
-class HaloEventRequest(HaloRequest):
+class HaloEventRequest(AbsHaloRequest):
     event = None
 
     def __init__(self, halo_event:AbsHaloEvent,secure=False, method_roles=None):
         super(HaloEventRequest, self).__init__(halo_event.context, halo_event.name, secure, method_roles)
         self.event = halo_event
 
-class HaloQueryRequest(HaloRequest):
+class HaloQueryRequest(AbsHaloRequest):
     query = None
 
     def __init__(self, halo_query:HaloQuery,secure=False, method_roles=None):
         super(HaloQueryRequest, self).__init__(halo_query.context, halo_query.name, secure, method_roles)
         self.query = halo_query
+
+

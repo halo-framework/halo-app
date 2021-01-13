@@ -16,6 +16,10 @@ class AbsHaloCommand(AbsHaloMessage):
     context = None
     name = None
     vars = None
+    version = None
+    aggregate_id = None
+    aggregate_name = None
+    aggregate_revision = None
 
     def __init__(self):
         super(AbsHaloCommand,self).__init__()

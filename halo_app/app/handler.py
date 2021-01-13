@@ -9,14 +9,14 @@ from jsonpath_ng import parse
 # common
 # app
 from .uow import AbsUnitOfWork
-from .utilx import Util
 from halo_app.app.context import HaloContext
 from ..errors import status
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
+from ..entrypoints.client_type import ClientType
 from ..exceptions import *
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
-from halo_app.app.response import HaloResponse
+from halo_app.app.request import AbsHaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
+from halo_app.app.response import AbsHaloResponse, ApiHaloResponse
 from ..settingsx import settingsx
 from ..classes import AbsBaseClass
 from .business_event import BusinessEventCategory, FoiBusinessEvent, SagaBusinessEvent, ApiBusinessEvent, BusinessEvent
@@ -24,7 +24,7 @@ from halo_app.infra.apis import ApiMngr
 from .anlytx_filter import RequestFilter
 from halo_app.providers.providers import get_provider
 from halo_app.saga import SagaRollBack, load_saga
-from ..view.query_filters import Filter
+from halo_app.app.utilx import Util
 
 settings = settingsx()
 
@@ -48,11 +48,10 @@ class AbsBaseHandler(AbsBaseClass):
     def __init__(self,method_id=None):
         pass
 
-    def create_response(self,halo_request, payload, headers):
-        code = status.HTTP_200_OK
-        if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value or halo_request.context.get(HaloContext.method) == HTTPChoice.put.value:
-            code = status.HTTP_201_CREATED
-        return HaloResponse(halo_request, payload, code, headers)
+    def create_response(self,halo_request, payload,env)->AbsHaloResponse:
+        response_factory = Util.get_response_factory()
+        return response_factory.get_halo_response(halo_request,True, payload,env)
+
 
     def validate_req(self, halo_request):
         logger.debug("in validate_req ")
@@ -186,7 +185,7 @@ class AbsBaseHandler(AbsBaseClass):
                     logger.debug("error in load_resp_mapping " + str(path))
         return None
 
-    def set_resp_headers(self, halo_request, headers=None):
+    def set_resp_headers1(self, halo_request, headers=None):
         logger.debug("in set_resp_headers " + str(headers))
         if headers:
             headersx = {}
@@ -214,7 +213,7 @@ class AbsBaseHandler(AbsBaseClass):
 class AbsQueryHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
-    def do_operation(self, halo_request:HaloRequest)->HaloResponse:
+    def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -225,9 +224,9 @@ class AbsQueryHandler(AbsBaseHandler):
         payload = self.create_resp_payload(halo_request, dict_dto)
         logger.debug("payload=" + str(payload))
         # 5. setup headers for reply
-        headers = self.set_resp_headers(halo_request)
+        #headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
-        halo_response = self.create_response(halo_request, payload, headers)
+        halo_response = self.create_response(halo_request, payload, {})#headers)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter
@@ -247,20 +246,20 @@ class AbsQueryHandler(AbsBaseHandler):
             results = list(uow.session.execute(query_str, dict_params))
         return results
 
-    def __run_query(self,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->HaloResponse:
+    def __run_query(self,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         self.uow = uow
-        ret:HaloResponse = self.do_operation(halo_request)
+        ret:AbsHaloResponse = self.do_operation(halo_request)
         return ret
 
     @classmethod
-    def run_query_class(cls,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->HaloResponse:
+    def run_query_class(cls,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         handler = cls()
         return handler.__run_query(halo_request,uow)
 
 class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
-    def do_operation(self, halo_request:HaloRequest):
+    def do_operation(self, halo_request:AbsHaloRequest):
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -287,10 +286,10 @@ class AbsEventHandler(AbsBaseHandler):
 
     def _run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
         self.uow = uow
-        ret:HaloResponse = self.do_operation(halo_request)
+        ret:AbsHaloResponse = self.do_operation(halo_request)
 
     @classmethod
-    def run_event_class(cls,halo_request:HaloEventRequest,uow:AbsUnitOfWork)->HaloResponse:
+    def run_event_class(cls,halo_request:HaloEventRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         handler = cls()
         return handler._run_event(halo_request,uow)
 
@@ -302,7 +301,7 @@ class AbsCommandHandler(AbsBaseHandler):
     # InfrastructureService
     # Repository
 
-    def do_operation(self, halo_request:HaloRequest)->HaloResponse:
+    def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
         # 2. run pre conditions
@@ -313,9 +312,9 @@ class AbsCommandHandler(AbsBaseHandler):
         payload = self.create_resp_payload(halo_request, table)
         logger.debug("payload=" + str(payload))
         # 5. setup headers for reply
-        headers = self.set_resp_headers(halo_request)
+        #headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
-        halo_response = self.create_response(halo_request, payload, headers)
+        halo_response = self.create_response(halo_request, payload, {})#headers)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter
@@ -495,14 +494,14 @@ class AbsCommandHandler(AbsBaseHandler):
 
     ######################################################################
 
-    def __run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
+    def __run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         self.uow = uow
         self.set_businss_event(halo_request, BusinessEventCategory.EMPTY)
-        ret:HaloResponse = self.do_operation(halo_request)
+        ret:AbsHaloResponse = self.do_operation(halo_request)
         return ret
 
     @classmethod
-    def run_command_class(cls,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->HaloResponse:
+    def run_command_class(cls,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         handler = cls()
         return handler.__run_command(halo_request,uow)
 

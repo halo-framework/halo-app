@@ -1,5 +1,6 @@
 from __future__ import print_function
-
+import os
+import importlib
 from halo_app.classes import AbsBaseClass
 
 
@@ -9,8 +10,10 @@ def getit():
         return app.config
     except:
         try:
-            from .config import Config
-            return Config
+            importlib.import_module(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
+            return f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}"
+            #from .config import Config
+            #return Config
         except:
             raise Exception("no settings")
 

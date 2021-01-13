@@ -36,11 +36,14 @@ class LOGChoice(Enum):  # A subclass of Enum
 class OPType(Enum):  # A subclass of Enum
     event = "EVENT"
     command = "COMMAND"
+    query = "QUERY"
 
 ASYNC = "async"
+SYNC = "sync"
 
 class BusinessEventCategory(Enum):  # A subclass of Enum - if no category then implement handle method all the way
     EMPTY = "empty" # define a single api in code in method set_back_api
     API = "api" # define single api in config json
     SEQ = "seq" # define seq of api in config json
     SAGA = "saga" # define saga api in config json
+

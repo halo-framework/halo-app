@@ -9,15 +9,21 @@ from halo_app.settingsx import settingsx
 
 settings = settingsx()
 
-DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
-    settings.POSTGRES_URL,
-    isolation_level=settings.ISOLATION_LEVEL
-))
 
 class SqlAlchemyUnitOfWork(AbsUnitOfWork):
 
-    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
-        self.session_factory = session_factory
+
+
+    def __init__(self, session_factory=None):
+        if session_factory:
+            self.session_factory = session_factory
+        else:
+            DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
+                settings.POSTGRES_URL,
+                isolation_level=settings.ISOLATION_LEVEL
+            ))
+            self.session_factory = DEFAULT_SESSION_FACTORY
+
 
     def __enter__(self):
         self.session = self.session_factory()  # type: Session

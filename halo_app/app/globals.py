@@ -12,8 +12,7 @@ from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloCommandRequest
-from halo_app.app.response import HaloResponse
+from halo_app.app.request import AbsHaloRequest, HaloCommandRequest
 from ..classes import AbsBaseClass
 from ..settingsx import settingsx
 

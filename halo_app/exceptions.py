@@ -190,3 +190,6 @@ class CommandNotMappedError(HaloError):
 
 class QueryNotMappedError(HaloError):
     pass
+
+class MissingResponsetoClientTypeError(HaloError):
+    pass

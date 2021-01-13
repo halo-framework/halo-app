@@ -12,8 +12,8 @@ from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
-from halo_app.app.request import HaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
-from halo_app.app.response import HaloResponse
+from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
+from halo_app.app.response import AbsHaloResponse, ApiHaloResponse
 from ..classes import AbsBaseClass
 from ..settingsx import settingsx
 
@@ -26,7 +26,7 @@ class AbsBoundaryService(AbsBaseClass,abc.ABC):
     the only port exposed from the boundry
     """
     @abc.abstractmethod
-    def execute(self, halo_request: HaloRequest)->HaloResponse:
+    def execute(self, halo_request: AbsHaloRequest)->AbsHaloResponse:
         pass
 
 class BoundaryService(AbsBoundaryService):
@@ -46,7 +46,7 @@ class BoundaryService(AbsBoundaryService):
         self.command_handlers = command_handlers
         self.query_handlers = query_handlers
 
-    def execute(self, halo_request: HaloRequest)->HaloResponse:
+    def execute(self, halo_request: AbsHaloRequest)->AbsHaloResponse:
         """
 
         :param vars:
@@ -101,7 +101,7 @@ class BoundaryService(AbsBoundaryService):
         return self.__do_abort(halo_request,http_status_code, errors=json_error)
 
     def __do_abort(self,halo_request,http_status_code, errors):
-        ret = HaloResponse(halo_request)
+        ret = ApiHaloResponse(halo_request)
         ret.payload = errors
         ret.code = http_status_code
         ret.headers = {}
@@ -117,13 +117,13 @@ class BoundaryService(AbsBoundaryService):
                 logger.debug("process_finally - back to orig:" + str(orig_log_level),
                              extra=log_json(halo_context))
 
-    def __process1(self,halo_request:HaloRequest)->HaloResponse:
+    def __process1(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
             return self.run_command(halo_request)
         return self.run_event(halo_request)
 
 
-    def __process(self,halo_request:HaloRequest)->HaloResponse:
+    def __process(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         result = None
         self.queue = [halo_request]
         while self.queue:
@@ -170,7 +170,7 @@ class BoundaryService(AbsBoundaryService):
                 logger.exception('Exception handling event %s', event)
                 continue
 
-    def __process_command(self, command: HaloCommandRequest)->HaloResponse:
+    def __process_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
             raise CommandNotMappedError("command method_id" + command.method_id)
@@ -182,11 +182,11 @@ class BoundaryService(AbsBoundaryService):
                 new_events = self.uow.collect_new_events()
                 self.queue.extend(new_events)
             return ret
-        except Exception:
-            logger.exception('Exception handling command %s', command)
+        except Exception as e:
+            logger.exception('Exception %s handling command %s',e, command)
             raise
 
-    def __process_query(self, query: HaloQueryRequest)->HaloResponse:
+    def __process_query(self, query: HaloQueryRequest)->AbsHaloResponse:
         logger.debug('handling query %s', query)
         if query.method_id not in self.query_handlers:
             raise QueryNotMappedError("query method_id" + query.method_id)

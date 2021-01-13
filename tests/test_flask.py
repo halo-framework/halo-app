@@ -9,7 +9,7 @@ from nose.tools import eq_
 
 from halo_app.app.context import InitCtxFactory
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
-from halo_app.app.response import HaloResponse
+from halo_app.app.response import AbsHaloResponse, ApiHaloResponse, HaloResponseFactory
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.domain.event import AbsHaloEvent
@@ -23,6 +23,7 @@ from halo_app.infra.mail import AbsMailService
 from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
+from halo_app.entrypoints.client_type import ClientType
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -33,7 +34,7 @@ from halo_app.app.globals import load_global_data
 from halo_app.security import HaloSecurity
 from halo_app.app.utilx import Util
 from halo_app.sys_util import SysUtil
-from halo_app.app.request import HaloRequest
+from halo_app.app.request import AbsHaloRequest
 import unittest
 #6,7,9923,9941 failing
 from tests.conftest import sqlite_session_factory
@@ -173,11 +174,10 @@ class A3(AbsCommandHandler):
 class A2(A1):
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
-        if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:
-            if seq == '1':
-                return {}
-            if seq == '3':
-                return {}
+        if seq == '1':
+            return {}
+        if seq == '3':
+            return {}
         ret = super(A2,self).set_api_data(halo_request,api, seq, dict)
         return ret
 
@@ -201,21 +201,15 @@ class A2(A1):
         if seq == None:#no event
             if halo_request.method_id == "z1":#method type
                 return {"tst_get_deposit":"good"}
-            if halo_request.context.get(HaloContext.method) == HTTPChoice.delete.value:#method type
+            else:
                 return {"tst_delete_deposit":"good"}
         else:#in event
-            if halo_request.context.get(HaloContext.method) == HTTPChoice.put.value:#method type
+            if halo_request.method_id == "z1":#method type
                 if seq == '1':
                     return {"tst_put_deposit":"good1"}
                 if seq == '2':
                     return {"tst_put_deposit":"good2"}
-            if halo_request.context.get(HaloContext.method) == HTTPChoice.post.value:#method type
-                if seq == '1':
-                    return {"tst_post_deposit":"good1"}
-                if seq == '2':
-                    return {"tst_post_deposit":"good2"}
-            if halo_request.context.get(HaloContext.method) == HTTPChoice.patch.value:#method type
-                return {"tst_patch_deposit":"good"}
+
 
     def create_resp_payload(self, halo_request, dict_back_json):
         if dict_back_json:
@@ -271,7 +265,7 @@ class A2(A1):
         code = 200
         if halo_request.method_id == "z4" or halo_request.method_id == "z5" or halo_request.method_id == "z6":
             code = 500
-        return HaloResponse(halo_request, payload, code, headers)
+        return ApiHaloResponse(halo_request, payload, code, headers)
 
 class A4(A2):
     secure = True
@@ -345,12 +339,26 @@ class FakeBoundry(BoundaryService):
     def fake_process(self,event):
         super(FakeBoundry,self)._process_event(event)
 
-def get_halo_context(request):
-    context = InitCtxFactory.get_initial_context({})
-    for i in request.headers.keys():
-        if type(i) == str:
-            context.put(i.lower(), request.headers[i])
-    context.put(HaloContext.method, request.method)
+class XClientType(ClientType):
+    tester = 'TESTER'
+
+class XHaloResponseFactory(HaloResponseFactory):
+
+    def get_halo_response(self, halo_request: AbsHaloRequest, success: bool, payload, env: dict) -> AbsHaloResponse:
+        class TesterHaloResponse(AbsHaloResponse):
+            pass
+        if halo_request.context.get(HaloContext.client_type) == XClientType.tester:
+            return TesterHaloResponse(halo_request, success, payload)
+        return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload,env)
+
+
+def get_halo_context(headers=None,env={},client_type:ClientType=ClientType.api):
+    context = Util.init_halo_context(env)
+    if headers:
+        for i in headers.keys():
+            if type(i) == str:
+                context.put(i.lower(), headers[i])
+    context.put(HaloContext.client_type, client_type)
     return context
 
 class TestUserDetailTestCase(unittest.TestCase):
@@ -453,7 +461,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1_run_handle(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
-                halo_context = get_halo_context(request)
+                halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.payload,{'a': 'b'})
@@ -464,7 +472,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_run_handle_with_event(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
-                halo_context = get_halo_context(request)
+                halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.payload,{'a': 'b'})
@@ -475,7 +483,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2a_run_api_from_config(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
-                halo_context = get_halo_context(request)
+                halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.payload,{'tst_get': 'good'})
@@ -486,7 +494,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2b_run_api_from_method(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
-                halo_context = get_halo_context(request)
+                halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1a", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.payload,{'tst_delete': 'good'})
@@ -496,80 +504,100 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_3_run_seq(self):
         with app.test_request_context(method='DELETE', path='/'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z8", request.args)
             response = self.boundary.execute(halo_request)
             eq_(response.payload, {'1': {}, '2': {}, '3': {'msg': 'Your input parameters are one and two'}})
 
     def test_4_run_saga(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z3", {})
             response = self.boundary.execute(halo_request)
             eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
 
     def test_5_cli_handle(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
+        response = self.boundary.execute(halo_request)
+        eq_(response.payload, {'a': 'b'})
+
+    def test_5a_cli_handle(self):
+        from halo_app.settingsx import settingsx
+        settings = settingsx()
+        print(settings.HALO_CLIENT_CLASS)
+        client_type_ins = Util.get_client_type()
+        client_type = client_type_ins.tester
+        halo_context = get_halo_context(client_type=client_type)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'a': 'b'})
 
     def test_6_cli_handle_with_event(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'a': 'b'})
 
     def test_7_cli_api_from_config(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z1", {"id": "1"})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'tst_get': 'good'})
 
     def test_7a_cli_api_from_method(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z1a", {"id": "1"})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'tst_delete': 'good'})
 
     def test_8_cli_seq(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z8", {})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'1': {}, '2': {}, '3': {'msg': 'Your input parameters are one and two'}})
 
     def test_9_cli_saga(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z3", {})
         response = self.boundary.execute(halo_request)
         eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
 
-    def test_9a_cli_view(self):
-        halo_context = HaloContext()
+    def test_9a_cli_query(self):
+        halo_context = get_halo_context(client_type=ClientType.cli)
         t = TestHaloQuery(halo_context,"q1",{})
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         eq_(response.code,status.HTTP_200_OK)
 
-    def test_9b_cli_view_error(self):
-        halo_context = HaloContext()
+    def test_9b_cli_query_error(self):
+        halo_context = get_halo_context(client_type=ClientType.cli)
         t = TestHaloQuery(halo_context, "q2", {})
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         eq_(response.code,status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_10_event(self):
-        halo_context = HaloContext()
+        halo_context = get_halo_context(client_type=ClientType.cli)
         halo_event = TestHaloEvent(halo_context, "z9","12")
         halo_request = SysUtil.create_event_request(halo_event)
         fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
+    def test_10a_event(self):
+        with app.test_request_context(method='GET', path='/?a=b'):
+            halo_context = get_halo_context(request.headers)
+            halo_event = TestHaloEvent(halo_context, "z9", "12")
+            halo_request = SysUtil.create_event_request(halo_event)
+            fake_boundary = FakeBoundry(self.boundary.uow, self.boundary.event_handlers, self.boundary.command_handlers,
+                                        self.boundary.query_handlers)
+            fake_boundary.fake_process(halo_request)
+
 
     def test_11_api_request(self):
         app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = TstApi(halo_context)
             from halo_app.app.utilx import Util
             timeout = Util.get_timeout(halo_context)
@@ -595,7 +623,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         #self.test_6_api_request_returns_a_CircuitBreakerError()
         with app.test_request_context(method='GET', path='/?a=b'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = TstApi(halo_context)
             timeout = Util.get_timeout(halo_context)
             try:
@@ -624,7 +652,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_13_api_request_returns_a_fail(self):
         with app.test_request_context(method='GET', path='/?a=b'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = CnnApi(halo_context)
             api.url = api.url + "/lgkmlgkhm??l,mhb&&,g,hj "
             timeout = Util.get_timeout(halo_context)
@@ -637,7 +665,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_14_api_request_soap(self):
         with app.test_request_context(method='GET', path='/'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = Tst2Api(halo_context,method='method1')
             timeout = Util.get_timeout(halo_context)
             try:
@@ -653,7 +681,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_15_api_request_soap_returns(self):
         with app.test_request_context(method='GET', path='/'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = Tst2Api(halo_context,method='method2')
             timeout = Util.get_timeout(halo_context)
             try:
@@ -670,7 +698,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_16_api_request_rpc_returns(self):
         app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = Tst3Api(halo_context)
             timeout = Util.get_timeout(halo_context)
             try:
@@ -683,7 +711,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_17_api_request_event_returns(self):
         app.config['PROVIDER'] = "AWS"
         with app.test_request_context(method='GET', path='/?a=b'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             api = Tst4Api(halo_context)
             timeout = Util.get_timeout(halo_context)
             try:
@@ -713,7 +741,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
@@ -722,7 +750,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
             eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
@@ -732,7 +760,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
 
@@ -741,7 +769,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
 
@@ -750,7 +778,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
         app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z10", request.args)
             response = self.boundary.execute(halo_request)
 
@@ -884,7 +912,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
         headers = {'X-Halo-Debug-Log-Enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
-            ret = get_halo_context(request)
+            ret = get_halo_context(request.headers)
             print(HaloContext.items[HaloContext.DEBUG_LOG])
             print(ret.table)
             eq_(ret.table[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
@@ -895,7 +923,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #headers = {'HTTP_X_HALO_DEBUG_LOG_ENABLED': 'true'}
         headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             try:
                 raise Exception("test it")
             except Exception as e:
@@ -908,7 +936,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = 'ONPREM'
         headers = {'x-halo-debug-log-enabled': 'true'}
         with app.test_request_context(method='GET', path='/?a=b', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             ret = Util.isDebugEnabled(halo_context)
             eq_(ret, True)
 
@@ -921,7 +949,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_33_trans_json(self):
         with app.test_request_context(method='GET', path="/tst"):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -933,7 +961,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_34_load_saga(self):
         with app.test_request_context(method='POST', path="/"):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             with open("../env/config/saga.json") as f:
                 jsonx = json.load(f)
@@ -942,7 +970,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_35_run_saga_error(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -952,7 +980,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_36_rollback_saga(self):
         with app.test_request_context(method='PUT', path="/"):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -962,7 +990,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_37_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z6", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -979,7 +1007,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['PROVIDER'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             try:
                 from halo_app.ssm import set_app_param_config
                 params = {}
@@ -1098,7 +1126,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_44_timeout(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             os.environ["AWS_LAMBDA_FUNCTION_NAME"] = "halo_app"
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             timeout = Util.get_timeout(halo_context)
             eq_(timeout, 3)
 
@@ -1106,7 +1134,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2','x-correlation-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
@@ -1115,7 +1143,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['HALO_CONTEXT_LIST'] = [HaloContext.CORRELATION]
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -1127,9 +1155,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         headers = {'HTTP_HOST': '127.0.0.2','x-tester-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
-        app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
+        app.config['HALO_CONTEXT_CLASS'] = 'tests.test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
+            eq_(halo_context.get(CAContext.items[CAContext.TESTER]), "123")
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
             eq_(response.code, status.HTTP_200_OK)
@@ -1139,7 +1168,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
         app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -1157,23 +1186,23 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_50_db(self):
         app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             db = DbTest()
-            req = HaloRequest(halo_context,"z1",{})
+            req = AbsHaloRequest(halo_context, "z1", {})
             db.get_dbaccess(req,True)
 
     def test_51_db(self):
         app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             db = DbTest()
-            req = HaloRequest(halo_context,"z1",{})
+            req = AbsHaloRequest(halo_context, "z1", {})
             db.get_dbaccess(req,False)
 
 
     def test_52_security_need_token(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -1188,7 +1217,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id,30,secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -1204,7 +1233,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id,30,secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 response = self.boundary.execute(halo_request)
@@ -1221,7 +1250,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = []
@@ -1239,7 +1268,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = ['tst1']
@@ -1258,7 +1287,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a4.method_roles = ['tst']
@@ -1278,7 +1307,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a5.method_roles = ['tst']
@@ -1297,7 +1326,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a6.method_roles = ['tst']
@@ -1317,7 +1346,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a5.method_roles = ['tst']
@@ -1339,7 +1368,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
         with app.test_request_context(method='POST', path='/xst2/2/tst1/1/tst/0/', headers=headers):
-            halo_context = get_halo_context(request)
+            halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
                 self.a6.method_roles = ['tst']

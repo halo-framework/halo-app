@@ -326,8 +326,6 @@ class Config(object):
 
     HTTP_RETRY_SLEEP = 10 #0.100  # in seconds = 100 ms
 
-    ERR_MSG_CLASS = 'halo_app.app.err_msg'
-
     #in case a web edge
     FRONT_WEB = False #env.str('FRONT_API',default=False)
     file_dirname = os.path.dirname(__file__)
@@ -364,6 +362,8 @@ class Config(object):
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
     HALO_CONTEXT_CLASS = None
+    HALO_CLIENT_CLASS = None
+    HALO_RESPONSE_FACTORY_CLASS = None
     REQUEST_FILTER_CLASS = None
     REQUEST_FILTER_CLEAR_CLASS = None
     HALO_SECURITY_CLASS = None
@@ -447,6 +447,8 @@ print('== The base settings file has been loaded.')
 class Config_loc(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
     FLASK_ENV = "local"
+    HALO_CLIENT_CLASS = 'tests.test_flask.XClientType'
+    HALO_RESPONSE_FACTORY_CLASS = 'tests.test_flask.XHaloResponseFactory'
 
 class Config_dev(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
