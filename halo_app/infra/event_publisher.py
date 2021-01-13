@@ -3,7 +3,7 @@ import logging
 from dataclasses import asdict
 
 from halo_app.classes import AbsBaseClass
-from halo_app.domain.event import AbsHaloEvent
+from halo_app.app.event import AbsHaloEvent
 from halo_app.settingsx import settingsx
 
 logger = logging.getLogger(__name__)

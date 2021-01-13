@@ -60,7 +60,7 @@ class BoundaryService(AbsBoundaryService):
 
         try:
             if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
-                raise HaloException(f'{halo_request} was not a Query or Command request')
+                raise HaloError(f'{halo_request} was not a Query or Command request')
             ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,
@@ -117,23 +117,17 @@ class BoundaryService(AbsBoundaryService):
                 logger.debug("process_finally - back to orig:" + str(orig_log_level),
                              extra=log_json(halo_context))
 
-    def __process1(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
-        if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
-            return self.run_command(halo_request)
-        return self.run_event(halo_request)
-
-
     def __process(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
-        result = None
+        if isinstance(halo_request, HaloQueryRequest) or issubclass(halo_request.__class__, HaloQueryRequest):
+            return self.__process_query(halo_request)
         self.queue = [halo_request]
+        result = None
         while self.queue:
             message = self.queue.pop(0)
             if isinstance(halo_request,HaloCommandRequest) or issubclass(halo_request.__class__,HaloCommandRequest):
                 result = self.__process_command(halo_request)
             elif isinstance(halo_request,HaloEventRequest) or issubclass(halo_request.__class__,HaloEventRequest):
                 self.__process_event(message)
-            elif isinstance(halo_request,HaloQueryRequest) or issubclass(halo_request.__class__,HaloQueryRequest):
-                self.__process_query(message)
             else:
                 raise Exception(f'{message} was not an Event or Command or Query')
         return result

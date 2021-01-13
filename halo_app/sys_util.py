@@ -3,8 +3,8 @@ from __future__ import print_function
 import os
 
 from halo_app.classes import AbsBaseClass
-from halo_app.domain.command import HaloCommand
-from halo_app.domain.event import AbsHaloEvent
+from halo_app.app.command import HaloCommand
+from halo_app.app.event import AbsHaloEvent
 from halo_app.const import LOC, OPType
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, AbsHaloRequest, HaloQueryRequest

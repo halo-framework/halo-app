@@ -3,9 +3,9 @@ import abc
 import logging
 # halo
 from halo_app.app.exchange import AbsHaloExchange
-from halo_app.domain.command import HaloCommand
+from halo_app.app.command import HaloCommand
 from halo_app.classes import AbsBaseClass
-from halo_app.domain.event import AbsHaloEvent
+from halo_app.app.event import AbsHaloEvent
 from halo_app.exceptions import MissingHaloContextException
 from halo_app.reflect import Reflect
 from halo_app.security import HaloSecurity

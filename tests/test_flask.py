@@ -12,7 +12,7 @@ from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHan
 from halo_app.app.response import AbsHaloResponse, ApiHaloResponse, HaloResponseFactory
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
-from halo_app.domain.event import AbsHaloEvent
+from halo_app.app.event import AbsHaloEvent
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService

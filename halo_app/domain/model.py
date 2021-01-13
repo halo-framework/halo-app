@@ -4,7 +4,6 @@ from datetime import date
 from typing import Optional, List, Set
 
 from halo_app.app.context import HaloContext
-from halo_app.domain import command, event
 from halo_app.domain.entity import AbsHaloAggregateRoot
 from halo_app.domain.event import AbsHaloDomainEvent
 

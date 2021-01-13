@@ -5,7 +5,7 @@ import uuid
 # halo
 from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext
-from halo_app.domain.message import AbsHaloMessage
+from halo_app.app.message import AbsHaloMessage
 from halo_app.settingsx import settingsx
 
 logger = logging.getLogger(__name__)
