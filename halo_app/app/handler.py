@@ -299,12 +299,12 @@ class AbsCommandHandler(AbsBaseHandler):
         # 3. processing engine
         table = self.processing_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
-        #payload = self.create_resp_payload(halo_request, table)
+        payload = self.create_resp_payload(halo_request, table)
         #logger.debug("payload=" + str(payload))
         # 5. setup headers for reply
         #headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
-        halo_response = self.create_response(halo_request,True)
+        halo_response = self.create_response(halo_request,True,payload)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter

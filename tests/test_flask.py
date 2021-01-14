@@ -133,8 +133,8 @@ class A0(AbsCommandHandler):
             item = self.repository.load(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
-            return {"1":{"a":"b"}}
             uow.commit()
+            return {"1": {"a": "b"}}
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
@@ -348,7 +348,7 @@ class XHaloResponseFactory(HaloResponseFactory):
         class TesterHaloResponse(HaloCommandResponse):
             pass
         if isinstance(halo_request, HaloCommandRequest) or issubclass(halo_request.__class__, HaloCommandRequest):
-            return TesterHaloResponse(halo_request, success)
+            return TesterHaloResponse(halo_request, success,payload)
         return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload)
 
 
@@ -465,6 +465,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
+                eq_(response.payload, {'a': 'b'})
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
