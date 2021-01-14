@@ -13,7 +13,7 @@ from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
-from halo_app.app.response import AbsHaloResponse, ApiHaloResponse
+from halo_app.app.response import AbsHaloResponse, HaloResponseFactory
 from ..classes import AbsBaseClass
 from ..settingsx import settingsx
 
@@ -56,7 +56,6 @@ class BoundaryService(AbsBoundaryService):
         error_message = None
         error = None
         orig_log_level = 0
-        http_status_code = 500
 
         try:
             if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
@@ -69,7 +68,6 @@ class BoundaryService(AbsBoundaryService):
             return ret
 
         except HaloError as e:
-            http_status_code = e.status_code
             error = e
             error_message = str(error)
             # @todo check if stack needed and working
@@ -98,14 +96,12 @@ class BoundaryService(AbsBoundaryService):
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
         json_error = Util.json_error_response(halo_request.context, halo_request.vars,settings.ERR_MSG_CLASS, error)
-        return self.__do_abort(halo_request,http_status_code, errors=json_error)
+        return self.__do_abort(halo_request, errors=json_error)
 
-    def __do_abort(self,halo_request,http_status_code, errors):
-        ret = ApiHaloResponse(halo_request)
-        ret.payload = errors
-        ret.code = http_status_code
-        ret.headers = {}
-        return ret
+    def __do_abort(self,halo_request, errors):
+        response = HaloResponseFactory().get_halo_response(halo_request,success=False)
+        response.errors = errors
+        return response
 
     def __process_finally(self,halo_context, orig_log_level):
         """

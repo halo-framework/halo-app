@@ -9,7 +9,7 @@ from nose.tools import eq_
 
 from halo_app.app.context import InitCtxFactory
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
-from halo_app.app.response import AbsHaloResponse, ApiHaloResponse, HaloResponseFactory
+from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.app.event import AbsHaloEvent
@@ -344,12 +344,12 @@ class XClientType(ClientType):
 
 class XHaloResponseFactory(HaloResponseFactory):
 
-    def get_halo_response(self, halo_request: AbsHaloRequest, success: bool, payload, env: dict) -> AbsHaloResponse:
-        class TesterHaloResponse(AbsHaloResponse):
+    def get_halo_response(self, halo_request: AbsHaloRequest, success: bool, payload) -> AbsHaloResponse:
+        class TesterHaloResponse(HaloCommandResponse):
             pass
-        if halo_request.context.get(HaloContext.client_type) == XClientType.tester:
-            return TesterHaloResponse(halo_request, success, payload)
-        return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload,env)
+        if isinstance(halo_request, HaloCommandRequest) or issubclass(halo_request.__class__, HaloCommandRequest):
+            return TesterHaloResponse(halo_request, success)
+        return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload)
 
 
 def get_halo_context(headers=None,env={},client_type:ClientType=ClientType.api):
@@ -464,7 +464,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
-                eq_(response.payload,{'a': 'b'})
+                eq_(response.success,True)
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -475,7 +475,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
-                eq_(response.payload,{'a': 'b'})
+                eq_(response.success,True)
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -486,7 +486,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
                 response = self.boundary.execute(halo_request)
-                eq_(response.payload,{'tst_get': 'good'})
+                eq_(response.success,True)
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -497,7 +497,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1a", request.args)
                 response = self.boundary.execute(halo_request)
-                eq_(response.payload,{'tst_delete': 'good'})
+                eq_(response.success,True)
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -507,20 +507,20 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z8", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.payload, {'1': {}, '2': {}, '3': {'msg': 'Your input parameters are one and two'}})
+            eq_(response.success,True)
 
     def test_4_run_saga(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z3", {})
             response = self.boundary.execute(halo_request)
-            eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
+            eq_(response.success,True)
 
     def test_5_cli_handle(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'a': 'b'})
+        eq_(response.success,True)
 
     def test_5a_cli_handle(self):
         from halo_app.settingsx import settingsx
@@ -531,51 +531,53 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = get_halo_context(client_type=client_type)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'a': 'b'})
+        eq_(response.success,True)
 
     def test_6_cli_handle_with_event(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'a': 'b'})
+        eq_(response.success,True)
 
     def test_7_cli_api_from_config(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z1", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'tst_get': 'good'})
+        eq_(response.success,True)
 
     def test_7a_cli_api_from_method(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z1a", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'tst_delete': 'good'})
+        eq_(response.success,True)
 
     def test_8_cli_seq(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z8", {})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'1': {}, '2': {}, '3': {'msg': 'Your input parameters are one and two'}})
+        eq_(response.success,True)
 
     def test_9_cli_saga(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z3", {})
         response = self.boundary.execute(halo_request)
-        eq_(response.payload, {'$.BookHotelResult': {}, '$.BookFlightResult': {}, '$.BookRentalResult': {}})
+        eq_(response.success,True)
 
     def test_9a_cli_query(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         t = TestHaloQuery(halo_context,"q1",{})
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
-        eq_(response.code,status.HTTP_200_OK)
+        eq_(response.success, True)
+        eq_(response.payload,'')
 
     def test_9b_cli_query_error(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
         t = TestHaloQuery(halo_context, "q2", {})
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
-        eq_(response.code,status.HTTP_500_INTERNAL_SERVER_ERROR)
+        eq_(response.success,False)
+        eq_(response.errors['error']['error_code'], 500)
 
     def test_10_event(self):
         halo_context = get_halo_context(client_type=ClientType.cli)
@@ -974,7 +976,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(response.code,500)
+                eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
@@ -1137,7 +1139,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.code, status.HTTP_200_OK)
+            eq_(response.success,True)
 
     def test_46_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1161,7 +1163,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             eq_(halo_context.get(CAContext.items[CAContext.TESTER]), "123")
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.code, status.HTTP_200_OK)
+            eq_(response.success,True)
 
     def test_48_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1206,9 +1208,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(1,2)
+                eq_(response.errors['error']["error_code"], 10108)
             except Exception as e:
-                eq_(e.data['errors']['error']["error_code"], 10108)
+                eq_(1, 2)
 
     def test_53_security_bad_token(self):
         app.config['SESSION_MINUTES'] = 30

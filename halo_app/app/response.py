@@ -4,7 +4,7 @@ import logging
 
 from halo_app.app.context import HaloContext
 from halo_app.app.exchange import AbsHaloExchange
-from halo_app.app.request import AbsHaloRequest
+from halo_app.app.request import AbsHaloRequest, HaloCommandRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.entrypoints.client_type import ClientType
 from halo_app.exceptions import MissingResponsetoClientTypeError
@@ -28,46 +28,39 @@ logger = logging.getLogger(__name__)
 class AbsHaloResponse(AbsHaloExchange):
 
     request = None
-    payload = None
+
+
+    def __init__(self,halo_request:AbsHaloRequest):
+        self.request = halo_request
+
+
+
+class HaloCommandResponse(AbsHaloResponse):
+
     success = None
 
-    def __init__(self,halo_request,success=True, payload=None):
-        self.request = halo_request
+    def __init__(self,halo_request:AbsHaloRequest,success:bool=True):
+        super(HaloCommandResponse,self).__init__(halo_request)
         self.success = success
+
+
+class HaloQueryResponse(HaloCommandResponse):
+
+    payload = None
+
+    def __init__(self,halo_request:AbsHaloRequest,success:bool=True,payload=None):
+        super(HaloQueryResponse, self).__init__(halo_request,success)
         if payload:
             self.payload = payload
 
 
-class ApiHaloResponse(AbsHaloResponse):
-
-    code = 200
-    headers = {}
-
-    def __init__(self,halo_request:AbsHaloRequest,success:bool=True, payload=None, code=None, headers=None):
-        super(ApiHaloResponse,self).__init__(halo_request,success, payload)
-        if code:
-            self.code = code
-        if headers:
-            self.headers = headers
-
-class CliHaloResponse(AbsHaloResponse):
-
-    env = {}
-
-    def __init__(self,halo_request:AbsHaloRequest,success:bool=True, payload=None, env=None):
-        super(CliHaloResponse,self).__init__(halo_request,success, payload)
-        if env:
-            self.env = env
-
-
 class HaloResponseFactory(AbsBaseClass):
 
-    def get_halo_response(self,halo_request:AbsHaloRequest,success:bool,payload,env:dict=None)->AbsHaloResponse:
-        if halo_request.context.get(HaloContext.client_type) == ClientType.api:
-            return ApiHaloResponse(halo_request,success, payload,env)
-        if halo_request.context.get(HaloContext.client_type) == ClientType.cli:
-            return CliHaloResponse(halo_request, success, payload)
+    def get_halo_response(self,halo_request:AbsHaloRequest,success:bool,payload=None)->AbsHaloResponse:
+        if isinstance(halo_request, HaloCommandRequest) or issubclass(halo_request.__class__, HaloCommandRequest):
+            return HaloCommandResponse(halo_request,success)
         else:
-            raise MissingResponsetoClientTypeError(halo_request.context.get(HaloContext.client_type))
+            return HaloQueryResponse(halo_request, success, payload)
+
 
 

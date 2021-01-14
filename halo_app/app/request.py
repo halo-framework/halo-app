@@ -22,7 +22,6 @@ class AbsHaloRequest(AbsHaloExchange):
     method_id = None
     context = None
     security = None
-    sub_func = None
 
     def __init__(self,halo_context, method_id,vars,secure=False,method_roles=None):
         self.method_id = method_id
