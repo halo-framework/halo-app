@@ -39,9 +39,7 @@ def create_app(config_object='settings'):
             class_name = app.config['INIT_CLASS_NAME']
             load_global_data(class_name,data_map)
 
-        from halo_app.settingsx import settingsx
-        settings = settingsx()
-        print(settings.FUNC_NAME)
+
         from halo_app.sys_util import SysUtil
         SysUtil.get_boundary()
 
