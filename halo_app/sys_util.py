@@ -56,15 +56,14 @@ class SysUtil(AbsBaseClass):
             clazz = clazz_type["class"]
             type = clazz_type["type"]
             try:
-                if type != "query":  # command
-                    module_name, class_name = clazz.rsplit(".", 1)
-                    x = getattr(importlib.import_module(module_name), class_name)
+                module_name, class_name = clazz.rsplit(".", 1)
+                x = getattr(importlib.import_module(module_name), class_name)
+                if type == "command":  # command
                     bootstrap.COMMAND_HANDLERS[method_id] = x.run_command_class
                 if type == "query":  # query
-                    x = f"{clazz}"
                     bootstrap.QUERY_HANDLERS[method_id] = x.run_query_class
                 if type == "event":  # event
-                    pass
+                    bootstrap.EVENT_HANDLERS[method_id] = x.run_query_class
             except Exception as e:
                 logger.error(str(e))
         BOUNDARY = bootstrap.bootstrap()

@@ -403,7 +403,7 @@ class Config(object):
                         with open(file_path_data, 'r') as fx:
                              data = json.load(fx)
                              dict[action] = { item['type'] : data }
-                        HANDLER_MAP[action] = {"class": clazz,"type":item["type"]}
+                        HANDLER_MAP[action] = {"class": clazz,"type":bq}
                     dictx[bq] = dict
                 BUSINESS_EVENT_MAP[clazz] = dictx
     else:

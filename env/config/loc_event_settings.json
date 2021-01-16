@@ -1,6 +1,6 @@
 {
   "tests.test_flask.A1": {
-    "base": {
+    "command": {
       "z1": {
         "url": "api1.json",
         "type": "api"
@@ -12,7 +12,7 @@
     }
   },
   "A8": {
-    "base": {
+    "command": {
       "z8": {
         "url": "base_seq.json",
         "type": "seq"
@@ -20,7 +20,7 @@
     }
   },
   "A3": {
-    "base": {
+    "command": {
       "z3": {
         "url": "saga.json",
         "type": "saga"
@@ -28,7 +28,7 @@
     }
   },
   "A1x": {
-    "base": {
+    "command": {
       "z3": {
         "url": "base_seq.json",
         "type": "seq"
@@ -52,7 +52,7 @@
     }
   },
   "A2": {
-    "base": {
+    "command": {
       "z6": {
         "url": "saga_rlbk_brk.json",
         "type": "saga"
@@ -68,7 +68,7 @@
     }
   },
   "A5x": {
-    "base": {
+    "command": {
       "GET": {
         "url": "base_seq_provider.json",
         "type": "seq",
@@ -93,7 +93,7 @@
     }
   },
   "A6x": {
-    "base": {
+    "command": {
       "GET": {
         "url": "base_seq_provider.json",
         "type": "seq",
@@ -118,7 +118,7 @@
     }
   },
   "T3":{
-    "base": {
+    "command": {
       "GET": {
         "url": "tst_saga.json",
         "type": "saga"
