@@ -308,7 +308,7 @@ class AbsCommandHandler(AbsBaseHandler):
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter
-        #self.do_filter(halo_request,halo_response)
+        self.do_filter(halo_request,halo_response)
         # 9. return json response
         return halo_response
 

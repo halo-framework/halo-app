@@ -382,6 +382,7 @@ class Config(object):
         print("no api config file")
 
     BUSINESS_EVENT_MAP = None
+    HANDLER_MAP = {}
     EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
     file_path = os.path.join(BASE_DIR,'..','env','config', EVENT_SETTINGS)
     if os.path.exists(file_path):
@@ -402,6 +403,7 @@ class Config(object):
                         with open(file_path_data, 'r') as fx:
                              data = json.load(fx)
                              dict[action] = { item['type'] : data }
+                        HANDLER_MAP[action] = {"class": clazz,"type":item["type"]}
                     dictx[bq] = dict
                 BUSINESS_EVENT_MAP[clazz] = dictx
     else:

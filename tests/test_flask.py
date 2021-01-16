@@ -265,7 +265,7 @@ class A2(A1):
         code = 200
         if halo_request.method_id == "z4" or halo_request.method_id == "z5" or halo_request.method_id == "z6":
             code = 500
-        return ApiHaloResponse(halo_request, payload, code, headers)
+        return HaloCommandResponse(halo_request, payload, code, headers)
 
 class A4(A2):
     secure = True

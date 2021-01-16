@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Create an application instance."""
+import os
 from flask import Flask
 from halo_app.infra.apis import load_api_config
 from halo_app.ssm import set_app_param_config,set_host_param_config,get_app_param_config
@@ -18,7 +19,8 @@ def create_app(config_object='settings'):
     :param config_object: The configuration object to use.
     """
     app = Flask(__name__.split('.')[0])
-    app.config.from_object(config_object)
+    #app.config.from_object(config_object)
+    app.config.from_object(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
     with app.app_context():
         stage = '/' + app.config['ENV_NAME']
         if app.config['SSM_TYPE'] and app.config['SSM_TYPE'] != 'NONE':
@@ -36,6 +38,12 @@ def create_app(config_object='settings'):
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']
             load_global_data(class_name,data_map)
+
+        from halo_app.settingsx import settingsx
+        settings = settingsx()
+        print(settings.FUNC_NAME)
+        from halo_app.sys_util import SysUtil
+        SysUtil.get_boundary()
 
     site_map(app)
 

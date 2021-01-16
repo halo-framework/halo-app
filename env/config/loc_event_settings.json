@@ -1,5 +1,5 @@
 {
-  "A1": {
+  "tests.test_flask.A1": {
     "base": {
       "z1": {
         "url": "api1.json",
@@ -64,16 +64,6 @@
       "z5": {
         "url": "saga_rlbk.json",
         "type": "empty"
-      }
-    },
-    "deposit": {
-      "GET": {
-        "url": "base_seq.json",
-        "type": "seq"
-      },
-      "POST": {
-        "url": "tst_saga.json",
-        "type": "saga"
       }
     }
   },
