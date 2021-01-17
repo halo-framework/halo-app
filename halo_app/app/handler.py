@@ -461,9 +461,9 @@ class AbsCommandHandler(AbsBaseHandler):
        if not self.business_event:
             if settings.BUSINESS_EVENT_MAP:
                 if self.service_operation in settings.BUSINESS_EVENT_MAP:
-                    bq = "base"
+                    #bq = "base"
                     bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
-                    if bq in bqs:
+                    for bq in bqs:
                         service_list = bqs[bq]
                         #@todo add schema to all event config files
                         if service_list and halo_request.method_id in service_list.keys():

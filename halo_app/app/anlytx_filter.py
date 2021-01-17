@@ -69,11 +69,11 @@ class RequestFilter(AbsFilter):
             event = FilterEvent({})
             event.name = halo_request.method_id
             event.time = datetime.datetime.now()
-            event.method = halo_request.context.get(HaloContext.method)
+            #event.method = halo_request.context.get(HaloContext.method)
             event.remote_addr = halo_request.context.get(HaloContext.remote_addr)
             event.host = halo_request.context.get(HaloContext.host)
-            if halo_request.sub_func:
-                event.put("sub_func", halo_request.sub_func)
+            #if halo_request.sub_func:
+            #    event.put("sub_func", halo_request.sub_func)
             event = self.augment_event_with_headers_and_data(event, halo_request,halo_response)
             store_util = InitStoreFactory.get_store()
             if store_util:
