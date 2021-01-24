@@ -163,7 +163,7 @@ class BoundaryService(AbsBoundaryService):
     def __process_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
-            raise CommandNotMappedError("command method_id" + command.method_id)
+            raise CommandNotMappedError("command method_id " + command.method_id)
         try:
             # The command dispatcher expects just one handler per command.
             handler = self.command_handlers[command.method_id]

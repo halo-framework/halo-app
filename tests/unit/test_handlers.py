@@ -5,41 +5,12 @@ from datetime import date
 from typing import Dict, List
 import pytest
 from halo_app import bootstrap
-from halo_app.domain import command
+from halo_app.app import command
 from halo_app.app import handler, uow as unit_of_work
 from halo_app.domain import repository
 
 
-class FakeRepository(repository.AbsRepository):
 
-    def __init__(self, products):
-        super().__init__()
-        self._products = set(products)
-
-    def _add(self, product):
-        self._products.add(product)
-
-    def _get(self, sku):
-        return next((p for p in self._products if p.sku == sku), None)
-
-    def _get_by_batchref(self, batchref):
-        return next((
-            p for p in self._products for b in p.batches
-            if b.reference == batchref
-        ), None)
-
-
-class FakeUnitOfWork(unit_of_work.AbsUnitOfWork):
-
-    def __init__(self):
-        self.products = FakeRepository([])
-        self.committed = False
-
-    def _commit(self):
-        self.committed = True
-
-    def rollback(self):
-        pass
 
 
 def bootstrap_test_app():

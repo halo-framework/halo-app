@@ -19,7 +19,7 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
             self.session_factory = session_factory
         else:
             DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
-                settings.POSTGRES_URL,
+                settings.SQLALCHEMY_DATABASE_URI,
                 isolation_level=settings.ISOLATION_LEVEL
             ))
             self.session_factory = DEFAULT_SESSION_FACTORY

@@ -65,6 +65,8 @@ class SysUtil(AbsBaseClass):
                 if type == "event":  # event
                     bootstrap.EVENT_HANDLERS[method_id] = x.run_query_class
             except Exception as e:
-                logger.error(str(e))
+                logger.error("config for handler missing: "+str(clazz) +" - "+str(e))
+                #@todo raise
+                #raise e
         BOUNDARY = bootstrap.bootstrap()
         return BOUNDARY

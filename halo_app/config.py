@@ -1,4 +1,4 @@
-    #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import os
 import halo_app
@@ -59,8 +59,6 @@ class Config(object):
     API_VERSION = '{}'.format('1.1')
     API_URL_PREFIX = API_PATH+'/api/{}'.format(API_VERSION)
 
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
     API_KEYS = ["1234"]
     INSTANCE_ID = "123"
     ERR_MSG_CLASS = 'halo_app.app.err_msg'
@@ -87,7 +85,7 @@ class Config(object):
 
     ENV = env.str('FLASK_ENV', default='production')
     DEBUG = ENV == 'development'
-    SQLALCHEMY_DATABASE_URI = env.str('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = env.str('DATABASE_URL',None)
     SECRET_KEY = env.str('SECRET_KEY')
     BCRYPT_LOG_ROUNDS = env.int('BCRYPT_LOG_ROUNDS', default=13)
     DEBUG_TB_ENABLED = DEBUG
@@ -111,7 +109,7 @@ class Config(object):
     SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
     PROVIDER = env.str('PROVIDER')
     AWS_REGION = env.str('AWS_REGION')
-    DB_URL = env.str('DYNAMODB_URL')
+    DYNAMODB_URL = env.str('DYNAMODB_URL',None)
     SECRET_JWT_KEY = env.str('SECRET_JWT_KEY')
     STAGE_URL=env.bool('STAGE_URL',default=True)
     SITE_NAME = env.str('SITE_NAME')
@@ -358,7 +356,9 @@ class Config(object):
 
     ISOLATION_LEVEL = env.str('ISOLATION_LEVEL',default="REPEATABLE READ")
 
-
+    START_ORM = True
+    UOW_CLASS = "halo_app.infra.fake.FakeUnitOfWork"
+    PUBLISHER_CLASS = "halo_app.infra.fake.FakePublisher"
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
     HALO_CONTEXT_CLASS = None
@@ -434,12 +434,14 @@ class Config(object):
             except FileNotFoundError as e:
                 raise e
 
-
-    host = os.environ.get('DB_HOST', 'localhost')
-    port = 54321 if host == 'localhost' else 5432
-    password = os.environ.get('DB_PASSWORD', 'abc123')
-    user, db_name = 'allocation', 'allocation'
-    POSTGRES_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+    if not SQLALCHEMY_DATABASE_URI:
+        db_host = os.environ.get('DB_HOST', 'localhost')
+        db_port = env.int('DB_PORT',default=1234)
+        password = os.environ.get('DB_PASSWORD', 'abc123')
+        db_user = env.str('DB_USER',default='user')
+        db_name = env.str('DB_NAME',default='test')
+        db_type = os.environ.get('DB_TYPE', 'sqlite')
+        SQLALCHEMY_DATABASE_URI = f"{db_type}://{db_user}:{password}@{db_host}:{db_port}/{db_name}"
 
 
 
