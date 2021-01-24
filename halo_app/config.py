@@ -356,7 +356,7 @@ class Config(object):
 
     ISOLATION_LEVEL = env.str('ISOLATION_LEVEL',default="REPEATABLE READ")
 
-    START_ORM = env.bool('START_ORM',True)
+    START_ORM = env.bool('START_ORM',default=True)
     UOW_CLASS = env.str('UOW_CLASS',default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
     PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.event_publisher.Publisher")
     ############################################################################################
