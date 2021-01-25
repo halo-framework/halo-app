@@ -25,6 +25,7 @@ from .anlytx_filter import RequestFilter
 from halo_app.providers.providers import get_provider
 from halo_app.saga import SagaRollBack, load_saga
 from halo_app.app.utilx import Util
+from ..sys_util import SysUtil
 
 settings = settingsx()
 
@@ -457,7 +458,7 @@ class AbsCommandHandler(AbsBaseHandler):
 
 
     def set_businss_event(self, halo_request:HaloCommandRequest, event_category:BusinessEventCategory=None):
-       self.service_operation = self.__class__.__name__
+       self.service_operation = SysUtil.instance_full_name(self)#self.__class__.__name__
        if not self.business_event:
             if settings.BUSINESS_EVENT_MAP:
                 if self.service_operation in settings.BUSINESS_EVENT_MAP:

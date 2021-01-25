@@ -8,10 +8,19 @@
       "z1a": {
         "url": "api1.json",
         "type": "empty"
+      },
+      "z1b": {
+        "url": "base_seq.json",
+        "type": "seq"
+      },
+      "z1c": {
+        "url": "saga.json",
+        "type": "saga"
       }
     }
   },
-  "A8": {
+
+  "tests.test_flask.A8": {
     "command": {
       "z8": {
         "url": "base_seq.json",
@@ -19,7 +28,7 @@
       }
     }
   },
-  "A3": {
+  "tests.test_flask.A3": {
     "command": {
       "z3": {
         "url": "saga.json",
@@ -27,31 +36,15 @@
       }
     }
   },
-  "A1x": {
+  "tests.test_flask.A1x": {
     "command": {
-      "z3": {
-        "url": "base_seq.json",
-        "type": "seq"
-      },
-      "POST": {
-        "url": "tst_saga.json",
-        "type": "saga"
-      },
-      "PATCH": {
-        "url": "tst_saga.json",
-        "type": "saga"
-      },
-      "z1": {
-        "url": "base_seq.json",
-        "type": "seq"
-      },
       "z2": {
         "url": "base_seq.json",
         "type": "seq"
       }
     }
   },
-  "A2": {
+  "tests.test_flask.A2": {
     "command": {
       "z6": {
         "url": "saga_rlbk_brk.json",
@@ -67,7 +60,7 @@
       }
     }
   },
-  "A5x": {
+  "tests.test_flask.A5x": {
     "command": {
       "GET": {
         "url": "base_seq_provider.json",
@@ -92,7 +85,7 @@
 
     }
   },
-  "A6x": {
+  "tests.test_flask.A6x": {
     "command": {
       "GET": {
         "url": "base_seq_provider.json",
@@ -117,7 +110,7 @@
 
     }
   },
-  "T3":{
+  "tests.test_flask.T3":{
     "command": {
       "GET": {
         "url": "tst_saga.json",

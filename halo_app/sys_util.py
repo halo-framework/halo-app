@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 BOUNDARY = None
 
 class SysUtil(AbsBaseClass):
+
     @staticmethod
     def get_stage():
         """
@@ -26,6 +27,21 @@ class SysUtil(AbsBaseClass):
         if 'HALO_STAGE' in os.environ:
             return os.environ['HALO_STAGE']
         return LOC
+
+    @staticmethod
+    def instance_full_name(o):
+        # o.__module__ + "." + o.__class__.__qualname__ is an example in
+        # this context of H.L. Mencken's "neat, plausible, and wrong."
+        # Python makes no guarantees as to whether the __module__ special
+        # attribute is defined, so we take a more circumspect approach.
+        # Alas, the module name is explicitly excluded from __qualname__
+        # in Python 3.
+
+        module = o.__class__.__module__
+        if module is None or module == str.__class__.__module__:
+            return o.__class__.__name__  # Avoid reporting __builtin__
+        else:
+            return module + '.' + o.__class__.__name__
 
     @staticmethod
     def create_command_request(halo_context: HaloContext, method_id: str, vars: dict,

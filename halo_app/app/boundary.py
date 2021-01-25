@@ -125,7 +125,7 @@ class BoundaryService(AbsBoundaryService):
             elif isinstance(halo_request,HaloEventRequest) or issubclass(halo_request.__class__,HaloEventRequest):
                 self.__process_event(message)
             else:
-                raise Exception(f'{message} was not an Event or Command or Query')
+                raise HaloException(f'{message} was not an Event or Command or Query')
         return result
 
 
@@ -139,8 +139,8 @@ class BoundaryService(AbsBoundaryService):
                 new_events = self.uow.collect_new_events()
                 new_requests = Util.create_requests(new_events)
                 self.queue.extend(new_requests)
-            except Exception:
-                logger.exception('Exception handling event %s', request.event)
+            except Exception as e:
+                logger.exception('Exception %s handling event %s', e,request.event)
                 continue
 
     def __process_event_retry(self, event: HaloEventRequest):
@@ -156,8 +156,8 @@ class BoundaryService(AbsBoundaryService):
                 new_events = self.uow.collect_new_events()
                 new_requests = Util.create_requests(new_events)
                 self.queue.extend(new_requests)
-            except Exception:
-                logger.exception('Exception handling event %s', event)
+            except Exception as e:
+                logger.exception('Exception %s handling event %s', e, event)
                 continue
 
     def __process_command(self, command: HaloCommandRequest)->AbsHaloResponse:
@@ -185,8 +185,8 @@ class BoundaryService(AbsBoundaryService):
             handler = self.query_handlers[query.method_id]
             ret = handler(query)
             return ret
-        except Exception:
-            logger.exception('Exception handling query %s', query)
+        except Exception as e:
+            logger.exception('Exception %s handling query %s',e, query)
             raise
 
 

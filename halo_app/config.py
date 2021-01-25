@@ -453,6 +453,7 @@ class Config_loc(Config):
     FLASK_ENV = "local"
     HALO_CLIENT_CLASS = 'tests.test_flask.XClientType'
     HALO_RESPONSE_FACTORY_CLASS = 'tests.test_flask.XHaloResponseFactory'
+    ISOLATION_LEVEL = "SERIALIZABLE"
 
 class Config_dev(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'

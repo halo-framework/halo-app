@@ -129,6 +129,9 @@ class A0(AbsCommandHandler):
         self.infra_service = AbsMailService()
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->dict:
+        if 'id' in halo_request.command.vars:
+            if halo_request.command.vars['id'] != '1':
+                raise Exception()
         with uow:
             item = self.repository.load(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
@@ -394,9 +397,12 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
         from halo_app import bootstrap
-        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
-        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
-        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
+        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class # simple handle + fail
+        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class # event 1 api
+        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class # event empty api
+        bootstrap.COMMAND_HANDLERS["z1b"] = A1.run_command_class  # event seq api
+        bootstrap.COMMAND_HANDLERS["z1c"] = A1.run_command_class  # event saga api
+        bootstrap.COMMAND_HANDLERS["z2"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
         #bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
@@ -470,18 +476,33 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_2_run_handle_with_event(self):
+    def test_1a_run_query(self):
+        #app.config['UOW_CLASS'] = "halo_app.infra.fake.FakeUnitOfWork"
+        #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = get_halo_context(request.headers)
-                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                t = TestHaloQuery(halo_context, "q1",  request.args)
+                halo_request = SysUtil.create_query_request(t)
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
+                eq_(response.payload, {'a': 'b'})
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_2a_run_api_from_config(self):
+    def test_2_run_handle_fail(self):
+        with app.test_request_context(method='GET', path='/?id=2'):
+            try:
+                halo_context = get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,False)
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "Exception")
+
+    def test_2a_run_api_from_event_config(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = get_halo_context(request.headers)
@@ -492,7 +513,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_2b_run_api_from_method(self):
+    def test_2b_run_api_from_event_config_empty(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = get_halo_context(request.headers)
@@ -506,14 +527,14 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_3_run_seq(self):
         with app.test_request_context(method='DELETE', path='/'):
             halo_context = get_halo_context(request.headers)
-            halo_request = SysUtil.create_command_request(halo_context, "z8", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1b", request.args)
             response = self.boundary.execute(halo_request)
             eq_(response.success,True)
 
     def test_4_run_saga(self):
         with app.test_request_context(method='PUT', path='/?abc=def'):
             halo_context = get_halo_context(request.headers)
-            halo_request = SysUtil.create_command_request(halo_context, "z3", {})
+            halo_request = SysUtil.create_command_request(halo_context, "z1c", {})
             response = self.boundary.execute(halo_request)
             eq_(response.success,True)
 
@@ -742,7 +763,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SSM_TYPE'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
         with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -751,7 +772,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_20_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -760,8 +781,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_21_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -769,8 +790,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_22_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -778,8 +799,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_23_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z10", request.args)
@@ -787,8 +808,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_24_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": "<", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -814,8 +835,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_25_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": "?", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -841,8 +862,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_26_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": ">", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -871,8 +892,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_27_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": ">", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -1169,7 +1190,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_48_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
-        app.config['HALO_CONTEXT_CLASS'] = 'test_flask.CAContext'
+        app.config['HALO_CONTEXT_CLASS'] = 'tests.test_flask.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             halo_context = get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -1187,7 +1208,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
 
     def test_50_db(self):
-        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
+        app.config['DBACCESS_CLASS'] = 'tests.test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request.headers)
             db = DbTest()
@@ -1195,7 +1216,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             db.get_dbaccess(req,True)
 
     def test_51_db(self):
-        app.config['DBACCESS_CLASS'] = 'test_flask.DbMixin'
+        app.config['DBACCESS_CLASS'] = 'tests.test_flask.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = get_halo_context(request.headers)
             db = DbTest()
