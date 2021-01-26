@@ -19,12 +19,14 @@ def bootstrap(
     publish: Callable = Reflect.instantiate(settings.PUBLISHER_CLASS,AbsBaseClass),#Publisher(),
 ) -> BoundaryService:
 
-
-
     if start_orm:
         orm.start_mappers()
 
-    dependencies = {'uow': uow,  'publish': publish}
+    dependencies = {'uow': uow, 'publish': publish}
+    for item in settings.DEPENDENCIES:
+        clazz = settings.DEPENDENCIES[item]
+        dependencies[item] = Reflect.instantiate(clazz)
+
     injected_event_handlers = {
         event_type: [
             inject_dependencies(handler, dependencies)
@@ -43,6 +45,7 @@ def bootstrap(
 
     return BoundaryService(
         uow=uow,
+        publisher = publish,
         event_handlers=injected_event_handlers,
         command_handlers=injected_command_handlers,
         query_handlers=injected_query_handlers,

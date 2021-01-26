@@ -49,11 +49,6 @@ class AbsBaseHandler(AbsBaseClass):
     def __init__(self,method_id=None):
         pass
 
-    def create_response(self,halo_request,success, payload=None)->AbsHaloResponse:
-        response_factory = Util.get_response_factory()
-        return response_factory.get_halo_response(halo_request,success, payload)
-
-
     def validate_req(self, halo_request):
         logger.debug("in validate_req ")
         if halo_request:
@@ -227,7 +222,7 @@ class AbsQueryHandler(AbsBaseHandler):
         # 5. setup headers for reply
         #headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
-        halo_response = self.create_response(halo_request,True, payload)
+        halo_response = Util.create_response(halo_request,True, payload)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter
@@ -305,7 +300,7 @@ class AbsCommandHandler(AbsBaseHandler):
         # 5. setup headers for reply
         #headers = self.set_resp_headers(halo_request)
         # 6. build json and add to halo response
-        halo_response = self.create_response(halo_request,True,payload)
+        halo_response = Util.create_response(halo_request,True,payload)
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter

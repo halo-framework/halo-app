@@ -39,9 +39,10 @@ class BoundaryService(AbsBoundaryService):
         Only admin users are able to access this view.
         """
 
-    def __init__(self, uow,event_handlers,command_handlers,query_handlers):
+    def __init__(self, uow,publisher,event_handlers,command_handlers,query_handlers):
         super(BoundaryService, self).__init__()
         self.uow = uow
+        self.publisher = publisher
         self.event_handlers = event_handlers
         self.command_handlers = command_handlers
         self.query_handlers = query_handlers
@@ -160,7 +161,12 @@ class BoundaryService(AbsBoundaryService):
                 logger.exception('Exception %s handling event %s', e, event)
                 continue
 
-    def __process_command(self, command: HaloCommandRequest)->AbsHaloResponse:
+    def __process_command(self, command: HaloCommandRequest) -> AbsHaloResponse:
+        if settings.ASYNC_MODE:
+            return self.__process_async_command(command)
+        return self.__process_sync_command(command)
+
+    def __process_sync_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
             raise CommandNotMappedError("command method_id " + command.method_id)
@@ -172,6 +178,17 @@ class BoundaryService(AbsBoundaryService):
                 new_events = self.uow.collect_new_events()
                 self.queue.extend(new_events)
             return ret
+        except Exception as e:
+            logger.exception('Exception %s handling command %s',e, command)
+            raise
+
+    def __process_async_command(self, command: HaloCommandRequest)->AbsHaloResponse:
+        logger.debug('handling command %s', command)
+        if command.method_id not in self.command_handlers:
+            raise CommandNotMappedError("command method_id " + command.method_id)
+        try:
+            self.publisher.send(settings.HANDLER_TARGET, command)
+            return Util.create_response(command,True)
         except Exception as e:
             logger.exception('Exception %s handling command %s',e, command)
             raise

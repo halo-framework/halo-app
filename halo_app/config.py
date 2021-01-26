@@ -454,6 +454,10 @@ class Config_loc(Config):
     HALO_CLIENT_CLASS = 'tests.test_flask.XClientType'
     HALO_RESPONSE_FACTORY_CLASS = 'tests.test_flask.XHaloResponseFactory'
     ISOLATION_LEVEL = "SERIALIZABLE"
+    ASYNC_MODE = False
+    DEPENDENCIES = {}
+    REDIS_URI = get_redis_host_and_port()
+    HANDLER_TARGET = "handler_target"
 
 class Config_dev(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'

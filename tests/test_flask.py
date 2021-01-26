@@ -605,7 +605,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = get_halo_context(client_type=ClientType.cli)
         halo_event = TestHaloEvent(halo_context, "z9","12")
         halo_request = SysUtil.create_event_request(halo_event)
-        fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
+        fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
     def test_10a_event(self):
@@ -613,7 +613,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = get_halo_context(request.headers)
             halo_event = TestHaloEvent(halo_context, "z9", "12")
             halo_request = SysUtil.create_event_request(halo_event)
-            fake_boundary = FakeBoundry(self.boundary.uow, self.boundary.event_handlers, self.boundary.command_handlers,
+            fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
                                         self.boundary.query_handlers)
             fake_boundary.fake_process(halo_request)
 

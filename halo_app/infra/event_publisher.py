@@ -1,7 +1,9 @@
 import json
 import logging
 from dataclasses import asdict
+import redis
 
+from halo_app.app.command import AbsHaloCommand
 from halo_app.classes import AbsBaseClass
 from halo_app.app.event import AbsHaloEvent
 from halo_app.settingsx import settingsx
@@ -11,10 +13,18 @@ logger = logging.getLogger(__name__)
 settings = settingsx()
 logger = logging.getLogger(__name__)
 
-publisher = None#redis.Redis(**config.get_redis_host_and_port())
+
 
 
 class Publisher(AbsBaseClass):
+
+    def __init__(self):
+        self.publisher = redis.Redis(settings.REDIS_URI)#**config.get_redis_host_and_port())
+
     def publish(self,channel, event: AbsHaloEvent):
         logging.info('publishing: channel=%s, event=%s', channel, event)
-        publisher.publish(channel, json.dumps(asdict(event)))
+        self.publisher.publish(channel, json.dumps(asdict(event)))
+
+    def send(self,channel, command: AbsHaloCommand):
+        logging.info('publishing: channel=%s, event=%s', channel, command)
+        self.publisher.publish(channel, json.dumps(asdict(command)))
