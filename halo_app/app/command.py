@@ -2,6 +2,7 @@ from __future__ import print_function
 import abc
 import logging
 import uuid
+from dataclasses import dataclass
 # halo
 from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 settings = settingsx()
 
+@dataclass
 class AbsHaloCommand(AbsHaloMessage):
     context = None
     name = None

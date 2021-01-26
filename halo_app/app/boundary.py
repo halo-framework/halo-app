@@ -187,7 +187,7 @@ class BoundaryService(AbsBoundaryService):
         if command.method_id not in self.command_handlers:
             raise CommandNotMappedError("command method_id " + command.method_id)
         try:
-            self.publisher.send(settings.HANDLER_TARGET, command)
+            self.publisher.send(settings.HANDLER_TARGET, command.command)
             return Util.create_response(command,True)
         except Exception as e:
             logger.exception('Exception %s handling command %s',e, command)

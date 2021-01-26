@@ -14,12 +14,9 @@ settings = settingsx()
 logger = logging.getLogger(__name__)
 
 
-
-
-class Publisher(AbsBaseClass):
-
+class AbsPublisher(AbsBaseClass):
     def __init__(self):
-        self.publisher = redis.Redis(settings.REDIS_URI)#**config.get_redis_host_and_port())
+        self.publisher = None
 
     def publish(self,channel, event: AbsHaloEvent):
         logging.info('publishing: channel=%s, event=%s', channel, event)
@@ -28,3 +25,7 @@ class Publisher(AbsBaseClass):
     def send(self,channel, command: AbsHaloCommand):
         logging.info('publishing: channel=%s, event=%s', channel, command)
         self.publisher.publish(channel, json.dumps(asdict(command)))
+
+class Publisher(AbsPublisher):
+    def __init__(self):
+        self.publisher = redis.Redis(settings.REDIS_URI)#**config.get_redis_host_and_port())

@@ -491,6 +491,20 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
+    def test_1b_run_handle_async(self):
+        app.config['ASYNC_MODE'] = True
+        with app.test_request_context(method='GET', path='/?id=1'):
+            try:
+                halo_context = get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,True)
+                eq_(response.payload, None)
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+
     def test_2_run_handle_fail(self):
         with app.test_request_context(method='GET', path='/?id=2'):
             try:
