@@ -27,4 +27,5 @@ class AbsPublisher(AbsBaseClass):
 
 class Publisher(AbsPublisher):
     def __init__(self):
+        super(Publisher, self).__init__()
         self.publisher = redis.Redis(settings.REDIS_URI)
