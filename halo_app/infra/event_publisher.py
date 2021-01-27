@@ -11,7 +11,6 @@ from halo_app.settingsx import settingsx
 logger = logging.getLogger(__name__)
 
 settings = settingsx()
-logger = logging.getLogger(__name__)
 
 
 class AbsPublisher(AbsBaseClass):
