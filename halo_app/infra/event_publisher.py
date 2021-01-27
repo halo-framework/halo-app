@@ -28,4 +28,4 @@ class AbsPublisher(AbsBaseClass):
 
 class Publisher(AbsPublisher):
     def __init__(self):
-        self.publisher = redis.Redis(settings.REDIS_URI)#**config.get_redis_host_and_port())
+        self.publisher = redis.Redis(settings.REDIS_URI)

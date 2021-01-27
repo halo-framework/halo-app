@@ -12,10 +12,15 @@ def getit():
         try:
             importlib.import_module(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
             return f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}"
-            #from .config import Config
-            #return Config
-        except:
-            raise Exception("no settings")
+        except Exception as e:
+            try:
+                module = importlib.import_module(".config", package=__package__)
+                my_class = getattr(module, f"Config_{os.getenv('HALO_STAGE', 'loc')}")
+                return my_class
+                # from .config import Config
+                # return Config
+            except Exception as e:
+                raise Exception("no settings:" + str(e))
 
 settings = None
 

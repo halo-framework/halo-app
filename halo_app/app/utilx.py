@@ -46,7 +46,7 @@ class Util(AbsBaseClass):
         return context
 
     @classmethod
-    def get_client_type(self):
+    def get_client_type(self)->ClientType:
         if settings.HALO_CLIENT_CLASS:
             client_type_ins = Reflect.instantiate(settings.HALO_CLIENT_CLASS,ClientType)
         else:
@@ -54,7 +54,7 @@ class Util(AbsBaseClass):
         return client_type_ins
 
     @classmethod
-    def get_response_factory(self):
+    def get_response_factory(self)->HaloResponseFactory:
         if settings.HALO_RESPONSE_FACTORY_CLASS:
             response_factory_ins = Reflect.instantiate(settings.HALO_RESPONSE_FACTORY_CLASS, HaloResponseFactory)
         else:

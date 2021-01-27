@@ -21,10 +21,6 @@ print(env.dump())
 
 
 
-def get_api_url():
-    host = os.environ.get('API_HOST', 'localhost')
-    port = 5005 if host == 'localhost' else 80
-    return f"http://{host}:{port}"
 
 def get_redis_host_and_port():
     host = os.environ.get('REDIS_HOST', 'localhost')
@@ -41,7 +37,11 @@ class Config(object):
 
     @classmethod
     def get(cls,key):
-        return cls.__dict__[key]
+        if key in cls.__dict__:
+            return cls.__dict__[key]
+        if cls != Config:
+            return Config.get(key)
+        return None
 
     SERVICING_SESSION = False
     PORT = 8080
