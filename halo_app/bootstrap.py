@@ -5,7 +5,6 @@ from halo_app.classes import AbsBaseClass
 from halo_app.infra import orm
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.app.boundary import BoundaryService
-from halo_app.app.handler import AbsCommandHandler
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 

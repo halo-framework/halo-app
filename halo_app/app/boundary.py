@@ -21,7 +21,7 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-class AbsBoundaryService(AbsBaseClass,abc.ABC):
+class IBoundaryService(AbsBaseClass, abc.ABC):
     """
     the only port exposed from the boundry
     """
@@ -29,7 +29,7 @@ class AbsBoundaryService(AbsBaseClass,abc.ABC):
     def execute(self, halo_request: AbsHaloRequest)->AbsHaloResponse:
         pass
 
-class BoundaryService(AbsBoundaryService):
+class BoundaryService(IBoundaryService):
 
     """
         the only point of communication with left-side driver
