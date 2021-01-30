@@ -1,6 +1,5 @@
 import json
 import logging
-import redis
 
 from halo_app import bootstrap
 from halo_app.classes import AbsBaseClass
@@ -13,13 +12,6 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-
-def main():
-    logger.info('Redis pubsub starting')
-    c = Consumer()
-
-    for m in c.consumer.listen():
-        c.handle_command(m)
 
 class AbsConsumer(AbsBaseClass):
     def __init__(self):
@@ -45,13 +37,3 @@ class AbsConsumer(AbsBaseClass):
         params = data
         return method_id,params,command_id
 
-class Consumer(AbsConsumer):
-    def __init__(self):
-        super(Consumer,self).__init__()
-        r = redis.Redis(settings.REDIS_URI)
-        self.consumer = r.pubsub(ignore_subscribe_messages=True)
-        self.consumer.subscribe(settings.HALO_CHANNEL)
-        client_util.get_halo_context(client_type=ClientType.event)
-
-if __name__ == '__main__':
-    main()

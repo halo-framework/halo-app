@@ -358,7 +358,7 @@ class Config(object):
 
     START_ORM = env.bool('START_ORM',default=True)
     UOW_CLASS = env.str('UOW_CLASS',default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
-    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.event_publisher.Publisher")
+    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.redis_event_publisher.Publisher")
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
     HALO_CONTEXT_CLASS = None
@@ -443,7 +443,10 @@ class Config(object):
         db_type = os.environ.get('DB_TYPE', 'sqlite')
         SQLALCHEMY_DATABASE_URI = f"{db_type}://{db_user}:{password}@{db_host}:{db_port}/{db_name}"
 
-
+    ASYNC_MODE = False
+    DEPENDENCIES = {} # { "sample_repo":"path to class code"}
+    REDIS_URI = get_redis_host_and_port()
+    HANDLER_TARGET = "handler_target"
 
 print('== The base settings file has been loaded.')
 
@@ -454,10 +457,8 @@ class Config_loc(Config):
     HALO_CLIENT_CLASS = 'tests.test_flask.XClientType'
     HALO_RESPONSE_FACTORY_CLASS = 'tests.test_flask.XHaloResponseFactory'
     ISOLATION_LEVEL = "SERIALIZABLE"
-    ASYNC_MODE = False
-    DEPENDENCIES = {} # { "sample_repo":"path to class code"}
-    REDIS_URI = get_redis_host_and_port()
-    HANDLER_TARGET = "handler_target"
+
+
 
 class Config_dev(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
