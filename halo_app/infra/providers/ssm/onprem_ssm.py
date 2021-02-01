@@ -9,7 +9,7 @@ import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
 from halo_app.infra.exceptions import CacheKeyException, CacheExpireException, HaloException
-from halo_app.providers.exceptions import  NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
+from halo_app.infra.providers.exceptions import  NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.base_util import BaseUtil

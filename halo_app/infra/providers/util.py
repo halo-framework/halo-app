@@ -1,12 +1,12 @@
 import logging
 from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext, InitCtxFactory
-from halo_app.providers.providers import get_provider,ONPREM
+from halo_app.infra.providers.providers import get_provider,ONPREM
 from .exceptions import ProviderError
-from ..entrypoints.client_type import ClientType
-from ..infra.exceptions import CacheException
-from ..reflect import Reflect
-from ..settingsx import settingsx
+from halo_app.entrypoints.client_type import ClientType
+from halo_app.infra.exceptions import CacheException
+from halo_app.reflect import Reflect
+from halo_app.settingsx import settingsx
 
 settings = settingsx()
 

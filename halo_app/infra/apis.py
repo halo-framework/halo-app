@@ -7,10 +7,10 @@ import uuid
 import json
 from abc import ABCMeta
 import requests
-from halo_app.providers.providers import get_provider,ProviderError
+from halo_app.infra.providers.providers import get_provider,ProviderError
 from halo_app.classes import AbsBaseClass
 from halo_app.infra.exceptions import MaxTryHttpException, NoApiDefinitionException, \
-    HaloMethodNotImplementedException, MissingClassConfigException, IllegalMethodException, ApiException
+     MissingClassConfigException, IllegalMethodException, ApiException
 from halo_app.logs import log_json
 from halo_app.reflect import Reflect
 from halo_app.app.utilx import Util
@@ -448,7 +448,7 @@ class AbsSoapApi(AbsBaseApi):
             if type(soap_response) == SoapResponse:
                 return soap_response
         except AttributeError as ex:
-            raise HaloMethodNotImplementedException("function for "+str(method),ex)
+            raise ApiException("function for "+str(method),ex)
 
 """
 Request api but don't wait for response

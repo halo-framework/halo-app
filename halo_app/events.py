@@ -6,9 +6,9 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 # DRF
-from halo_app.providers.exceptions import ProviderError
+from halo_app.infra.providers.exceptions import ProviderError
 from halo_app.logs import log_json
-from halo_app.providers.providers import get_provider
+from halo_app.infra.providers.providers import get_provider
 from halo_app.classes import AbsBaseClass
 from .app.utilx import Util
 from .exceptions import HaloException

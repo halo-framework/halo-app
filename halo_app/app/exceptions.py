@@ -35,3 +35,6 @@ class MissingHaloContextException(AppException):
 
 class NoCorrelationIdException(AppException):
     pass
+
+class HaloMethodNotImplementedException(AppException):
+    pass

@@ -8,6 +8,7 @@ from jsonpath_ng import parse
 # aws
 # common
 # app
+from .exceptions import BadRequestError
 from .uow import AbsUnitOfWork
 from halo_app.app.context import HaloContext
 from ..errors import status
@@ -22,7 +23,7 @@ from ..classes import AbsBaseClass
 from .business_event import BusinessEventCategory, FoiBusinessEvent, SagaBusinessEvent, ApiBusinessEvent, BusinessEvent
 from halo_app.infra.apis import ApiMngr
 from .anlytx_filter import RequestFilter
-from halo_app.providers.providers import get_provider
+from halo_app.infra.providers.providers import get_provider
 from halo_app.saga import SagaRollBack, load_saga
 from halo_app.app.utilx import Util
 from ..sys_util import SysUtil
@@ -104,7 +105,7 @@ class AbsBaseHandler(AbsBaseClass):
                 msg = "in execute_api. " + seq_msg + " code= " + str(ret.status_code)
                 logger.info(msg)
                 return ret
-            except ApiError as e:
+            except ApiException as e:
                 raise HaloError("failed to execute api:"+str(back_api.name),e)
         return None
 

@@ -65,9 +65,9 @@ class Config(object):
 
 
     ONPREM_PROVIDER_CLASS_NAME = "ONPREMProvider"
-    ONPREM_PROVIDER_MODULE_NAME = "halo_app.providers.providers"
+    ONPREM_PROVIDER_MODULE_NAME = "halo_app.infra.providers.providers"
     ONPREM_SSM_CLASS_NAME = 'OnPremClient'
-    ONPREM_SSM_MODULE_NAME = 'halo_app.providers.ssm.onprem_ssm_client'
+    ONPREM_SSM_MODULE_NAME = 'halo_app.infra.providers.ssm.onprem_ssm_client'
 
     FILTER_SEPARATOR = ";"
     SD_REFERENCE_ID_MASK = '^([0-9a-f]+)$'

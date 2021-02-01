@@ -16,8 +16,8 @@ from abc import ABCMeta,abstractmethod
 from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem,get_app_param_config as get_app_param_config_onprem
 from .ssm.onprem_ssm import get_config as get_config_onprem
 from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
-from ..settingsx import settingsx
-from halo_app.providers.exceptions import ProviderError,NoONPREMProviderClassError,NoONPREMProviderModuleError,ProviderInitError
+from halo_app.settingsx import settingsx
+from halo_app.infra.providers.exceptions import ProviderError,NoONPREMProviderClassError,NoONPREMProviderModuleError,ProviderInitError
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.sys_util import SysUtil

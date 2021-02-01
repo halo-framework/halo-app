@@ -9,13 +9,13 @@ import time
 from environs import Env
 
 
-from halo_app.providers.exceptions import HaloError, SSMError, NoSSMRegionError,ProviderInitError
+from halo_app.infra.providers.exceptions import HaloError, SSMError, NoSSMRegionError,ProviderInitError
 from halo_app.infra.exceptions import  CacheKeyException, CacheExpireException
 from halo_app.classes import AbsBaseClass
 # from .logs import log_json
 from halo_app.base_util import BaseUtil
 from halo_app.app.utilx import Util
-from halo_app.providers.util import ProviderUtil
+from halo_app.infra.providers.util import ProviderUtil
 from halo_app.settingsx import settingsx
 settings = settingsx()
 

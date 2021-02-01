@@ -18,7 +18,8 @@ from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
-from halo_app.infra.exceptions import ApiException,HaloMethodNotImplementedException
+from halo_app.infra.exceptions import ApiException
+from halo_app.app.exceptions import HaloMethodNotImplementedException
 from halo_app.domain.repository import AbsRepository
 from halo_app.infra.mail import AbsMailService
 from halo_app.logs import log_json
@@ -323,7 +324,7 @@ class TestRequestFilterClear(RequestFilterClear):
 
 class TestAwsRequestFilterClear(RequestFilterClear):
     def run(self,event):
-        from halo_app.providers.providers import get_provider
+        from halo_app.infra.providers.providers import get_provider
         get_provider().publish()
         print("insert_events_to_repository " + str(event.serialize()))
 
@@ -1014,7 +1015,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(response.code,500)
+                eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiError")
 
@@ -1024,7 +1025,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z6", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(response.code,500)
+                eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
 
@@ -1139,7 +1140,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['SSM_TYPE'] = "ONPREM"
         app.config['ONPREM_SSM_CLASS_NAME'] = 'OnPremClient'
-        app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_app.providers.ssm.onprem_ssm_client'
+        app.config['ONPREM_SSM_MODULE_NAME'] = 'halo_app.infra.providers.ssm.onprem_ssm_client'
         with app.test_request_context(method='GET', path='/?a=b', headers=header):
             from halo_app.ssm import set_app_param_config
             params = {}

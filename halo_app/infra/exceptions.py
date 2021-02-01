@@ -45,10 +45,6 @@ class ReflectException(InfraException):
     pass
 
 
-class HaloMethodNotImplementedException(InfraException):
-    pass
-
-
 class NoApiDefinitionException(InfraException):
     pass
 

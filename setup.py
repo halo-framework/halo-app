@@ -11,8 +11,8 @@ with open("README.md", "r") as h:
 setup(
     name='halo-app',
     version='0.10.43',
-    packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.providers', 'halo_app.providers.cloud',
-              'halo_app.providers.cloud.aws', 'halo_app.providers.onprem', 'halo_app.providers.ssm',
+    packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.infra.providers', 'halo_app.infra.providers.cloud',
+              'halo_app.infra.providers.cloud.aws', 'halo_app.infra.providers.onprem', 'halo_app.infra.providers.ssm',
               'halo_app.view','halo_app.infra','halo_app.domain','halo_app.entrypoints',],
     data_files=[('schema', ['halo_app/schema/saga_schema.json'])],
     package_data={'schema': ['halo_app/schema/saga_schema.json']},
