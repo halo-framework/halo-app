@@ -3,7 +3,8 @@ from __future__ import print_function
 import logging
 from halo_app.infra.apis import ApiMngr
 from .base_util import BaseUtil
-from .exceptions import ApiError,HaloException, HaloError
+from halo_app.exceptions import HaloException,HaloError
+from halo_app.infra.exceptions import ApiException
 from .logs import log_json
 from  .classes import AbsBaseClass
 from .errors import status
@@ -186,7 +187,7 @@ class Saga(AbsBaseClass):
                 if tname is True:
                     logger.debug("finished")
                     break
-            except ApiError as e:
+            except ApiException as e:
                 self.slog.log(halo_context, SagaLog.failTx, tname)
                 self.slog.log(halo_context, SagaLog.abortSaga, self.name)
                 logger.debug("ApiError=" + str(e))

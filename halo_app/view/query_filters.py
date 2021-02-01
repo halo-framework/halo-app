@@ -5,7 +5,7 @@ from halo_app.classes import AbsBaseClass
 from dataclasses import dataclass
 
 #{"field": "<field_name>", "op": "<operator>", "value": "<some_value>"}
-from halo_app.exceptions import FilterValidationError
+from halo_app.exceptions import FilterValidationException
 
 """
 symbol  operator	
@@ -35,14 +35,14 @@ class Filter(AbsFilter):
             allowed = (Number, datetime.date, datetime.datetime)
             return isinstance(value, allowed)
         except AssertionError:
-            raise FilterValidationError(f"{self} requires an ordinal value")
+            raise FilterValidationException(f"{self} requires an ordinal value")
 
     def is_valid_list(self,value):
         try:
             allowed = ([])
             return isinstance(value, allowed)
         except AssertionError:
-            raise FilterValidationError(f"{self} requires an ordinal value")
+            raise FilterValidationException(f"{self} requires an ordinal value")
 
     def apply(self, value):
         if self.op == '<' and self.is_valid(value):

@@ -52,4 +52,7 @@ class BusinessEventCategory(Enum):  # A subclass of Enum - if no category then i
     RUN = "run"  # define run query
 
 
-
+class ERRType(Enum):  # A subclass of Enum
+    error = "ERROR"
+    exception = "EXCEPTION"
+    general = "GENERAL"

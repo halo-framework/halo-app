@@ -8,7 +8,8 @@ import os
 import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
-from halo_app.exceptions import HaloError, CacheKeyError, CacheExpireError, HaloException, NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
+from halo_app.infra.exceptions import CacheKeyException, CacheExpireException, HaloException
+from halo_app.providers.exceptions import  NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.base_util import BaseUtil
@@ -132,12 +133,12 @@ class MyConfig(AbsBaseClass):
             if key in self.cache.items:
                 return self.cache.items[key]
             else:
-                raise CacheKeyError("no key in cache:" + key)
+                raise CacheKeyException("no key in cache:" + key)
         else:
             self.cache = get_cache(self.region_name, self.path)
             if key in self.cache.items:
                 return self.cache.items[key]
-        raise CacheExpireError("cache expired")
+        raise CacheExpireException("cache expired")
 
 
 def load_config(ssm_parameter_path):

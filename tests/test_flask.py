@@ -18,7 +18,7 @@ from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.errors import status
-from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
+from halo_app.infra.exceptions import ApiException,HaloMethodNotImplementedException
 from halo_app.domain.repository import AbsRepository
 from halo_app.infra.mail import AbsMailService
 from halo_app.logs import log_json
@@ -633,21 +633,21 @@ class TestUserDetailTestCase(unittest.TestCase):
             timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except ApiException as e:
                 pass
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except ApiException as e:
                 pass
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except ApiException as e:
                 pass
             try:
                 response = api.get(timeout)
-            except ApiError as e:
+            except ApiException as e:
                 print(str(e))
-                eq_(e.__class__.__name__, "ApiError")
+                eq_(e.__class__.__name__, "ApiException")
 
     def test_12_api_request(self):
         app.config['PROVIDER'] = "AWS"
@@ -677,7 +677,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 response = api.get(timeout)
                 eq_(response.status_code, status.HTTP_200_OK)
-            except ApiError as e:
+            except ApiException as e:
                 eq_(1,2)
 
     def test_13_api_request_returns_a_fail(self):
@@ -689,7 +689,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 response = api.get(timeout)
                 assert False
-            except ApiError as e:
+            except ApiException as e:
                 eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 
@@ -705,7 +705,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = api.run(timeout,data)
                 print("response=" + str(response.content))
                 eq_(json.loads(response.content)['msg'],'Your input parameters are start and end')
-            except ApiError as e:
+            except ApiException as e:
                 #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
                 eq_(response.payload['first'],'start')
 
@@ -734,9 +734,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 response = api.get(timeout)
                 assert False
-            except ApiError as e:
+            except ApiException as e:
                 #eq_(e.status_code, status.HTTP_404_NOT_FOUND)
-                eq_(e.__class__.__name__,"ApiError")
+                eq_(e.__class__.__name__,"ApiException")
 
     def test_17_api_request_event_returns(self):
         app.config['PROVIDER'] = "AWS"
@@ -747,7 +747,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 response = api.get(timeout)
                 assert False
-            except ApiError as e:
+            except ApiException as e:
                 eq_(e.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 

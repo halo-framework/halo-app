@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import time
-from halo_app.exceptions import NoSSMDefinedError,NotSSMTypeError
+from halo_app.providers.exceptions import NoSSMDefinedError,NotSSMTypeError
 
 #@ TODO put_parameter should be activated only is current value is different then the existing one
 #@ TODO perf activation will reload SSM if needed and refresh API table
@@ -16,7 +16,6 @@ from .providers.providers import get_config as get_config_provider
 from .providers.providers import get_app_config as get_app_config_provider
 from halo_app.base_util import BaseUtil
 
-from .exceptions import HaloError, CacheKeyError, CacheExpireError
 
 # from .logs import log_json
 

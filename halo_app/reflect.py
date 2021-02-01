@@ -3,7 +3,7 @@ from __future__ import print_function
 import importlib
 import logging
 from halo_app.classes import AbsBaseClass
-from halo_app.exceptions import HaloException, ReflectException
+from halo_app.infra.exceptions import  ReflectException
 
 logger = logging.getLogger(__name__)
 

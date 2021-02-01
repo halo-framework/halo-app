@@ -9,7 +9,6 @@ from abc import ABCMeta,abstractmethod
 
 import requests
 import json
-from .exceptions import MaxTryHttpException, ApiError
 
 
 

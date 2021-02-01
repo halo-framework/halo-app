@@ -9,8 +9,8 @@ from abc import ABCMeta
 import requests
 from halo_app.providers.providers import get_provider,ProviderError
 from halo_app.classes import AbsBaseClass
-from halo_app.exceptions import MaxTryHttpException, ApiError, NoApiDefinitionError, \
-    HaloMethodNotImplementedException, MissingClassConfigError, IllegalMethodException
+from halo_app.infra.exceptions import MaxTryHttpException, NoApiDefinitionException, \
+    HaloMethodNotImplementedException, MissingClassConfigException, IllegalMethodException, ApiException
 from halo_app.logs import log_json
 from halo_app.reflect import Reflect
 from halo_app.app.utilx import Util
@@ -81,7 +81,7 @@ class AbsBaseApi(AbsBaseClass):
                 protocol = api_config[self.name]["protocol"]
             return url,type,protocol
 
-        raise NoApiDefinitionError(self.name)
+        raise NoApiDefinitionException(self.name)
 
     def get_version(self):
         """
@@ -166,7 +166,7 @@ class AbsRestApi(AbsBaseApi):
                 if ret.status_code >= 500:
                     continue
                 if 200 > ret.status_code or 500 > ret.status_code >= 300:
-                    err = ApiError("error status_code " + str(ret.status_code) + " in : " + url)
+                    err = ApiException("error status_code " + str(ret.status_code) + " in : " + url)
                     err.status_code = ret.status_code
                     err.stack = None
                     raise err
@@ -288,28 +288,28 @@ class AbsRestApi(AbsBaseApi):
         except requests.ConnectionError as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(msg,e)
+            er = ApiException(msg,e)
             er.status_code = 500
             raise er
         except requests.HTTPError as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(msg,e)
+            er = ApiException(msg,e)
             er.status_code = 500
             raise er
         except requests.Timeout as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(msg,e)
+            er = ApiException(msg,e)
             er.status_code = 500
             raise er
         except requests.RequestException as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
-            er = ApiError(msg,e)
+            er = ApiException(msg,e)
             er.status_code = 500
             raise er
-        except ApiError as e:
+        except ApiException as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
             raise e
@@ -434,7 +434,7 @@ class AbsSoapApi(AbsBaseApi):
                                                                           LOGChoice.url.value: str(url)}))
             logger.debug("ret: " + str(soap_response), extra=log_json(self.halo_context))
             return soap_response
-        except ApiError as e:
+        except ApiException as e:
             msg = str(e)
             logger.debug("error: " + msg, extra=log_json(self.halo_context))
             raise e
@@ -497,7 +497,7 @@ class ApiMngr(AbsBaseClass):
                 return class_name
             #else:
 
-        raise NoApiDefinitionError(name)
+        raise NoApiDefinitionException(name)
 
     @staticmethod
     def get_api_instance(name:str,ctx:HaloContext,method:str="", *args):
@@ -528,7 +528,7 @@ class ApiMngr(AbsBaseClass):
                 finally:
                     lock.release()
                 return api
-        raise NoApiDefinitionError(name)
+        raise NoApiDefinitionException(name)
 
 HALO_API_LIST = None
 SSM_CONFIG = None
@@ -570,7 +570,7 @@ def load_api_config(stage_type,ssm_type,func_name,API_CONFIG):
                 class_name = API_CONFIG[key]["class"]
                 api_list[key] = class_name
             else:
-                raise MissingClassConfigError(key)
+                raise MissingClassConfigException(key)
 
     HALO_API_LIST = api_list
     #ApiMngr.instance().set_api_list(api_list)

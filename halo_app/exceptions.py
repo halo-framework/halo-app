@@ -7,6 +7,7 @@ class HaloException(Exception):
     __metaclass__ = ABCMeta
     """The abstract Generic exception for halo"""
 
+    @abstractmethod
     def __init__(self, message, original_exception=None, detail=None,data=None):
         super(HaloException, self).__init__()
         self.message = message
@@ -26,62 +27,16 @@ class HaloError(HaloException):
     The abstract error is used as base class for server error with status code. app does not expect to handle error. Accepts the following
     optional arguments:
     """
-    status_code = 500
+    error_code = None
 
-    def __init__(self, message, original_exception=None,detail=None, data=None,status_code=None):
+    @abstractmethod
+    def __init__(self, message, original_exception=None,detail=None, data=None,error_code=None):
         super(HaloError, self).__init__(message, original_exception,detail,data)
-        if status_code is not None:
-            self.status_code = status_code
-
-class BadRequestError(HaloError):
-    pass
-
-class AuthException(HaloException):
-    pass
+        if error_code is not None:
+            self.error_code = error_code
 
 
-class ApiException(HaloException):
-    pass
 
-
-class MaxTryException(ApiException):
-    pass
-
-
-class MaxTryHttpException(MaxTryException):
-    pass
-
-
-class MaxTryRpcException(MaxTryException):
-    pass
-
-
-class ApiTimeOutExpired(ApiException):
-    pass
-
-
-class ApiError(HaloError):
-    pass
-
-
-class DbError(HaloError):
-    pass
-
-
-class DbIdemError(DbError):
-    pass
-
-
-class CacheError(HaloError):
-    pass
-
-
-class CacheKeyError(CacheError):
-    pass
-
-
-class CacheExpireError(CacheError):
-    pass
 
 """
 class HaloHttpError(HaloError):
@@ -95,41 +50,6 @@ class ServerError(HaloHttpError):
         self.status = http_status
 """
 
-class ProviderError(HaloError):
-    pass
-
-class SSMError(HaloError):
-    pass
-
-class NoLocalSSMClassError(HaloError):
-    pass
-
-class NoLocalSSMModuleError(HaloError):
-    pass
-
-class NoSSMRegionError(HaloError):
-    pass
-
-class BusinessEventMissingSeqException(HaloException):
-    pass
-
-class HaloMethodNotImplementedException(HaloException):
-    pass
-
-class HaloBusinessEventNotImplementedException(HaloException):
-    pass
-
-class IllegalBQException(HaloException):
-    pass
-
-class NoApiDefinitionError(HaloError):
-    pass
-
-class ApiClassError(HaloError):
-    pass
-
-class NoApiClassException(HaloException):
-    pass
 
 class StoreException(HaloException):
     pass
@@ -137,59 +57,20 @@ class StoreException(HaloException):
 class StoreClearException(HaloException):
     pass
 
-class MissingHaloContextException(HaloException):
+
+
+class SecureException(HaloException):
     pass
 
-class NoCorrelationIdException(HaloException):
+class MissingRoleException(SecureException):
     pass
 
-class ReflectException(HaloException):
+class MissingSecurityTokenException(SecureException):
     pass
 
-class NoSSMDefinedError(HaloError):
+class BadSecurityTokenException(SecureException):
     pass
 
-class NotSSMTypeError(HaloError):
+class FilterValidationException(SecureException):
     pass
 
-class NoONPREMProviderClassError(HaloError):
-    pass
-
-class NoONPREMProviderModuleError(HaloError):
-    pass
-
-class ProviderInitError(HaloError):
-    pass
-
-class NoSuchPathException(HaloException):
-    pass
-
-class MissingClassConfigError(HaloError):
-    pass
-
-class IllegalMethodException(HaloException):
-    pass
-
-class MissingRoleError(HaloError):
-    pass
-
-class MissingSecurityTokenException(HaloException):
-    pass
-
-class BadSecurityTokenException(HaloException):
-    pass
-
-class FilterValidationError(HaloException):
-    pass
-
-class MissingMethodIdException(HaloException):
-    pass
-
-class CommandNotMappedError(HaloError):
-    pass
-
-class QueryNotMappedError(HaloError):
-    pass
-
-class MissingResponsetoClientTypeError(HaloError):
-    pass

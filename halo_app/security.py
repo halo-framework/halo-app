@@ -4,7 +4,7 @@ import jwt
 import logging
 import datetime
 from halo_app.classes import AbsBaseClass
-from halo_app.exceptions import MissingRoleError,MissingSecurityTokenException,BadSecurityTokenException
+from halo_app.exceptions import MissingRoleException,MissingSecurityTokenException,BadSecurityTokenException
 from halo_app.app.context import HaloContext
 from .settingsx import settingsx
 
@@ -51,7 +51,7 @@ class HaloSecurity(AbsBaseClass):
                 for r in method_roles:
                     if r in self.user_roles:
                         return True
-            raise MissingRoleError(str(method_roles))
+            raise MissingRoleException(str(method_roles))
         return True
 
     @classmethod

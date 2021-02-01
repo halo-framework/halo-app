@@ -9,11 +9,13 @@ import time
 from environs import Env
 
 
-from halo_app.exceptions import HaloError, CacheKeyError, CacheExpireError, SSMError, NoSSMRegionError,ProviderInitError
+from halo_app.providers.exceptions import HaloError, SSMError, NoSSMRegionError,ProviderInitError
+from halo_app.infra.exceptions import  CacheKeyException, CacheExpireException
 from halo_app.classes import AbsBaseClass
 # from .logs import log_json
 from halo_app.base_util import BaseUtil
 from halo_app.app.utilx import Util
+from halo_app.providers.util import ProviderUtil
 from halo_app.settingsx import settingsx
 settings = settingsx()
 
@@ -41,7 +43,7 @@ def get_client(region_name):
 def get_region():
     logger.debug("get_region")
     try:
-        return Util.get_func_region()
+        return ProviderUtil.get_func_region()
     except ProviderInitError as e:
         raise e
     except HaloError:
@@ -108,12 +110,12 @@ class MyConfig(AbsBaseClass):
             if key in self.cache.items:
                 return self.cache.items[key]
             else:
-                raise CacheKeyError("no key in cache:" + key)
+                raise CacheKeyException("no key in cache:" + key)
         else:
             self.cache = get_cache(self.region_name, self.path)
             if key in self.cache.items:
                 return self.cache.items[key]
-        raise CacheExpireError("cache expired")
+        raise CacheExpireException("cache expired")
 
 
 def load_config(region_name, ssm_parameter_path):
@@ -177,7 +179,7 @@ def get_app_param_config(service_name,var_name):
         if var_name in param:
             value = param[var_name]
             return value
-    except CacheKeyError as e:
+    except CacheKeyException as e:
         pass
     return None
 
@@ -202,7 +204,7 @@ def set_app_param_config(params):
         value = value[:-1]
         value = value + '}'
         return set_config(region_name, ssm_parameter_path, value)
-    except CacheKeyError as e:
+    except CacheKeyException as e:
         value = '{'
         for var_name in params.keys():
             value = value + '"' + str(var_name) + '":"' + str(params[var_name]) + '",'

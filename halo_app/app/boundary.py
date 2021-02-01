@@ -7,9 +7,9 @@ import logging
 import traceback
 from abc import ABCMeta,abstractmethod
 # app
-from ..exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError
+from halo_app.app.exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError
 from .utilx import Util
-from ..const import SYSTEMChoice, LOGChoice
+from ..const import SYSTEMChoice, LOGChoice, ERRType
 from ..logs import log_json
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -70,6 +70,18 @@ class BoundaryService(IBoundaryService):
 
         except HaloError as e:
             error = e
+            error.type = ERRType.error
+            error_message = str(error)
+            # @todo check if stack needed and working
+            e.stack = traceback.format_exc()
+            logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
+            # exc_type, exc_obj, exc_tb = sys.exc_info()
+            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
+
+        except HaloException as e:
+            error = e
+            error.type = ERRType.exception
             error_message = str(error)
             # @todo check if stack needed and working
             e.stack = traceback.format_exc()
@@ -80,6 +92,7 @@ class BoundaryService(IBoundaryService):
 
         except Exception as e:
             error = e
+            error.type = ERRType.general
             error_message = str(error)
             #@todo check if stack needed and working
             e.stack = traceback.format_exc()
