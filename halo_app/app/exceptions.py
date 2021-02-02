@@ -38,3 +38,9 @@ class NoCorrelationIdException(AppException):
 
 class HaloMethodNotImplementedException(AppException):
     pass
+
+class BusinessEventMissingSeqException(AppException):
+    pass
+
+class BusinessEventNotImplementedException(AppException):
+    pass
