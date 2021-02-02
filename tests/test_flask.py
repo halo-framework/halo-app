@@ -1017,7 +1017,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,False)
             except Exception as e:
-                eq_(e.__class__.__name__, "ApiError")
+                eq_(e.__class__.__name__, "ApiException")
 
     def test_37_rollback_saga_error(self):
         with app.test_request_context(method='PATCH', path="/"):
