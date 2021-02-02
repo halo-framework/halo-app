@@ -146,7 +146,7 @@ class A0(AbsCommandHandler):
             if halo_request.method_id == "z1" or halo_request.method_id == "z1a" or halo_request.method_id == "z5":
                 return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.get.value)
                 #return CnnApi(halo_request.context,HTTPChoice.delete.value)
-        return super(A0,self).set_back_api(halo_request,foi)
+        return None
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
@@ -713,7 +713,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_15_api_request_soap_returns(self):
         with app.test_request_context(method='GET', path='/'):
             halo_context = client_util.get_halo_context(request.headers)
-            api = Tst2Api(halo_context,method='method2')
+            api = Tst2Api(halo_context,method='method1')
             timeout = Util.get_timeout(halo_context)
             try:
                 data = {}
