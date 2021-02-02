@@ -236,6 +236,9 @@ class AbsCommandHandler(AbsBaseHandler):
     # InfrastructureService
     # Repository
 
+    def set_back_api(self, halo_request):
+        return None
+
     def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
@@ -265,7 +268,7 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def processing_engine_dtl(self, halo_request:HaloCommandRequest)->dict:
         if self.business_event:
-            processing_engine = ProcessingEngine(self.business_event)
+            processing_engine = ProcessingEngine(self.business_event,self.set_back_api(halo_request))
             if self.business_event.get_business_category() == BusinessEventCategory.SAGA:
                 return processing_engine.do_operation_3(halo_request)
             if self.business_event.get_business_category() == BusinessEventCategory.SEQ:

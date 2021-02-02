@@ -39,8 +39,9 @@ logger = logging.getLogger(__name__)
 
 class ProcessingEngine(AbsBaseClass):
 
-    def __init__(self,business_event):
+    def __init__(self,business_event,api=None):
         self.business_event = business_event
+        self.api = api
 
     def set_back_api(self, halo_request,api):
         if api:
@@ -180,10 +181,10 @@ class ProcessingEngine(AbsBaseClass):
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
         if self.business_event.EVENT_CATEGORY == BusinessEventCategory.EMPTY:
-            api = None
+            back_api = self.api
         else:
             api = self.business_event.get()['1']
-        back_api = self.set_back_api(halo_request,api)
+            back_api = self.set_back_api(halo_request,api)
         # 2. array to store the headers required for the API Access
         back_headers = self.set_api_headers(halo_request,back_api)
         # 3. Set request params

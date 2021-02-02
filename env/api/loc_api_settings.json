@@ -16,7 +16,7 @@
     "class": "tests.test_flask.PrimoServiceApi"
   },
   "Cnn": {
-    "url": "http://www.github.com",
+    "url": "http://www.nytimes.com",
     "type": "api",
     "class": "tests.test_flask.CnnApi"
   },

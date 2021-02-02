@@ -144,7 +144,7 @@ class A0(AbsCommandHandler):
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
             if halo_request.method_id == "z1" or halo_request.method_id == "z1a" or halo_request.method_id == "z5":
-                return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.delete.value)
+                return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.get.value)
                 #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A0,self).set_back_api(halo_request,foi)
 
