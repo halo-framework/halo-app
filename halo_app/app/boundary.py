@@ -7,9 +7,11 @@ import logging
 import traceback
 from abc import ABCMeta,abstractmethod
 # app
-from halo_app.app.exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError
+from halo_app.app.exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError, \
+    HaloRequestError
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice, ERRType
+from ..domain.exceptions import DomainException
 from ..logs import log_json
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -54,13 +56,11 @@ class BoundaryService(IBoundaryService):
         :return:
         """
         now = datetime.datetime.now()
-        error_message = None
-        error = None
         orig_log_level = 0
 
         try:
             if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
-                raise HaloError(f'{halo_request} was not a Query or Command request')
+                raise HaloRequestError(f'{halo_request} was not a Query or Command request')
             ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,

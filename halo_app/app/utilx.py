@@ -132,10 +132,6 @@ class Util(AbsBaseClass):
             return provider.get_func_ver()
         return settings.FUNC_VER
 
-
-
-
-
     @classmethod
     def get_system_debug_enabled(cls):
         """
@@ -148,8 +144,6 @@ class Util(AbsBaseClass):
             if settings.LOG_SAMPLE_RATE > rand:
                 return 'true'
         return 'false'
-
-
 
     @classmethod
     def isDebugEnabled(cls, halo_context):

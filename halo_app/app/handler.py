@@ -9,9 +9,10 @@ from jsonpath_ng import parse
 # common
 # app
 from .exceptions import BadRequestError, HaloMethodNotImplementedException, BusinessEventMissingSeqException, \
-    BusinessEventNotImplementedException, ServerError
+    BusinessEventNotImplementedException, ServerError, ConvertDomainExceptionHandler
 from .uow import AbsUnitOfWork
 from halo_app.app.context import HaloContext
+from ..domain.exceptions import DomainException
 from ..errors import status
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..entrypoints.client_type import ClientType
@@ -261,10 +262,14 @@ class AbsCommandHandler(AbsBaseHandler):
         return halo_response
 
     def processing_engine(self, halo_request:HaloCommandRequest)->dict:
-        if self.business_event:
-            return self.processing_engine_dtl(halo_request)
-        else:
-            return self.handle(halo_request,self.uow)
+        domain_exception_handler = ConvertDomainExceptionHandler()
+        try:
+            if self.business_event:
+                return self.processing_engine_dtl(halo_request)
+            else:
+                return self.handle(halo_request,self.uow)
+        except DomainException as e:
+            raise domain_exception_handler.handle(e)
 
     def processing_engine_dtl(self, halo_request:HaloCommandRequest)->dict:
         if self.business_event:

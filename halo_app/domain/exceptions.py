@@ -1,6 +1,7 @@
 
 from abc import ABCMeta, abstractmethod
 
+from halo_app.classes import AbsBaseClass
 from halo_app.exceptions import HaloException
 
 
@@ -15,5 +16,4 @@ class IllegalBQException(DomainException):
 
 class NoSuchPathException(DomainException):
     pass
-
 
