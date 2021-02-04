@@ -8,7 +8,7 @@ import traceback
 from abc import ABCMeta,abstractmethod
 # app
 from halo_app.app.exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError, \
-    HaloRequestError
+    HaloRequestError, AppExceptionHandler
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice, ERRType
 from ..domain.exceptions import DomainException
@@ -69,37 +69,13 @@ class BoundaryService(IBoundaryService):
             return ret
 
         except HaloError as e:
-            error = e
-            error.type = ERRType.error
-            error_message = str(error)
-            # @todo check if stack needed and working
-            e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
-            # exc_type, exc_obj, exc_tb = sys.exc_info()
-            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
+            error = AppExceptionHandler().handle(halo_request,e,ERRType.error,traceback)
 
         except HaloException as e:
-            error = e
-            error.type = ERRType.exception
-            error_message = str(error)
-            # @todo check if stack needed and working
-            e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
-            # exc_type, exc_obj, exc_tb = sys.exc_info()
-            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
+            error = AppExceptionHandler().handle(halo_request, e, ERRType.exception, traceback)
 
         except Exception as e:
-            error = e
-            error.type = ERRType.general
-            error_message = str(error)
-            #@todo check if stack needed and working
-            e.stack = traceback.format_exc()
-            logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
-            # exc_type, exc_obj, exc_tb = sys.exc_info()
-            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
+            error = AppExceptionHandler().handle(halo_request, e, ERRType.general, traceback)
 
         finally:
             self.__process_finally(halo_request.context,orig_log_level)

@@ -1,9 +1,12 @@
 from abc import ABCMeta, abstractmethod
-
+import logging
 from halo_app.classes import AbsBaseClass
+from halo_app.const import ERRType
 from halo_app.domain.exceptions import DomainException
 from halo_app.exceptions import HaloError, HaloException
+from halo_app.logs import log_json
 
+logger = logging.getLogger(__name__)
 
 class AppException(HaloException):
     __metaclass__ = ABCMeta
@@ -62,3 +65,19 @@ class ConvertDomainExceptionHandler(AbsBaseClass):
         #main_message = self.message_service.convert(de.message)
         #detail_message = self.message_service.convert(de.detail)
         return AppException ( de.message, de, de.detail,de.data)
+
+class AppExceptionHandler(AbsBaseClass):
+
+    def __init__(self):
+        pass
+
+    def handle(self,halo_request,e:Exception,type:ERRType,traceback):
+        error = e
+        error.type = error
+        error_message = str(error)
+        # @todo check if stack needed and working
+        e.stack = traceback.format_exc()
+        logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
