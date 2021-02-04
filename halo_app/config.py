@@ -358,7 +358,7 @@ class Config(object):
 
     START_ORM = env.bool('START_ORM',default=True)
     UOW_CLASS = env.str('UOW_CLASS',default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
-    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.redis_event_publisher.Publisher")
+    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.impl.redis_event_publisher.Publisher")
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
     HALO_CONTEXT_CLASS = None

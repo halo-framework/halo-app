@@ -30,6 +30,7 @@ from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  #
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.infra.apis import load_api_config
+from halo_app import bootstrap
 from halo_app.models import AbsDbMixin
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
 from halo_app.app.globals import load_global_data
@@ -38,8 +39,7 @@ from halo_app.app.utilx import Util
 from halo_app.sys_util import SysUtil
 from halo_app.app.request import AbsHaloRequest
 import unittest
-#6,7,9923,9941 failing
-from tests.conftest import sqlite_session_factory
+import pytest
 
 fake = Faker()
 app = Flask(__name__)
@@ -295,10 +295,15 @@ class A9(AbsEventHandler):
 
 class A10(AbsQueryHandler):
     def set_query_data(self,halo_query_request: HaloQueryRequest):
+        itemid = 1
+        detailid = 2
+        return 'SELECT id FROM item_lines WHERE itemid=:itemid AND detailid=:detailid',dict(orderid=itemid, detailid=detailid)
+
+class A11(AbsQueryHandler):
+    def set_query_data(self,halo_query_request: HaloQueryRequest):
         orderid = 1
         sku = 2
         return 'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',dict(orderid=orderid, sku=sku)
-
 
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
@@ -356,12 +361,30 @@ class XHaloResponseFactory(HaloResponseFactory):
             return TesterHaloResponse(halo_request, success,payload)
         return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload)
 
+boundry = None
+
+@pytest.fixture
+def sqlite_boundry(sqlite_session_factory):
+    global boundry
+    if boundry:
+        return boundry
+    boundry = bootstrap.bootstrap(
+        start_orm=True,
+        uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
+        publish=lambda *args: None,
+    )
+    print("boundry1")
+    return boundry
+
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
     """
-    def start(self):
+
+    @classmethod
+    def setUpClass(cls):
+        print(" do start")
         from halo_app.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
@@ -369,15 +392,23 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['FUNC_NAME'] = "FUNC_NAME"
         #app.config['API_CONFIG'] = None
         app.config['AWS_REGION'] = 'us-east-1'
-        with app.test_request_context(method='GET', path='/?abc=def'):
-            try:
-                load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
-                                app.config['API_CONFIG'])
-            except Exception as e:
-                eq_(e.__class__.__name__, "NoApiClassException")
+        # config
+        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class  # simple handle + fail
+        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class  # event 1 api
+        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class  # event empty api
+        bootstrap.COMMAND_HANDLERS["z1b"] = A1.run_command_class  # event seq api
+        bootstrap.COMMAND_HANDLERS["z1c"] = A1.run_command_class  # event saga api
+        bootstrap.COMMAND_HANDLERS["z2"] = A8.run_command_class
+        bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
+        bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
+        # bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+        bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
+        bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+        bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
 
     def setUp(self):
-
         #self.app = app#.test_client()
         #app.config.from_pyfile('../settings.py')
         app.config.from_object(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
@@ -389,25 +420,11 @@ class TestUserDetailTestCase(unittest.TestCase):
                                 app.config['API_CONFIG'])
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
-        from halo_app import bootstrap
-        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class # simple handle + fail
-        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class # event 1 api
-        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class # event empty api
-        bootstrap.COMMAND_HANDLERS["z1b"] = A1.run_command_class  # event seq api
-        bootstrap.COMMAND_HANDLERS["z1c"] = A1.run_command_class  # event saga api
-        bootstrap.COMMAND_HANDLERS["z2"] = A8.run_command_class
-        bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
-        bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
-        #bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
-        bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
-        bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
-        bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
-        self.boundary = bootstrap.bootstrap()
         print("do setup")
 
-
+    @pytest.fixture(autouse=True)
+    def initdir(self, sqlite_boundry):
+        self.boundary = sqlite_boundry
 
 
     def test_000_start(self):
