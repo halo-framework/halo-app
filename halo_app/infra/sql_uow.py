@@ -12,8 +12,6 @@ settings = settingsx()
 
 class SqlAlchemyUnitOfWork(AbsUnitOfWork):
 
-
-
     def __init__(self, session_factory=None):
         if session_factory:
             self.session_factory = session_factory

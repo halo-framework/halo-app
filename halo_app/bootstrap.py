@@ -2,9 +2,9 @@ import inspect
 from typing import Callable
 
 from halo_app.classes import AbsBaseClass
-from halo_app.infra import orm
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.app.boundary import BoundaryService
+from halo_app.infra.event_publisher import AbsPublisher
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 
@@ -13,11 +13,12 @@ settings = settingsx()
 def bootstrap(
     start_orm: bool = settings.START_ORM,#True,
     uow: AbsUnitOfWork = Reflect.instantiate(settings.UOW_CLASS,AbsUnitOfWork),#SqlAlchemyUnitOfWork(),
-    publish: Callable = Reflect.instantiate(settings.PUBLISHER_CLASS,AbsBaseClass),#Publisher(),
+    publish: Callable = Reflect.instantiate(settings.PUBLISHER_CLASS,AbsPublisher),#Publisher(),
 ) -> BoundaryService:
 
     if start_orm:
-        orm.start_mappers()
+        start_mappers = Reflect.import_method_from(settings.ORM_CLASS)
+        start_mappers()
 
     dependencies = {'uow': uow, 'publish': publish}
     for item in settings.DEPENDENCIES:

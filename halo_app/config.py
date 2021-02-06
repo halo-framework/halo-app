@@ -447,6 +447,7 @@ class Config(object):
     DEPENDENCIES = {} # { "sample_repo":"path to class code"}
     REDIS_URI = get_redis_host_and_port()
     HANDLER_TARGET = "handler_target"
+    ORM_CLASS = env.str('ORM_CLASS',default='halo_app.infra.orm.start_mappers')
 
 print('== The base settings file has been loaded.')
 

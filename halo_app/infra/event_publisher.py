@@ -1,7 +1,7 @@
 import json
 import logging
 from dataclasses import asdict
-
+import abc
 from halo_app.app.command import AbsHaloCommand
 from halo_app.classes import AbsBaseClass
 from halo_app.app.event import AbsHaloEvent
@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 settings = settingsx()
 
 
-class AbsPublisher(AbsBaseClass):
+class AbsPublisher(AbsBaseClass,abc.ABC):
+
+    @abc.abstractmethod
     def __init__(self):
         self.publisher = None
 
