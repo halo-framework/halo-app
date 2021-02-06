@@ -2,6 +2,8 @@ from halo_app.app.event import AbsHaloEvent
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
 from halo_app.app.uow import AbsUnitOfWork
+from halo_app.infra.event_publisher import AbsPublisher
+
 
 class FakeRepository(AbsRepository):
 
@@ -35,7 +37,7 @@ class FakeUnitOfWork(AbsUnitOfWork):
         pass
 
 
-class FakePublisher(AbsBaseClass):
+class FakePublisher(AbsPublisher):
     def publish(self,channel, event: AbsHaloEvent):
         #logging.info('publishing: channel=%s, event=%s', channel, event)
         pass
