@@ -10,14 +10,24 @@ from halo_app.domain.event import AbsHaloDomainEvent
 
 class Item(AbsHaloAggregateRoot):
 
-    def __init__(self, id: str,  other: int = 0):
+    def __init__(self, id: str,  data: str):
         super(Item, self).__init__(id)
-        self.other = other
+        self.data = data
+        self.events = []
+
+class Detail(AbsHaloAggregateRoot):
+
+    def __init__(self, id: str,  desc: str, qty:int):
+        super(Item, self).__init__(id)
+        self.desc = desc
+        self.qty = qty
+        self.events = []
 
 
     def add(self, context, something: str) -> str:
         try:
-            self.other += 1
+            self.qty += 1
+            self.desc = something
             self.events.append(self.add_domain_event(context, something))
             return something
         except Exception:

@@ -48,7 +48,7 @@ class HaloCommandResponse(AbsHaloResponse):
 class HaloQueryResponse(HaloCommandResponse):
 
     def __init__(self,halo_request:AbsHaloRequest,success:bool=True,payload=None):
-        super(HaloQueryResponse, self).__init__(halo_request,success)
+        super(HaloQueryResponse, self).__init__(halo_request,success,payload)
 
 
 class HaloResponseFactory(AbsBaseClass):

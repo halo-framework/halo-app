@@ -295,9 +295,9 @@ class A9(AbsEventHandler):
 
 class A10(AbsQueryHandler):
     def set_query_data(self,halo_query_request: HaloQueryRequest):
-        itemid = 1
-        detailid = 2
-        return 'SELECT id FROM item_lines WHERE itemid=:itemid AND detailid=:detailid',dict(orderid=itemid, detailid=detailid)
+        item_dtl_id = 1
+        qty = 2
+        return 'SELECT desc,qty FROM items_view WHERE item_dtl_id=:item_dtl_id AND qty=:qty',dict(item_dtl_id=item_dtl_id, qty=qty)
 
 class A11(AbsQueryHandler):
     def set_query_data(self,halo_query_request: HaloQueryRequest):
@@ -407,6 +407,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
         bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
         bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
+        bootstrap.QUERY_HANDLERS["q2"] = A11.run_query_class
 
     def setUp(self):
         #self.app = app#.test_client()
@@ -496,12 +497,26 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_request = SysUtil.create_query_request(t)
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
-                eq_(response.payload, {'a': 'b'})
+                eq_(response.payload, {})
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_1b_run_handle_async(self):
+    def test_1b_run_query(self):
+        #app.config['UOW_CLASS'] = "halo_app.infra.fake.FakeUnitOfWork"
+        #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
+        with app.test_request_context(method='GET', path='/?id=1'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                t = TestHaloQuery(halo_context, "q2",  request.args)
+                halo_request = SysUtil.create_query_request(t)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,False)
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_1c_run_handle_async(self):
         app.config['ASYNC_MODE'] = True
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
