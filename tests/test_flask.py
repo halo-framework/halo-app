@@ -630,7 +630,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         eq_(response.success, True)
-        eq_(response.payload,'')
+        eq_(response.payload,{})
 
     def test_9b_cli_query_error(self):
         halo_context = client_util.get_halo_context(client_type=ClientType.cli)
