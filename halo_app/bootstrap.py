@@ -17,7 +17,7 @@ def bootstrap(
 ) -> BoundaryService:
 
     if start_orm:
-        start_mappers = Reflect.import_method_from(settings.ORM_CLASS)
+        start_mappers = Reflect.import_method_from(settings.ORM_METHOD)
         start_mappers()
 
     dependencies = {'uow': uow, 'publish': publish}

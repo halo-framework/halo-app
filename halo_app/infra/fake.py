@@ -1,3 +1,4 @@
+from halo_app.app.boundary import BoundaryService
 from halo_app.app.event import AbsHaloEvent
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
@@ -44,3 +45,11 @@ class FakePublisher(AbsPublisher):
             def publish(self,channel, json):
                 pass
         self.publisher = Publisher()
+
+
+
+class FakeBoundary(BoundaryService):
+    def fake_process(self,event):
+        super(FakeBoundary,self)._process_event(event)
+
+

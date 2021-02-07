@@ -2,12 +2,11 @@ from __future__ import print_function
 
 import json
 import os
-
+from http import HTTPStatus
 from faker import Faker
 from flask import Flask, request
 from nose.tools import eq_
 
-from halo_app.app.context import InitCtxFactory
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
 from halo_app.app.uow import AbsUnitOfWork
@@ -17,7 +16,6 @@ from halo_app.entrypoints import client_util
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
-from halo_app.errors import status
 from halo_app.infra.exceptions import ApiException
 from halo_app.app.exceptions import HaloMethodNotImplementedException
 from halo_app.domain.repository import AbsRepository
@@ -26,6 +24,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
+from halo_app.infra.fake import FakeBoundary
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -41,7 +40,7 @@ from halo_app.app.request import AbsHaloRequest
 import unittest
 import pytest
 
-fake = Faker()
+faker = Faker()
 app = Flask(__name__)
 boundary = None
 
@@ -345,9 +344,6 @@ def get_host_name():
     else:
         return 'HALO_HOST'
 
-class FakeBoundry(BoundaryService):
-    def fake_process(self,event):
-        super(FakeBoundry,self)._process_event(event)
 
 class XClientType(ClientType):
     tester = 'TESTER'
@@ -361,21 +357,21 @@ class XHaloResponseFactory(HaloResponseFactory):
             return TesterHaloResponse(halo_request, success,payload)
         return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload)
 
-boundry = None
+boundray = None
 
 @pytest.fixture
-def sqlite_boundry(sqlite_session_factory):
-    global boundry
-    if boundry:
-        return boundry
-    boundry = bootstrap.bootstrap(
+def sqlite_boundary(sqlite_session_factory):
+    global boundray
+    if boundray:
+        return boundray
+    from sqlalchemy.orm import clear_mappers
+    clear_mappers()
+    boundary = bootstrap.bootstrap(
         start_orm=True,
         uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
         publish=lambda *args: None,
     )
-    print("boundry1")
-    return boundry
-
+    return boundary
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -424,8 +420,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         print("do setup")
 
     @pytest.fixture(autouse=True)
-    def initdir(self, sqlite_boundry):
-        self.boundary = sqlite_boundry
+    def init_boundary(self, sqlite_boundary):
+        self.boundary = sqlite_boundary
 
 
     def test_000_start(self):
@@ -523,8 +519,25 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
+                from .util import Util
+                response = Util.process_api_ok(response,request.method,app.config['ASYNC_MODE'])
                 eq_(response.success,True)
-                eq_(response.payload, None)
+                eq_(response.code, HTTPStatus.ACCEPTED)
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_1d_run_handle_async(self):
+        app.config['ASYNC_MODE'] = True
+        with app.test_request_context(method='GET', path='/?id=1'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                from .util import Util
+                response = Util.process_api_ok(response,request.method,app.config['ASYNC_MODE'])
+                eq_(response.success,True)
+                eq_(response.code, HTTPStatus.ACCEPTED)
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -644,7 +657,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = client_util.get_halo_context(client_type=ClientType.cli)
         halo_event = TestHaloEvent(halo_context, "z9","12")
         halo_request = SysUtil.create_event_request(halo_event)
-        fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
+        fake_boundary = FakeBoundary(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
     def test_10a_event(self):
@@ -652,7 +665,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers)
             halo_event = TestHaloEvent(halo_context, "z9", "12")
             halo_request = SysUtil.create_event_request(halo_event)
-            fake_boundary = FakeBoundry(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
+            fake_boundary = FakeBoundary(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
                                         self.boundary.query_handlers)
             fake_boundary.fake_process(halo_request)
 
@@ -709,7 +722,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             timeout = Util.get_timeout(halo_context)
             try:
                 response = api.get(timeout)
-                eq_(response.status_code, status.HTTP_200_OK)
+                eq_(response.status_code, HTTPStatus.OK)
             except ApiException as e:
                 eq_(1,2)
 
@@ -723,7 +736,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = api.get(timeout)
                 assert False
             except ApiException as e:
-                eq_(e.status_code, status.HTTP_404_NOT_FOUND)
+                eq_(e.status_code, HTTPStatus.NOT_FOUND)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 
     def test_14_api_request_soap(self):
@@ -781,7 +794,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = api.get(timeout)
                 assert False
             except ApiException as e:
-                eq_(e.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+                eq_(e.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
                 #eq_(e.__class__.__name__,"CircuitBreakerError")
 
     def test_18_send_event(self):

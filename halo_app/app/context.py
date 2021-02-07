@@ -26,6 +26,8 @@ class HaloContext(AbsBaseClass):
     SESSION = "SESSION"
     ACCESS = "ACCESS"
 
+
+
     items = {
         CORRELATION:"x-halo-correlation-id",
         USER_AGENT: "x-halo-user-agent",
@@ -33,7 +35,7 @@ class HaloContext(AbsBaseClass):
         DEBUG_LOG: "x-halo-debug-log-enabled",
         API_KEY: "x-halo-api-key",
         SESSION: "x-halo-session-id",
-        ACCESS: "x-halo-access-token"
+        ACCESS: "x-halo-access-token",
     }
 
     table:dict = {}

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class IBoundaryService(AbsBaseClass, abc.ABC):
     """
-    the only port exposed from the boundry
+    the only port exposed from the boundray
     """
     @abc.abstractmethod
     def execute(self, halo_request: AbsHaloRequest)->AbsHaloResponse:
@@ -123,7 +123,7 @@ class BoundaryService(IBoundaryService):
         for handler in self.event_handlers[type(request.event)]:
             try:
                 #@todo for attempt in Retrying: implement retry for event failier
-                #  configure boundry to retry operations up to three times, with an exponentially increasing wait between attempts
+                #  configure boundray to retry operations up to three times, with an exponentially increasing wait between attempts
                 logger.debug('handling event %s with handler %s', request.event, handler)
                 handler(request)
                 new_events = self.uow.collect_new_events()
@@ -140,7 +140,7 @@ class BoundaryService(IBoundaryService):
         for handler in self.event_handlers[type(event)]:
             try:
                 #@todo for attempt in Retrying: implement retry for event failier
-                #  configure boundry to retry operations up to three times, with an exponentially increasing wait between attempts
+                #  configure boundray to retry operations up to three times, with an exponentially increasing wait between attempts
                 logger.debug('handling event %s with handler %s', event, handler)
                 handler.run_event(event)
                 new_events = self.uow.collect_new_events()

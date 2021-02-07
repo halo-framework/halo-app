@@ -38,7 +38,8 @@ def strx(str1):
 
 class Util(AbsBaseClass):
 
-    def init_halo_context(self,env:dict=None):
+    @classmethod
+    def init_halo_context(cls,env:dict=None):
         if settings.HALO_CONTEXT_CLASS:
             context = Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext,env)
         else:
@@ -46,7 +47,7 @@ class Util(AbsBaseClass):
         return context
 
     @classmethod
-    def get_client_type(self)->ClientType:
+    def get_client_type(cls)->ClientType:
         if settings.HALO_CLIENT_CLASS:
             client_type_ins = Reflect.instantiate(settings.HALO_CLIENT_CLASS,ClientType)
         else:
@@ -54,7 +55,7 @@ class Util(AbsBaseClass):
         return client_type_ins
 
     @classmethod
-    def get_response_factory(self)->HaloResponseFactory:
+    def get_response_factory(cls)->HaloResponseFactory:
         if settings.HALO_RESPONSE_FACTORY_CLASS:
             response_factory_ins = Reflect.instantiate(settings.HALO_RESPONSE_FACTORY_CLASS, HaloResponseFactory)
         else:

@@ -53,6 +53,9 @@ class BusinessEventNotImplementedException(AppException):
 class HaloRequestError(HaloError):
     pass
 
+class HttpFailException(HaloException):
+    pass
+
 
 class ConvertDomainExceptionHandler(AbsBaseClass):
     message_service = None
