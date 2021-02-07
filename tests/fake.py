@@ -1,8 +1,12 @@
+from halo_app import bootstrap
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.event import AbsHaloEvent
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
 from halo_app.app.uow import AbsUnitOfWork
+from halo_app.entrypoints import client_util
+from halo_app.entrypoints.client_type import ClientType
+from halo_app.entrypoints.event_consumer import AbsConsumer
 from halo_app.infra.event_publisher import AbsPublisher
 
 
@@ -46,6 +50,11 @@ class FakePublisher(AbsPublisher):
                 pass
         self.publisher = Publisher()
 
+
+class FakeConsumer(AbsConsumer):
+    def __init__(self):
+        self.consumer = None
+        self.boundary = bootstrap.bootstrap(start_orm=False)
 
 
 class FakeBoundary(BoundaryService):

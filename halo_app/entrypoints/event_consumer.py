@@ -22,7 +22,7 @@ class AbsConsumer(AbsBaseClass):
         logger.info('handling %s', m)
         data = json.loads(m['data'])
         method_id,params,command_id = self.get_from_data(data)
-        self.run_command(method_id,params)
+        self.run_command(method_id,params,command_id)
 
     def run_command(self,method_id,params,command_id):
         logger.info('start executing command: %s, id: %s ', method_id, command_id)

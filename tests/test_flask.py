@@ -24,7 +24,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
-from halo_app.infra.fake import FakeBoundary
+from tests.fake import FakeBoundary
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -39,6 +39,8 @@ from halo_app.sys_util import SysUtil
 from halo_app.app.request import AbsHaloRequest
 import unittest
 import pytest
+
+from tests.fake import FakeConsumer
 
 faker = Faker()
 app = Flask(__name__)
@@ -528,19 +530,12 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_1d_run_handle_async(self):
-        app.config['ASYNC_MODE'] = True
-        with app.test_request_context(method='GET', path='/?id=1'):
-            try:
-                halo_context = client_util.get_halo_context(request.headers)
-                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
-                response = self.boundary.execute(halo_request)
-                from .util import Util
-                response = Util.process_api_ok(response,request.method,app.config['ASYNC_MODE'])
-                eq_(response.success,True)
-                eq_(response.code, HTTPStatus.ACCEPTED)
-            except Exception as e:
-                print(str(e))
-                eq_(e.__class__.__name__, "NoApiClassException")
+        event_consumer = FakeConsumer()
+        try:
+            event_consumer.handle_command({'data':'{"method_id":"z0","id":"1"}'})
+        except Exception as e:
+            print(str(e))
+            eq_(e.__class__.__name__, "NoApiClassException")
 
 
     def test_2_run_handle_fail(self):
