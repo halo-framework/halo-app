@@ -29,7 +29,6 @@ from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  #
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.infra.apis import load_api_config
-from halo_app import bootstrap
 from halo_app.models import AbsDbMixin
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
 from halo_app.app.globals import load_global_data
@@ -363,6 +362,7 @@ boundray = None
 
 @pytest.fixture
 def sqlite_boundary(sqlite_session_factory):
+    from halo_app import bootstrap
     global boundray
     if boundray:
         return boundray
@@ -391,6 +391,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['API_CONFIG'] = None
         app.config['AWS_REGION'] = 'us-east-1'
         # config
+        from halo_app import bootstrap
         bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class  # simple handle + fail
         bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class  # event 1 api
         bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class  # event empty api
@@ -411,8 +412,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         #self.app = app#.test_client()
         #app.config.from_pyfile('../settings.py')
         app.config.from_object(f"halo_app.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
-        from halo_app.settingsx import settingsx
-        settings = settingsx()
+        #from halo_app.settingsx import settingsx
+        #settings = settingsx()
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
