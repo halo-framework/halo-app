@@ -38,6 +38,9 @@ class FakeUnitOfWork(AbsUnitOfWork):
 
 
 class FakePublisher(AbsPublisher):
-    def publish(self,channel, event: AbsHaloEvent):
-        #logging.info('publishing: channel=%s, event=%s', channel, event)
-        pass
+    def __init__(self):
+        super(FakePublisher, self).__init__()
+        class Publisher():
+            def publish(self,channel, json):
+                pass
+        self.publisher = Publisher()
