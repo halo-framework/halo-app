@@ -359,16 +359,14 @@ class XHaloResponseFactory(HaloResponseFactory):
             return TesterHaloResponse(halo_request, success,payload)
         return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload)
 
-boundray = None
+boundary = None
 
 @pytest.fixture
 def sqlite_boundary(sqlite_session_factory):
     from halo_app import bootstrap
-    global boundray
-    if boundray:
-        return boundray
-    from sqlalchemy.orm import clear_mappers
-    clear_mappers()
+    global boundary
+    if boundary:
+        return boundary
     boundary = bootstrap.bootstrap(
         start_orm=True,
         uow=SqlAlchemyUnitOfWork(sqlite_session_factory),

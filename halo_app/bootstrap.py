@@ -17,6 +17,8 @@ def bootstrap(
 ) -> BoundaryService:
 
     if start_orm:
+        from halo_app.infra.orm import clear_mappers
+        clear_mappers()
         start_mappers = Reflect.import_method_from(settings.ORM_METHOD)
         start_mappers()
 

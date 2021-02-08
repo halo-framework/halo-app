@@ -3,7 +3,7 @@ from sqlalchemy import (
     Table, MetaData, Column, Integer, String, Date, ForeignKey,
     event,
 )
-from sqlalchemy.orm import mapper, relationship
+from sqlalchemy.orm import mapper, relationship, clear_mappers
 
 from halo_app.domain import model
 
