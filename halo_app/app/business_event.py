@@ -2,20 +2,22 @@ from __future__ import print_function
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 
-from abc import ABCMeta
+from abc import ABCMeta,abstractmethod
 
 from collections import OrderedDict
 
+from halo_app.classes import AbsBaseClass
 from halo_app.const import BusinessEventCategory
 
 
-class AbsBusinessEvent:
+class AbsBusinessEvent(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     EVENT_NAME = None
     EVENT_CATEGORY = None
     event_type = None
 
+    @abstractmethod
     def __init__(self,event_name:str,event_category:BusinessEventCategory):
         self.EVENT_NAME = event_name
         self.EVENT_CATEGORY = event_category

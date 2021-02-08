@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import logging
-
+import abc
 from halo_app.app.context import HaloContext
 from halo_app.app.exchange import AbsHaloExchange
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest
@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
   }
 """
 
-class AbsHaloResponse(AbsHaloExchange):
+class AbsHaloResponse(AbsHaloExchange,abc.ABC):
 
     request = None
 
-
+    @abc.abstractmethod
     def __init__(self,halo_request:AbsHaloRequest):
         self.request = halo_request
 

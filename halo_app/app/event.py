@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 settings = settingsx()
 
 @dataclass
-class AbsHaloEvent(AbsHaloMessage):
+class AbsHaloEvent(AbsHaloMessage,abc.ABC):
     context = None
     name = None
 
+    @abc.abstractmethod
     def __init__(self, context:HaloContext,name:str):
         super(AbsHaloEvent, self).__init__()
         self.context = context

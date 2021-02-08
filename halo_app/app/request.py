@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 settings = settingsx()
 
-class AbsHaloRequest(AbsHaloExchange):
+class AbsHaloRequest(AbsHaloExchange,abc.ABC):
 
     method_id = None
     context = None
     security = None
 
+    @abc.abstractmethod
     def __init__(self,halo_context, method_id,vars,secure=False,method_roles=None):
         self.method_id = method_id
         self.vars = vars

@@ -16,6 +16,7 @@ class AbsHaloExchange(AbsBaseClass, abc.ABC):
     id = None
     timestamp = None
 
+    @abc.abstractmethod
     def __init__(self):
         self.id = uuid.uuid4().__str__()
         self.timestamp = datetime.datetime.now().timestamp()

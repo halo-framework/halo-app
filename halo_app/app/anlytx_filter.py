@@ -3,7 +3,7 @@ from __future__ import print_function
 # python
 import datetime
 import logging
-from abc import ABCMeta
+from abc import ABCMeta,abstractmethod
 
 from halo_app.exceptions import StoreException
 from halo_app.classes import AbsBaseClass
@@ -54,6 +54,7 @@ class FilterEvent(BaseEvent):
 class AbsFilter(AbsBaseClass):
     __metaclass__ = ABCMeta
 
+    @abstractmethod
     def do_filter(self,halo_request,  halo_response):
         pass
 

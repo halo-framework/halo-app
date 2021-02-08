@@ -50,6 +50,7 @@ class AbsBaseHandler(AbsBaseClass):
     secure = False
     method_roles = None
 
+    @abstractmethod
     def __init__(self,method_id=None):
         pass
 
@@ -159,6 +160,7 @@ class AbsBaseHandler(AbsBaseClass):
 class AbsQueryHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
+    @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)
@@ -205,6 +207,7 @@ class AbsQueryHandler(AbsBaseHandler):
 class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
+    @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest):
         # 1. validate input params
         self.validate_req(halo_request)
@@ -240,6 +243,7 @@ class AbsCommandHandler(AbsBaseHandler):
     def set_back_api(self, halo_request):
         return None
 
+    @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
         self.validate_req(halo_request)

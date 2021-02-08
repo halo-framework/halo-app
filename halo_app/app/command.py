@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 settings = settingsx()
 
 @dataclass
-class AbsHaloCommand(AbsHaloMessage):
+class AbsHaloCommand(AbsHaloMessage,abc.ABC):
     context = None
     name = None
     vars = None
@@ -23,6 +23,7 @@ class AbsHaloCommand(AbsHaloMessage):
     aggregate_name = None
     aggregate_revision = None
 
+    @abc.abstractmethod
     def __init__(self):
         super(AbsHaloCommand,self).__init__()
 
