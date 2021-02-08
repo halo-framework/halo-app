@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 class Util(AbsBaseClass):
 
     @classmethod
-    def process_api_ok(cls, halo_response,method,async_mode):
+    def process_api_ok(cls, halo_response,method):
         if halo_response:
             if halo_response.request.context.get(HaloContext.client_type) == ClientType.api:
                 if halo_response.success:
-                    if async_mode:
+                    if settings.ASYNC_MODE:
                         success = HTTPStatus.ACCEPTED
                     else:
                         success = HTTPStatus.OK

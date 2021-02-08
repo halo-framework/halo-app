@@ -13,6 +13,7 @@ from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.app.event import AbsHaloEvent
 from halo_app.entrypoints import client_util
+from halo_app.infra.impl.redis_event_publisher import Publisher
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
@@ -24,7 +25,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
-from tests.fake import FakeBoundary
+from tests.fake import FakeBoundary, FakePublisher
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -371,7 +372,7 @@ def sqlite_boundary(sqlite_session_factory):
     boundary = bootstrap.bootstrap(
         start_orm=True,
         uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
-        publish=lambda *args: None,
+        publish=FakePublisher()
     )
     return boundary
 
@@ -523,7 +524,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
                 from .util import Util
-                response = Util.process_api_ok(response,request.method,app.config['ASYNC_MODE'])
+                response = Util.process_api_ok(response,request.method)
                 eq_(response.success,True)
                 eq_(response.code, HTTPStatus.ACCEPTED)
             except Exception as e:
