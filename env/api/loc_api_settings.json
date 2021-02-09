@@ -2,49 +2,49 @@
   "Google": {
     "url": "http://www.yahoo.com",
     "type": "api",
-    "class": "tests.test_flask.GoogleApi"
+    "class": "tests.test_halo.GoogleApi"
   },
   "halo-webapp-service-dev-halo_webapp": {
     "url": "http://htzc5syuhj.execute-api.us-east-1.amazonaws.com/info",
     "type": "service",
     "version": "1",
-    "class": "tests.test_flask.AwsApi"
+    "class": "tests.test_halo.AwsApi"
   },
   "PrimoService-dev-hello": {
     "url": "https://htzc5syuhj.execute-api.us-east-1.amazonaws.com/",
     "type": "service",
-    "class": "tests.test_flask.PrimoServiceApi"
+    "class": "tests.test_halo.PrimoServiceApi"
   },
   "Cnn": {
     "url": "http://www.nytimes.com",
     "type": "api",
-    "class": "tests.test_flask.CnnApi"
+    "class": "tests.test_halo.CnnApi"
   },
   "Tst": {
     "url": "http://www.cnddmfgkkn.com",
     "type": "api",
-    "class": "tests.test_flask.TstApi"
+    "class": "tests.test_halo.TstApi"
   },
   "Tst1": {
     "url": "http://127.0.0.1",
     "type": "api",
-    "class": "tests.test_flask.Tst1Api"
+    "class": "tests.test_halo.Tst1Api"
   },
   "Tst2": {
     "url": "http://www.soapclient.com/xml/soapresponder.wsdl",
     "type": "api",
     "protocol": "soap",
-    "class": "tests.test_flask.Tst2Api"
+    "class": "tests.test_halo.Tst2Api"
   },
   "Tst3": {
     "url": "http://127.0.0.1",
     "type": "api",
-    "class": "tests.test_flask.Tst3Api"
+    "class": "tests.test_halo.Tst3Api"
   },
   "Tst4": {
     "url": "https://base_url/$ID",
     "type": "api",
-    "class": "tests.test_flask.Tst4Api"
+    "class": "tests.test_halo.Tst4Api"
   },
   "Outbound": {
     "url": "https://base_url/$ID",

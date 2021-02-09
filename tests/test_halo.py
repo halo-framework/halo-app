@@ -44,7 +44,6 @@ from tests.fake import FakeConsumer
 
 faker = Faker()
 app = Flask(__name__)
-boundary = None
 
 
 ##################################### test #########################
@@ -116,7 +115,7 @@ class Sec(HaloSecurity):
     def get_user_roles(self,user):
         return ['tst']
 
-#API_LIST = {"Google": 'tests.test_flask.GoogleApi', "Cnn": "tests.test_flask.CnnApi","Tst":"tests.test_flask.TstApi","Tst2":"tests.test_flask.Tst2Api","Tst3":"tests.test_flask.Tst3Api","Tst4":"tests.test_flask.Tst4Api"}
+#API_LIST = {"Google": 'tests.test_halo.GoogleApi', "Cnn": "tests.test_halo.CnnApi","Tst":"tests.test_halo.TstApi","Tst2":"tests.test_halo.Tst2Api","Tst3":"tests.test_halo.Tst3Api","Tst4":"tests.test_halo.Tst4Api"}
 
 #ApiMngr.set_api_list(API_LIST)
 
@@ -424,7 +423,6 @@ class TestUserDetailTestCase(unittest.TestCase):
     @pytest.fixture(autouse=True)
     def init_boundary(self, sqlite_boundary):
         self.boundary = sqlite_boundary
-
 
     def test_000_start(self):
         from halo_app.const import LOC
@@ -810,7 +808,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SSM_TYPE'] = "AWS"
         app.config['AWS_REGION'] = 'us-east-1'
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
         with app.test_request_context(method='POST', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"},data={"a":"1"}):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -819,7 +817,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_20_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -828,8 +826,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_21_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -837,8 +835,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_22_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -846,8 +844,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_23_event_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?id=b',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z10", request.args)
@@ -855,8 +853,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_24_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": "<", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -882,8 +880,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_25_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": "?", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -909,8 +907,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_26_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": ">", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -939,8 +937,8 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_27_filter(self):
         app.config['PROVIDER'] = "AWS"
-        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_flask.TestFilter'
-        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_flask.TestAwsRequestFilterClear'
+        app.config['REQUEST_FILTER_CLASS'] = 'tests.test_halo.TestFilter'
+        app.config['REQUEST_FILTER_CLEAR_CLASS'] = 'tests.test_halo.TestAwsRequestFilterClear'
         with app.test_request_context(method='GET', path='/?a=b&q={"field": "weight", "op": ">", "value": 10.24}',headers= {HaloContext.items.get(HaloContext.CORRELATION):"123"}):
             q = request.args['q']
             import json
@@ -1226,7 +1224,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['PROVIDER'] = "AWS"
         headers = {'HTTP_HOST': '127.0.0.2','x-tester-id':"123"}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
-        app.config['HALO_CONTEXT_CLASS'] = 'tests.test_flask.CAContext'
+        app.config['HALO_CONTEXT_CLASS'] = 'tests.test_halo.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = client_util.get_halo_context(request.headers)
             eq_(halo_context.get(CAContext.items[CAContext.TESTER]), "123")
@@ -1237,7 +1235,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_48_NOCORR(self):
         header = {'HTTP_HOST': '127.0.0.2'}
         app.config['HALO_CONTEXT_LIST'] = [CAContext.TESTER]
-        app.config['HALO_CONTEXT_CLASS'] = 'tests.test_flask.CAContext'
+        app.config['HALO_CONTEXT_CLASS'] = 'tests.test_halo.CAContext'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=header):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
@@ -1255,7 +1253,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
 
     def test_50_db(self):
-        app.config['DBACCESS_CLASS'] = 'tests.test_flask.DbMixin'
+        app.config['DBACCESS_CLASS'] = 'tests.test_halo.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = client_util.get_halo_context(request.headers)
             db = DbTest()
@@ -1263,7 +1261,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             db.get_dbaccess(req,True)
 
     def test_51_db(self):
-        app.config['DBACCESS_CLASS'] = 'tests.test_flask.DbMixin'
+        app.config['DBACCESS_CLASS'] = 'tests.test_halo.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = client_util.get_halo_context(request.headers)
             db = DbTest()
@@ -1316,7 +1314,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
@@ -1334,7 +1332,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
@@ -1353,7 +1351,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
@@ -1373,7 +1371,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
@@ -1392,7 +1390,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
@@ -1412,7 +1410,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}
@@ -1434,7 +1432,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
-        app.config['HALO_SECURITY_CLASS'] = 'tests.test_flask.Sec'
+        app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token'],'x-halo-correlation-id':'123456'}

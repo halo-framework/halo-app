@@ -1,5 +1,5 @@
 {
-  "tests.test_flask.A1": {
+  "tests.test_halo.A1": {
     "command": {
       "z1": {
         "url": "api1.json",
@@ -20,7 +20,7 @@
     }
   },
 
-  "tests.test_flask.A8": {
+  "tests.test_halo.A8": {
     "command": {
       "z8": {
         "url": "base_seq.json",
@@ -28,7 +28,7 @@
       }
     }
   },
-  "tests.test_flask.A3": {
+  "tests.test_halo.A3": {
     "command": {
       "z3": {
         "url": "saga.json",
@@ -36,7 +36,7 @@
       }
     }
   },
-  "tests.test_flask.A1x": {
+  "tests.test_halo.A1x": {
     "command": {
       "z2": {
         "url": "base_seq.json",
@@ -44,7 +44,7 @@
       }
     }
   },
-  "tests.test_flask.A2": {
+  "tests.test_halo.A2": {
     "command": {
       "z6": {
         "url": "saga_rlbk_brk.json",
@@ -60,7 +60,7 @@
       }
     }
   },
-  "tests.test_flask.A5x": {
+  "tests.test_halo.A5x": {
     "command": {
       "GET": {
         "url": "base_seq_provider.json",
@@ -85,7 +85,7 @@
 
     }
   },
-  "tests.test_flask.A6x": {
+  "tests.test_halo.A6x": {
     "command": {
       "GET": {
         "url": "base_seq_provider.json",
@@ -110,7 +110,7 @@
 
     }
   },
-  "tests.test_flask.T3":{
+  "tests.test_halo.T3":{
     "command": {
       "GET": {
         "url": "tst_saga.json",

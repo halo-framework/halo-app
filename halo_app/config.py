@@ -455,8 +455,8 @@ print('== The base settings file has been loaded.')
 class Config_loc(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
     FLASK_ENV = "local"
-    HALO_CLIENT_CLASS = 'tests.test_flask.XClientType'
-    HALO_RESPONSE_FACTORY_CLASS = 'tests.test_flask.XHaloResponseFactory'
+    HALO_CLIENT_CLASS = 'tests.test_halo.XClientType'
+    HALO_RESPONSE_FACTORY_CLASS = 'tests.test_halo.XHaloResponseFactory'
     ISOLATION_LEVEL = "SERIALIZABLE"
 
 
