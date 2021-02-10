@@ -509,6 +509,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 t = TestHaloQuery(halo_context, "q2",  request.args)
                 halo_request = SysUtil.create_query_request(t)
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 print(str(e))
@@ -543,6 +544,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 print(str(e))
@@ -648,6 +650,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         t = TestHaloQuery(halo_context, "q2", {})
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
+        TUtil.err(response)
         eq_(response.success,False)
         eq_(response.errors['error']['error_code'], 500)
 
@@ -1048,6 +1051,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1058,6 +1062,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiException")
@@ -1068,6 +1073,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z6", request.args)
             try:
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
