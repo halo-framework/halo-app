@@ -26,7 +26,6 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
     @abc.abstractmethod
     def __init__(self,halo_context, method_id,vars,secure=False,method_roles=None):
         self.method_id = method_id
-        self.vars = vars
         self.context = halo_context
         for i in settings.HALO_CONTEXT_LIST:
             item = HaloContext.items[i]

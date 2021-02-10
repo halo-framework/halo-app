@@ -17,6 +17,7 @@ class Util(AbsBaseClass):
     @classmethod
     def process_api_ok(cls, halo_response,method):
         if halo_response:
+            cls.err(halo_response)
             if halo_response.request.context.get(HaloContext.client_type) == ClientType.api:
                 if halo_response.success:
                     if settings.ASYNC_MODE:
@@ -49,3 +50,9 @@ class Util(AbsBaseClass):
                     halo_response.payload = halo_response.errors
                     return halo_response
         raise HttpFailException(halo_response)
+
+    @classmethod
+    def err(cls,response):
+        if not response.success:
+            for i in response.errors:
+                print(str(i) + ":" + str(response.errors[i]))

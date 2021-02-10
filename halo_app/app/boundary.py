@@ -69,13 +69,13 @@ class BoundaryService(IBoundaryService):
             return ret
 
         except HaloError as e:
-            error = AppExceptionHandler().handle(halo_request,e,ERRType.error,traceback)
+            error = AppExceptionHandler().handle(halo_request,e,traceback)
 
         except HaloException as e:
-            error = AppExceptionHandler().handle(halo_request, e, ERRType.exception, traceback)
+            error = AppExceptionHandler().handle(halo_request, e, traceback)
 
         except Exception as e:
-            error = AppExceptionHandler().handle(halo_request, e, ERRType.general, traceback)
+            error = AppExceptionHandler().handle(halo_request, e, traceback)
 
         finally:
             self.__process_finally(halo_request.context,orig_log_level)
@@ -85,7 +85,7 @@ class BoundaryService(IBoundaryService):
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        json_error = Util.json_error_response(halo_request.context, halo_request.vars,settings.ERR_MSG_CLASS, error)
+        json_error = Util.json_error_response(halo_request.context,settings.ERR_MSG_CLASS, error)
         return self.__do_abort(halo_request, errors=json_error)
 
     def __do_abort(self,halo_request, errors):

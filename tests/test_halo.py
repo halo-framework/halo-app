@@ -37,6 +37,8 @@ from halo_app.security import HaloSecurity
 from halo_app.app.utilx import Util
 from halo_app.sys_util import SysUtil
 from halo_app.app.request import AbsHaloRequest
+from .util import Util as TUtil
+
 import unittest
 import pytest
 
@@ -498,7 +500,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_1b_run_query(self):
+    def test_1b_run_query_error(self):
         #app.config['UOW_CLASS'] = "halo_app.infra.fake.FakeUnitOfWork"
         #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
         with app.test_request_context(method='GET', path='/?id=1'):
@@ -519,8 +521,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
-                from .util import Util
-                response = Util.process_api_ok(response,request.method)
+                response = TUtil.process_api_ok(response,request.method)
                 eq_(response.success,True)
                 eq_(response.code, HTTPStatus.ACCEPTED)
             except Exception as e:
@@ -553,6 +554,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,True)
             except Exception as e:
                 print(str(e))
@@ -564,6 +566,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1a", request.args)
                 response = self.boundary.execute(halo_request)
+                response = TUtil.process_api_ok(response, request.method)
                 eq_(response.success,True)
             except Exception as e:
                 print(str(e))
@@ -574,6 +577,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1b", request.args)
             response = self.boundary.execute(halo_request)
+            response = TUtil.process_api_ok(response, request.method)
             eq_(response.success,True)
 
     def test_4_run_saga(self):
@@ -581,6 +585,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1c", {})
             response = self.boundary.execute(halo_request)
+            response = TUtil.process_api_ok(response, request.method)
             eq_(response.success,True)
 
     def test_5_cli_handle(self):

@@ -162,7 +162,7 @@ class Util(AbsBaseClass):
         return False
 
     @staticmethod
-    def json_error_response(halo_context,args, clazz, e):  # code, msg, requestId):
+    def json_error_response(halo_context, clazz, e):  # code, msg, requestId):
         """
 
         :param req_context:
@@ -187,6 +187,7 @@ class Util(AbsBaseClass):
                 e_msg = str(e)
             if e_msg is not None and e_msg != 'None' and e_msg != "":
                 error_detail = e_msg
+        #@todo check when to use data
         error_data = {}
         if hasattr(e, 'view'):
             error_data = json.dumps(e.data)
@@ -196,7 +197,7 @@ class Util(AbsBaseClass):
                    }
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
             payload["stack"] = json.dumps(e.stack)
-            payload["request"] = json.dumps(args)
+            payload["context"] = json.dumps(halo_context.table)
         return payload
 
     @staticmethod

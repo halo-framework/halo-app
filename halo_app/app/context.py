@@ -61,6 +61,9 @@ class HaloContext(AbsBaseClass):
     def size(self):
         return len(self.table)
 
+    def get_data(self):
+        return self.table
+
 
 
 class InitCtxFactory(AbsBaseClass):

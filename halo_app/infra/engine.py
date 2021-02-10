@@ -73,7 +73,7 @@ class ProcessingEngine(AbsBaseClass):
         return None
 
     def set_api_data(self,halo_request,api, seq=None, dict=None):
-        return halo_request.vars
+        return {}
 
     def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
         logger.debug("in execute_api "+back_api.name)

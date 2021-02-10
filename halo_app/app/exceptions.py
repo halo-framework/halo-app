@@ -74,13 +74,17 @@ class AppExceptionHandler(AbsBaseClass):
     def __init__(self):
         pass
 
-    def handle(self,halo_request,e:Exception,type:ERRType,traceback):
-        error = e
-        error.type = error
-        error_message = str(error)
+    def handle(self,halo_request,e:Exception,traceback):
+        if isinstance(e, HaloError) or issubclass(e.__class__, HaloError):
+            e.type = ERRType.error
+        elif isinstance(e, HaloException) or issubclass(e.__class__, HaloException):
+            e.type = ERRType.exception
+        else:
+            e.type = ERRType.general
         # @todo check if stack needed and working
         e.stack = traceback.format_exc()
-        logger.error(error_message, extra=log_json(halo_request.context, halo_request.vars, e))
+        logger.error(e.__str__(), extra=log_json(halo_request.context, {}, e))
         # exc_type, exc_obj, exc_tb = sys.exc_info()
         # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         # logger.debug('An error occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
+        return e
