@@ -135,7 +135,7 @@ class BoundaryService(IBoundaryService):
 
     def __process_event_retry(self, event: HaloEventRequest):
         if type(event) not in self.event_handlers:
-            logger.exception('event %s not mapped to handler', type(event))
+            logger.exception('event type %s not mapped to handler', type(event))
             return
         for handler in self.event_handlers[type(event)]:
             try:
@@ -185,7 +185,7 @@ class BoundaryService(IBoundaryService):
     def __process_query(self, query: HaloQueryRequest)->AbsHaloResponse:
         logger.debug('handling query %s', query)
         if query.method_id not in self.query_handlers:
-            raise QueryNotMappedError("query method_id" + query.method_id)
+            raise QueryNotMappedError("query method_id " + query.method_id)
         try:
             # The query dispatcher expects just one handler per command.
             handler = self.query_handlers[query.method_id]
