@@ -4,6 +4,8 @@ from __future__ import print_function
 import logging
 import json
 import re
+from typing import Tuple
+
 from jsonpath_ng import parse
 # aws
 # common
@@ -212,7 +214,7 @@ class AbsQueryHandler(AbsBaseHandler):
     def data_engine(self,halo_request:HaloQueryRequest)->dict:
         return self.run(halo_request,self.uow)
 
-    def set_query_data(self,halo_query_request: HaloQueryRequest):
+    def set_query_data(self,halo_query_request: HaloQueryRequest)->Tuple[str,dict]:
         raise HaloMethodNotImplementedException("method set_query_data in Query")
 
     def run(self, halo_query_request: HaloQueryRequest,uow:AbsUnitOfWork) -> dict:
