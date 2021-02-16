@@ -28,7 +28,7 @@ class Consumer(AbsConsumer):
         r = redis.Redis(settings.REDIS_URI)
         self.consumer = r.pubsub(ignore_subscribe_messages=True)
         self.consumer.subscribe(settings.HALO_CHANNEL)
-        client_util.get_halo_context(client_type=ClientType.event)
+        client_util.get_halo_context({},client_type=ClientType.event)
 
 if __name__ == '__main__':
     main()

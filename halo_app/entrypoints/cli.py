@@ -54,13 +54,13 @@ class Cli(AbsBaseClass):
         self.boundary = bootstrap.bootstrap()
 
     def run_command(self,method_id,params):
-        halo_context = client_util.get_halo_context(client_type=ClientType.cli)
+        halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, method_id, params)
         response = self.boundary.execute(halo_request)
         return response.payload
 
     def run_query(self,method_id,params):
-        halo_context = client_util.get_halo_context(client_type=ClientType.cli)
+        halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         t = AbsHaloQuery(halo_context,method_id, params)
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)

@@ -93,13 +93,6 @@ class Util(AbsBaseClass):
                 return timeout
         return settings.SERVICE_CONNECT_TIMEOUT_IN_SC
 
-
-    @classmethod
-    def get_halo_context1(cls, api_key=None,x_correlation_id=None,x_user_agent=None,dlog=None,request_id=None):
-        """
-        :param request:
-        :param api_key:
-        :return:
         """
 
         env = {HaloContext.items[HaloContext.USER_AGENT]: x_user_agent,
@@ -108,8 +101,7 @@ class Util(AbsBaseClass):
                HaloContext.items[HaloContext.DEBUG_LOG]: dlog}
         if api_key:
             env[HaloContext.items[HaloContext.API_KEY]] = api_key
-        ctx = InitCtxFactory.get_initial_context(env)
-        return ctx
+        """
 
     @staticmethod
     def get_func_name():
@@ -157,7 +149,7 @@ class Util(AbsBaseClass):
         # disable debug logging by default, but allow override via env variables
         # or if enabled via forwarded request context or if debug flag is on
         if halo_context.get(
-                HaloContext.items[HaloContext.DEBUG_LOG]) == 'true' or cls.get_system_debug_enabled() == 'true':
+                HaloContext.DEBUG_LOG) == 'true' or cls.get_system_debug_enabled() == 'true':
             return True
         return False
 

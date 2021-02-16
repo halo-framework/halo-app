@@ -28,9 +28,10 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
         self.method_id = method_id
         self.context = halo_context
         for i in settings.HALO_CONTEXT_LIST:
-            item = HaloContext.items[i]
-            if item not in self.context.keys():
-                raise MissingHaloContextException(str(item))
+            if i not in HaloContext.items:
+                raise MissingHaloContextException(str(i))
+            if i not in self.context.keys():
+                raise MissingHaloContextException(str(i))
         if settings.SECURITY_FLAG or secure:
             if settings.HALO_SECURITY_CLASS:
                 self.security = Reflect.instantiate(settings.HALO_SECURITY_CLASS, HaloSecurity)
