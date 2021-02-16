@@ -157,6 +157,33 @@ class AbsBaseHandler(AbsBaseClass):
             return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
+    def set_businss_event(self, halo_request:HaloCommandRequest, event_category:BusinessEventCategory=None):
+       self.service_operation = SysUtil.instance_full_name(self)#self.__class__.__name__
+       if not self.business_event:
+            if settings.BUSINESS_EVENT_MAP:
+                if self.service_operation in settings.BUSINESS_EVENT_MAP:
+                    #bq = "base"
+                    bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
+                    for bq in bqs:
+                        service_list = bqs[bq]
+                        #@todo add schema to all event config files
+                        if service_list and halo_request.method_id in service_list.keys():
+                            service_map = service_list[halo_request.method_id]
+                            if BusinessEventCategory.EMPTY.value in service_map:
+                                dict = service_map[BusinessEventCategory.EMPTY.value]
+                                self.business_event = BusinessEvent(self.service_operation,BusinessEventCategory.EMPTY)
+                            if BusinessEventCategory.API.value in service_map:
+                                dict = service_map[BusinessEventCategory.API.value]
+                                self.business_event = ApiBusinessEvent(self.service_operation,BusinessEventCategory.API, dict)
+                            if BusinessEventCategory.SEQ.value in service_map:
+                                dict = service_map[BusinessEventCategory.SEQ.value]
+                                self.business_event = FoiBusinessEvent(self.service_operation,BusinessEventCategory.SEQ, dict)
+                            if BusinessEventCategory.SAGA.value in service_map:
+                                saga = service_map[BusinessEventCategory.SAGA.value]
+                                self.business_event = SagaBusinessEvent(self.service_operation, BusinessEventCategory.SAGA, saga)
+                    #   if no entry use simple operation
+
+
 class AbsQueryHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
@@ -291,33 +318,6 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork)->dict:
         raise HaloMethodNotImplementedException("method handle in command")
-
-
-    def set_businss_event(self, halo_request:HaloCommandRequest, event_category:BusinessEventCategory=None):
-       self.service_operation = SysUtil.instance_full_name(self)#self.__class__.__name__
-       if not self.business_event:
-            if settings.BUSINESS_EVENT_MAP:
-                if self.service_operation in settings.BUSINESS_EVENT_MAP:
-                    #bq = "base"
-                    bqs = settings.BUSINESS_EVENT_MAP[self.service_operation]
-                    for bq in bqs:
-                        service_list = bqs[bq]
-                        #@todo add schema to all event config files
-                        if service_list and halo_request.method_id in service_list.keys():
-                            service_map = service_list[halo_request.method_id]
-                            if BusinessEventCategory.EMPTY.value in service_map:
-                                dict = service_map[BusinessEventCategory.EMPTY.value]
-                                self.business_event = BusinessEvent(self.service_operation,BusinessEventCategory.EMPTY)
-                            if BusinessEventCategory.API.value in service_map:
-                                dict = service_map[BusinessEventCategory.API.value]
-                                self.business_event = ApiBusinessEvent(self.service_operation,BusinessEventCategory.API, dict)
-                            if BusinessEventCategory.SEQ.value in service_map:
-                                dict = service_map[BusinessEventCategory.SEQ.value]
-                                self.business_event = FoiBusinessEvent(self.service_operation,BusinessEventCategory.SEQ, dict)
-                            if BusinessEventCategory.SAGA.value in service_map:
-                                saga = service_map[BusinessEventCategory.SAGA.value]
-                                self.business_event = SagaBusinessEvent(self.service_operation, BusinessEventCategory.SAGA, saga)
-                    #   if no entry use simple operation
 
     ######################################################################
 
