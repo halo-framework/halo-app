@@ -157,7 +157,7 @@ class AbsBaseHandler(AbsBaseClass):
             return Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
         return RequestFilter()
 
-    def set_businss_event(self, halo_request:HaloCommandRequest, event_category:BusinessEventCategory=None):
+    def set_business_event(self, halo_request:HaloCommandRequest, event_category:BusinessEventCategory=None):
        self.service_operation = SysUtil.instance_full_name(self)#self.__class__.__name__
        if not self.business_event:
             if settings.BUSINESS_EVENT_MAP:
@@ -223,6 +223,7 @@ class AbsQueryHandler(AbsBaseHandler):
 
     def __run_query(self,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         self.uow = uow
+        self.set_business_event(halo_request, BusinessEventCategory.EMPTY)
         ret:AbsHaloResponse = self.do_operation(halo_request)
         return ret
 
@@ -252,6 +253,7 @@ class AbsEventHandler(AbsBaseHandler):
 
     def _run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
         self.uow = uow
+        self.set_business_event(halo_request, BusinessEventCategory.EMPTY)
         ret:AbsHaloResponse = self.do_operation(halo_request)
 
     @classmethod
@@ -323,7 +325,7 @@ class AbsCommandHandler(AbsBaseHandler):
 
     def __run_command(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         self.uow = uow
-        self.set_businss_event(halo_request, BusinessEventCategory.EMPTY)
+        self.set_business_event(halo_request, BusinessEventCategory.EMPTY)
         ret:AbsHaloResponse = self.do_operation(halo_request)
         return ret
 
