@@ -174,7 +174,7 @@ class Util(AbsBaseClass):
         my_class = getattr(module, 'ErrorMessages')
         msgs = my_class()
         error_code, message = msgs.get_code(e)
-        error_detail = ""
+        error_detail = type(e)
         e_msg = ""
         if hasattr(e, 'detail'):
             error_detail = e.detail
