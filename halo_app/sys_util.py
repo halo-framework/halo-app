@@ -74,16 +74,15 @@ class SysUtil(AbsBaseClass):
             try:
                 module_name, class_name = clazz.rsplit(".", 1)
                 x = getattr(importlib.import_module(module_name), class_name)
-                if type == OPType.COMMAND:  # command
+                if type == OPType.COMMAND.value:  # command
                     bootstrap.COMMAND_HANDLERS[method_id] = x.run_command_class
-                if type == OPType.QUERY:  # query
+                if type == OPType.QUERY.value:  # query
                     bootstrap.QUERY_HANDLERS[method_id] = x.run_query_class
-                if type == OPType.EVENT:  # event
+                if type == OPType.EVENT.value:  # event
                     bootstrap.EVENT_HANDLERS[method_id] = x.run_event_class
             except Exception as e:
                 logger.error("config for handler missing: "+str(clazz) +" - "+str(e))
-                #@todo raise
-                #raise e
+                raise e
         BOUNDARY = bootstrap.bootstrap()
         return BOUNDARY
 

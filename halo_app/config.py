@@ -419,21 +419,6 @@ class Config(object):
     except FileNotFoundError as e:
         raise e
 
-    FACTORY_CLASS_LIST = {}
-    file_dir = os.path.dirname(__file__)
-    for f in os.listdir(file_dir):
-        if f.endswith(".json"):
-            service_file_name = f.replace(".json","")+"_service"
-            file_path = os.path.join(file_dir,f)
-            try:
-                with open(file_path, 'r') as fi:
-                    import ast
-                    MAPPING = ast.literal_eval(fi.read())
-                    for key in MAPPING:
-                        FACTORY_CLASS_LIST[key] = FUNC_NAME+".app.services."+service_file_name+"."+MAPPING[key]
-            except FileNotFoundError as e:
-                raise e
-
     if not SQLALCHEMY_DATABASE_URI:
         db_host = os.environ.get('DB_HOST', 'localhost')
         db_port = env.int('DB_PORT',default=1234)
