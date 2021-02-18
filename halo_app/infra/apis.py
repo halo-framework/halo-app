@@ -7,7 +7,7 @@ import uuid
 import json
 from abc import ABCMeta
 import requests
-from halo_app.infra.providers.providers import get_provider,ProviderError
+from halo_app.infra.providers.providers import get_provider,ProviderException
 from halo_app.classes import AbsBaseClass
 from halo_app.infra.exceptions import MaxTryHttpException, NoApiDefinitionException, \
      MissingClassConfigException, IllegalMethodException, ApiException
@@ -123,7 +123,7 @@ class AbsBaseApi(AbsBaseClass):
             print("content:" + str(content))
             provider_response = ProviderResponse(content["body"],ret['ResponseMetadata']["HTTPHeaders"],ret['StatusCode'])
             return provider_response
-        except ProviderError as e:
+        except ProviderException as e:
             logger.error("Unexpected Provider Error", extra=log_json(halo_context, messageDict, e))
             raise e
 

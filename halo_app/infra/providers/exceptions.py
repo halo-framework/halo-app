@@ -5,37 +5,37 @@ from abc import ABCMeta, abstractmethod
 
 
 # provider
-from halo_app.exceptions import HaloError
+from halo_app.infra.exceptions import InfraException
 
 
-class ProviderError(HaloError):
+class ProviderException(InfraException):
     __metaclass__ = ABCMeta
 
-class SSMError(ProviderError):
+class SSMException(ProviderException):
     pass
 
-class NoLocalSSMClassError(ProviderError):
+class NoLocalSSMClassException(ProviderException):
     pass
 
-class NoLocalSSMModuleError(ProviderError):
+class NoLocalSSMModuleException(ProviderException):
     pass
 
-class NoSSMRegionError(ProviderError):
+class NoSSMRegionException(ProviderException):
     pass
 
-class NoSSMDefinedError(ProviderError):
+class NoSSMDefinedException(ProviderException):
     pass
 
-class NotSSMTypeError(ProviderError):
+class NotSSMTypeException(ProviderException):
     pass
 
-class NoONPREMProviderClassError(ProviderError):
+class NoONPREMProviderClassException(ProviderException):
     pass
 
-class NoONPREMProviderModuleError(ProviderError):
+class NoONPREMProviderModuleException(ProviderException):
     pass
 
-class ProviderInitError(ProviderError):
+class ProviderInitException(ProviderException):
     pass
 
 

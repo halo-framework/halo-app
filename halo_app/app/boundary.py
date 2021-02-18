@@ -7,8 +7,8 @@ import logging
 import traceback
 from abc import ABCMeta,abstractmethod
 # app
-from halo_app.app.exceptions import HaloError, CommandNotMappedError, HaloException, QueryNotMappedError, \
-    HaloRequestError, AppExceptionHandler
+from halo_app.app.exceptions import HaloException, CommandNotMappedException, HaloException, QueryNotMappedException, \
+    HaloRequestException, AppExceptionHandler
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice, ERRType
 from ..domain.exceptions import DomainException
@@ -60,7 +60,7 @@ class BoundaryService(IBoundaryService):
 
         try:
             if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
-                raise HaloRequestError(f'{halo_request} was not a Query or Command request')
+                raise HaloRequestException(f'{halo_request} was not a Query or Command request')
             ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,
@@ -68,8 +68,6 @@ class BoundaryService(IBoundaryService):
                                                             LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
             return ret
 
-        except HaloError as e:
-            error = AppExceptionHandler().handle(halo_request,e,traceback)
 
         except HaloException as e:
             error = AppExceptionHandler().handle(halo_request, e, traceback)
@@ -158,7 +156,7 @@ class BoundaryService(IBoundaryService):
     def __process_sync_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
-            raise CommandNotMappedError("command method_id " + command.method_id)
+            raise CommandNotMappedException("command method_id " + command.method_id)
         try:
             # The command dispatcher expects just one handler per command.
             handler = self.command_handlers[command.method_id]
@@ -174,7 +172,7 @@ class BoundaryService(IBoundaryService):
     def __process_async_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
-            raise CommandNotMappedError("command method_id " + command.method_id)
+            raise CommandNotMappedException("command method_id " + command.method_id)
         try:
             self.publisher.send(settings.HANDLER_TARGET, command.command)
             return Util.create_response(command,True)
@@ -185,7 +183,7 @@ class BoundaryService(IBoundaryService):
     def __process_query(self, query: HaloQueryRequest)->AbsHaloResponse:
         logger.debug('handling query %s', query)
         if query.method_id not in self.query_handlers:
-            raise QueryNotMappedError("query method_id " + query.method_id)
+            raise QueryNotMappedException("query method_id " + query.method_id)
         try:
             # The query dispatcher expects just one handler per command.
             handler = self.query_handlers[query.method_id]

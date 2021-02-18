@@ -2,7 +2,7 @@ import logging
 from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.infra.providers.providers import get_provider,ONPREM
-from .exceptions import ProviderError
+from .exceptions import ProviderException
 from halo_app.entrypoints.client_type import ClientType
 from halo_app.infra.exceptions import CacheException
 from halo_app.reflect import Reflect
@@ -23,7 +23,7 @@ class ProviderUtil(AbsBaseClass):
         provider = get_provider()
         if provider.PROVIDER_NAME != ONPREM:
             return provider.get_func_region()
-        raise ProviderError("no region defined")
+        raise ProviderException("no region defined")
 
     @staticmethod
     def get_debug_param():

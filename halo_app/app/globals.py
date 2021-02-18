@@ -7,7 +7,6 @@ import logging
 import traceback
 from abc import ABCMeta,abstractmethod
 # app
-from ..exceptions import HaloError
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
 from ..logs import log_json

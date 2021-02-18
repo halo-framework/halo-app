@@ -8,8 +8,10 @@ import os
 import time
 from environs import Env
 from abc import ABCMeta,abstractmethod
+
+from halo_app.app.exceptions import HaloMethodNotImplementedException
 from halo_app.infra.exceptions import CacheKeyException, CacheExpireException, HaloException
-from halo_app.infra.providers.exceptions import  NoLocalSSMClassError, NoLocalSSMModuleError, SSMError
+from halo_app.infra.providers.exceptions import  NoLocalSSMClassException, NoLocalSSMModuleException, SSMException
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.base_util import BaseUtil
@@ -28,31 +30,33 @@ class AbsOnPremClient(AbsBaseClass):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_parameters_by_path(self,Path,Recursive,WithDecryption): raise NotImplementedError("NotImplemented get_parameters_by_path in OnPremClient")
+    def get_parameters_by_path(self,Path,Recursive,WithDecryption):
+        raise HaloMethodNotImplementedException("NotImplemented get_parameters_by_path in OnPremClient")
 
     @abstractmethod
-    def put_parameter(self,Name,Value,Type,Overwrite): raise NotImplementedError("NotImplemented put_parameter in OnPremClient")
+    def put_parameter(self,Name,Value,Type,Overwrite):
+        raise HaloMethodNotImplementedException("NotImplemented put_parameter in OnPremClient")
 
 def get_onprem_client()->AbsOnPremClient:
     if settings.ONPREM_SSM_CLASS_NAME:
         class_name = settings.ONPREM_SSM_CLASS_NAME
     else:
-        raise NoLocalSSMClassError("no ONPREM_SSM_CLASS_NAME")
+        raise NoLocalSSMClassException("no ONPREM_SSM_CLASS_NAME")
     if settings.ONPREM_SSM_MODULE_NAME:
         module = settings.ONPREM_SSM_MODULE_NAME
     else:
-        raise NoLocalSSMModuleError("no ONPREM_SSM_MODULE_NAME")
+        raise NoLocalSSMModuleException("no ONPREM_SSM_MODULE_NAME")
     return Reflect.do_instantiate(module,class_name, None)
 
 def get_onprem_client1()->AbsOnPremClient:
     if settings.ONPREM_SSM_CLASS_NAME:
         class_name = settings.ONPREM_SSM_CLASS_NAME
     else:
-        raise NoLocalSSMClassError("no ONPREM_SSM_CLASS_NAME")
+        raise NoLocalSSMClassException("no ONPREM_SSM_CLASS_NAME")
     if settings.ONPREM_SSM_MODULE_NAME:
         module = settings.ONPREM_SSM_MODULE_NAME
     else:
-        raise NoLocalSSMModuleError("no ONPREM_SSM_MODULE_NAME")
+        raise NoLocalSSMModuleException("no ONPREM_SSM_MODULE_NAME")
     import importlib
     module = importlib.import_module(module)
     class_ = getattr(module, class_name)
@@ -91,10 +95,10 @@ def load_cache(config, expiryMs=DEFAULT_EXPIRY):
     :return:
     """
     if config is None:
-        raise SSMError('you need to provide a non-empty config')
+        raise SSMException('you need to provide a non-empty config')
 
     if (expiryMs <= 0):
-        raise SSMError('you need to specify an expiry (ms) greater than 0, or leave it undefined')
+        raise SSMException('you need to specify an expiry (ms) greater than 0, or leave it undefined')
 
     # the below uses the captured closure to return an object with a gettable
     # property per config key that on invoke:
@@ -170,11 +174,11 @@ def load_config(ssm_parameter_path):
                 configuration.read_dict(config_dict)
 
     except HaloException as e:
-        logger.error("Encountered a client error loading config from SSM:" + str(e))
-    except json.decoder.JSONDecodeError as e:
-        logger.error("Encountered a json error loading config from SSM:" + str(e))
+        logger.error("Encountered a client Exception loading config from SSM:" + str(e))
+    except json.decoder.JSONDecodeException as e:
+        logger.error("Encountered a json Exception loading config from SSM:" + str(e))
     except Exception as e:
-        logger.error("Encountered an error loading config from SSM:" + str(e))
+        logger.error("Encountered an Exception loading config from SSM:" + str(e))
     finally:
         return configuration
 
@@ -237,17 +241,17 @@ def set_config(ssm_parameter_path, value):
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
     except HaloException as e:
-        msg = "Encountered a client error setting config from SSM"
+        msg = "Encountered a client Exception setting config from SSM"
         logger.error(msg)
-        raise SSMError(msg,e)
-    except json.decoder.JSONDecodeError as e:
-        msg = "Encountered a json error setting config from SSM"
+        raise SSMException(msg,e)
+    except json.decoder.JSONDecodeException as e:
+        msg = "Encountered a json Exception setting config from SSM"
         logger.error(msg)
-        raise SSMError(msg,e)
+        raise SSMException(msg,e)
     except Exception as e:
-        msg = "Encountered an error setting config from SSM"
+        msg = "Encountered an Exception setting config from SSM"
         logger.error(msg)
-        raise SSMError(msg,e)
+        raise SSMException(msg,e)
 
 
 def get_cache(path):

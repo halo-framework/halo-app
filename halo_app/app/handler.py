@@ -10,12 +10,11 @@ from jsonpath_ng import parse
 # aws
 # common
 # app
-from .exceptions import BadRequestError, HaloMethodNotImplementedException, BusinessEventMissingSeqException, \
-    BusinessEventNotImplementedException, ServerError, ConvertDomainExceptionHandler
+from .exceptions import HaloMethodNotImplementedException, BusinessEventMissingSeqException, \
+    BusinessEventNotImplementedException, ConvertDomainExceptionHandler, AppValidationException
 from .uow import AbsUnitOfWork
 from halo_app.app.context import HaloContext
 from ..domain.exceptions import DomainException
-from ..errors import status
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..entrypoints.client_type import ClientType
 from ..exceptions import *
@@ -60,12 +59,12 @@ class AbsBaseHandler(AbsBaseClass):
         logger.debug("in validate_req ")
         if halo_request:
             return True
-        raise BadRequestError("Halo Request not valid")
+        raise AppValidationException("Halo Request not valid")
 
     def validate_pre(self, halo_request):
         if halo_request:
             return True
-        raise BadRequestError("Fail pre validation for Halo Request")
+        raise AppValidationException("Fail pre validation for Halo Request")
 
     def create_resp_payload(self, halo_request, dict_back_json):
         logger.debug("in create_resp_payload " + str(dict_back_json))
@@ -81,7 +80,7 @@ class AbsBaseHandler(AbsBaseClass):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise HaloException("mapping error for " + halo_request.method_id,e)
+                    raise HaloException("mapping Exception for " + halo_request.method_id,e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -128,7 +127,7 @@ class AbsBaseHandler(AbsBaseClass):
                         logger.debug("in load_resp_mapping " + str(mapping))
                         return mapping
                 except Exception as e:
-                    logger.debug("error in load_resp_mapping " + str(path))
+                    logger.debug("Exception in load_resp_mapping " + str(path))
         return None
 
     def set_resp_headers1(self, halo_request, headers=None):
@@ -146,7 +145,7 @@ class AbsBaseHandler(AbsBaseClass):
     def validate_post(self, halo_request, halo_response):
         if True:
             return halo_response
-        raise ServerError(halo_response)
+        raise ServerException(halo_response)
 
 
     def do_filter(self, halo_request, halo_response):  #
@@ -221,7 +220,7 @@ class AbsQueryHandler(AbsBaseHandler):
         query_str, dict_params = self.set_query_data(halo_query_request)
         with uow:
             results = list(uow.session.execute(query_str, dict_params))
-        return results
+        return [dict(r) for r in results]
 
     def __run_query(self,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         self.uow = uow

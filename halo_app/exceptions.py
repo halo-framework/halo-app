@@ -21,35 +21,6 @@ class HaloException(Exception):
             msg = msg + " ,original:" +str(self.original_exception)
         return msg  # __str__() obviously expects a string to be returned, so make sure not to send any other view types
 
-class HaloError(HaloException):
-    __metaclass__ = ABCMeta
-    """
-    The abstract error is used as base class for server error with status code. app does not expect to handle error. Accepts the following
-    optional arguments:
-    """
-    error_code = None
-
-    @abstractmethod
-    def __init__(self, message, original_exception=None,detail=None, data=None,error_code=None):
-        super(HaloError, self).__init__(message, original_exception,detail,data)
-        if error_code is not None:
-            self.error_code = error_code
-
-
-
-
-"""
-class HaloHttpError(HaloError):
-    def __init__(self, message, detail=None,view=None, http_status=400):
-        super(HaloHttpError,self).__init__(message, detail,view)
-        self.status = http_status
-
-class ServerError(HaloHttpError):
-    def __init__(self, message, detail=None, view=None, http_status=500):
-        super(HaloHttpError, self).__init__(message, detail, view)
-        self.status = http_status
-"""
-
 
 class StoreException(HaloException):
     pass

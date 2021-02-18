@@ -7,7 +7,7 @@ from halo_app.app.exchange import AbsHaloExchange
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.entrypoints.client_type import ClientType
-from halo_app.app.exceptions import MissingResponsetoClientTypeError
+from halo_app.app.exceptions import MissingResponsetoClientTypeException
 
 logger = logging.getLogger(__name__)
 

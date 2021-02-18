@@ -17,11 +17,12 @@ from .ssm.onprem_ssm  import set_app_param_config as set_app_param_config_onprem
 from .ssm.onprem_ssm import get_config as get_config_onprem
 from .ssm.onprem_ssm import get_app_config as get_app_config_onprem
 from halo_app.settingsx import settingsx
-from halo_app.infra.providers.exceptions import ProviderError,NoONPREMProviderClassError,NoONPREMProviderModuleError,ProviderInitError
+from halo_app.infra.providers.exceptions import ProviderException,NoONPREMProviderClassException,NoONPREMProviderModuleException,ProviderInitException
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.sys_util import SysUtil
 from halo_app.reflect import Reflect
+from ...app.exceptions import HaloMethodNotImplementedException
 
 settings = settingsx()
 #current_milli_time = lambda: int(round(time.time() * 1000))
@@ -54,7 +55,7 @@ class ONPREMProvider(AbsBaseClass):
         pass
 
     def show(self):
-        raise NotImplementedError("")
+        raise HaloMethodNotImplementedException("")
 
     @staticmethod
     def get_context():
@@ -71,11 +72,11 @@ def get_onprem_provider():
     if settings.ONPREM_PROVIDER_CLASS_NAME:
         class_name = settings.ONPREM_PROVIDER_CLASS_NAME
     else:
-        raise NoONPREMProviderClassError("no ONPREM_PROVIDER_CLASS_NAME")
+        raise NoONPREMProviderClassException("no ONPREM_PROVIDER_CLASS_NAME")
     if settings.ONPREM_PROVIDER_MODULE_NAME:
         module = settings.ONPREM_PROVIDER_MODULE_NAME
     else:
-        raise NoONPREMProviderModuleError("no ONPREM_PROVIDER_MODULE_NAME")
+        raise NoONPREMProviderModuleException("no ONPREM_PROVIDER_MODULE_NAME")
     return Reflect.do_instantiate(module,class_name, None)
 
 provider = None
@@ -90,13 +91,13 @@ def get_provider():
             from halo_aws.providers.cloud.aws.aws import AWSProvider
             provider = AWSProvider()
         except Exception as e:
-            raise ProviderInitError("failed to get provider "+provider_name,e)
+            raise ProviderInitException("failed to get provider "+provider_name,e)
     else:
         if provider_name == ONPREM:
             try:
                 provider = get_onprem_provider()
             except Exception as e:
-                raise ProviderInitError("failed to get provider " + provider_name, e)
+                raise ProviderInitException("failed to get provider " + provider_name, e)
     return provider
 
 
@@ -114,7 +115,7 @@ def get_app_param_config(ssm_type, service_name,var_name):
             from .ssm.aws_ssm import get_app_param_config as get_app_param_config_cld
             return get_app_param_config_cld(service_name,var_name)
         except Exception as e:
-            raise ProviderError("failed to get ssm: "+str(e),e)
+            raise ProviderException("failed to get ssm: "+str(e),e)
     return get_app_param_config_onprem(service_name,var_name)
 
 def set_app_param_config(ssm_type, params):
@@ -129,7 +130,7 @@ def set_app_param_config(ssm_type, params):
             from .ssm.aws_ssm import set_app_param_config as set_app_param_config_cld
             return set_app_param_config_cld(params)
         except Exception as e:
-            raise ProviderError("failed to get ssm: "+str(e),e)
+            raise ProviderException("failed to get ssm: "+str(e),e)
     return set_app_param_config_onprem(params)
 
 def get_config(ssm_type):
@@ -143,10 +144,10 @@ def get_config(ssm_type):
         try:
             from .ssm.aws_ssm import get_config as get_config_cld
             return get_config_cld()
-        except ProviderInitError as e:
+        except ProviderInitException as e:
             raise e
         except Exception as e:
-            raise ProviderError("failed to get ssm type "+ssm_type,e)
+            raise ProviderException("failed to get ssm type "+ssm_type,e)
     return get_config_onprem()
 
 
@@ -162,6 +163,6 @@ def get_app_config(ssm_type):
             from .ssm.aws_ssm import get_app_config as get_app_config_cld
             return get_app_config_cld()
         except Exception as e:
-            raise ProviderError("failed to get ssm type "+ssm_type,e)
+            raise ProviderException("failed to get ssm type "+ssm_type,e)
     return get_app_config_onprem()
 

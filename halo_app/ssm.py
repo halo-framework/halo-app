@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import time
-from halo_app.infra.providers.exceptions import NoSSMDefinedError,NotSSMTypeError
+from halo_app.infra.providers.exceptions import NoSSMDefinedException,NotSSMTypeException
 
 #@ TODO put_parameter should be activated only is current value is different then the existing one
 #@ TODO perf activation will reload SSM if needed and refresh API table
@@ -28,9 +28,9 @@ client = None
 
 def check_ssm_type(ssm_type):
     if not ssm_type:
-        raise NoSSMDefinedError("None")
+        raise NoSSMDefinedException("None")
     if ssm_type not in ["AWS","ONPREM"]:
-        raise NotSSMTypeError(ssm_type)
+        raise NotSSMTypeException(ssm_type)
     return
 
 def get_app_param_config(ssm_type,service_name,var_name):

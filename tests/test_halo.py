@@ -1159,7 +1159,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 config = get_app_config(app.config['SSM_TYPE'])
                 eq_(config.get_param(app.config['HALO_HOST'])["url"], 'https://127.0.0.1:8000/loc')
             except Exception as e:
-                eq_(e.__class__.__name__, "NoSSMDefinedError")
+                eq_(e.__class__.__name__, "NoSSMDefinedException")
 
     def test_42_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1181,7 +1181,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 config = get_app_config(app.config['SSM_TYPE'])
                 eq_(config.get_param("halo_app")["url"], 'https://halo_flask:8000/loc')
             except Exception as e:
-                eq_(e.__class__.__name__, "NotSSMTypeError")
+                eq_(e.__class__.__name__, "NotSSMTypeException")
 
     def test_43_ssm_onperm(self):  # @TODO
         header = {'HTTP_HOST': '127.0.0.2'}

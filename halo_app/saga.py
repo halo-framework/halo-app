@@ -3,7 +3,7 @@ from __future__ import print_function
 import logging
 from halo_app.infra.apis import ApiMngr
 from .base_util import BaseUtil
-from halo_app.exceptions import HaloException,HaloError
+from halo_app.exceptions import HaloException
 from halo_app.infra.exceptions import ApiException
 from .logs import log_json
 from  .classes import AbsBaseClass
@@ -31,13 +31,13 @@ class SagaException(HaloException):
     pass
 
 
-class SagaRollBack(HaloError):
+class SagaRollBack(HaloException):
     """
     Raised when an action failed and the compensations complited.
     """
     pass
 
-class SagaError(HaloError):
+class SagaError(HaloException):
     """
     Raised when an action failed and at least one compensation also failed.
     """

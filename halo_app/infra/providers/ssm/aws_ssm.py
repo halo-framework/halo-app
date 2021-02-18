@@ -9,7 +9,8 @@ import time
 from environs import Env
 
 
-from halo_app.infra.providers.exceptions import HaloError, SSMError, NoSSMRegionError,ProviderInitError
+from halo_app.infra.providers.exceptions import SSMException, NoSSMRegionException, ProviderInitException, \
+    ProviderException
 from halo_app.infra.exceptions import  CacheKeyException, CacheExpireException
 from halo_app.classes import AbsBaseClass
 # from .logs import log_json
@@ -44,12 +45,12 @@ def get_region():
     logger.debug("get_region")
     try:
         return ProviderUtil.get_func_region()
-    except ProviderInitError as e:
+    except ProviderInitException as e:
         raise e
-    except HaloError:
+    except ProviderException:
         if settings.AWS_REGION:
             return settings.AWS_REGION
-    raise NoSSMRegionError("")
+    raise NoSSMRegionException("")
 
 # ALWAYS use json value in parameter store!!!
 
@@ -69,10 +70,10 @@ def load_cache(config, expiryMs=DEFAULT_EXPIRY):
     :return:
     """
     if config is None:
-        raise SSMError('you need to provide a non-empty config')
+        raise SSMException('you need to provide a non-empty config')
 
     if (expiryMs <= 0):
-        raise SSMError('you need to specify an expiry (ms) greater than 0, or leave it undefined')
+        raise SSMException('you need to specify an expiry (ms) greater than 0, or leave it undefined')
 
     # the below uses the captured closure to return an object with a gettable
     # property per config key that on invoke:
@@ -127,8 +128,8 @@ def load_config(region_name, ssm_parameter_path):
     try:
         from botocore.exceptions import ClientError
     except Exception as e:
-        logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise SSMError("please Load package Halo_aws in order to use AWS SSM",e)
+        logger.error("Encountered a client Exception loading config from SSM:" + str(e))
+        raise SSMException("please Load package Halo_aws in order to use AWS SSM",e)
     configuration = configparser.ConfigParser()
     logger.debug("ssm_parameter_path=" + str(ssm_parameter_path))
     try:
@@ -151,12 +152,12 @@ def load_config(region_name, ssm_parameter_path):
                 logger.debug("Found configuration: " + str(config_dict))
                 configuration.read_dict(config_dict)
 
-    except ClientError as e:
-        logger.error("Encountered a client error loading config from SSM:" + str(e))
-    except json.decoder.JSONDecodeError as e:
-        logger.error("Encountered a json error loading config from SSM:" + str(e))
+    except ClientException as e:
+        logger.error("Encountered a client Exception loading config from SSM:" + str(e))
+    except json.decoder.JSONDecodeException as e:
+        logger.error("Encountered a json Exception loading config from SSM:" + str(e))
     except Exception as e:
-        logger.error("Encountered an error loading config from SSM:" + str(e))
+        logger.error("Encountered an Exception loading config from SSM:" + str(e))
     finally:
         return configuration
 
@@ -222,8 +223,8 @@ def set_config(region_name, ssm_parameter_path, value):
     try:
         from botocore.exceptions import ClientError
     except Exception as e:
-        logger.error("Encountered a client error loading config from SSM:" + str(e))
-        raise SSMError("please Load package Halo_aws in order to use AWS SSM",e)
+        logger.error("Encountered a client Exception loading config from SSM:" + str(e))
+        raise SSMException("please Load package Halo_aws in order to use AWS SSM",e)
     try:
         # set parameters for this app
 
@@ -237,18 +238,18 @@ def set_config(region_name, ssm_parameter_path, value):
 
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
-    except ClientError as e:
-        msg = "Encountered a client error setting config from SSM:" + str(e)
+    except ClientException as e:
+        msg = "Encountered a client Exception setting config from SSM:" + str(e)
         logger.error(msg)
-        raise SSMError(msg,e)
-    except json.decoder.JSONDecodeError as e:
-        msg = "Encountered a json error setting config from SSM" + str(e)
+        raise SSMException(msg,e)
+    except json.decoder.JSONDecodeException as e:
+        msg = "Encountered a json Exception setting config from SSM" + str(e)
         logger.error(msg)
-        raise SSMError(msg,e)
+        raise SSMException(msg,e)
     except Exception as e:
-        msg = "Encountered an error setting config from SSM:" + str(e)
+        msg = "Encountered an Exception setting config from SSM:" + str(e)
         logger.error(msg)
-        raise SSMError(msg,e)
+        raise SSMException(msg,e)
 
 
 def get_cache(region_name, path):
