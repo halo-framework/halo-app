@@ -1,5 +1,5 @@
 from __future__ import print_function
-
+from http import HTTPStatus
 import logging
 from halo_app.infra.apis import ApiMngr
 from .base_util import BaseUtil
@@ -7,7 +7,6 @@ from halo_app.exceptions import HaloException
 from halo_app.infra.exceptions import ApiException
 from .logs import log_json
 from  .classes import AbsBaseClass
-from .errors import status
 from .const import LOGChoice
 logger = logging.getLogger(__name__)
 
@@ -207,7 +206,7 @@ class Saga(AbsBaseClass):
                 logger.debug("e=" + str(e))
                 if rollback is None:
                     rollback = e
-                    tname = self.__get_action(tname).compensate(status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    tname = self.__get_action(tname).compensate(HTTPStatus.INTERNAL_SERVER_ERROR)
                 else:
                     raise SagaError(e, [])
 

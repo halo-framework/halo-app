@@ -7,7 +7,7 @@ import logging
 import os
 import time
 import uuid
-from abc import ABCMeta,abstractmethod
+import abc
 
 #@ TODO put_parameter should be activated only is current value is different then the existing one
 #@ TODO perf activation will reload SSM if needed and refresh API table
@@ -47,7 +47,60 @@ def get_provider_name():
     return ONPREM
 
 
-class ONPREMProvider(AbsBaseClass):
+
+LATEST = None
+
+class IProvider(AbsBaseClass,abc.ABC) :
+
+    PROVIDER_NAME = None
+
+    def show(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_context(self):
+        pass
+
+    def get_header_name(self, request, name):
+        pass
+
+    def get_request_id(self, request):
+        pass
+
+    def send_event(self,ctx,messageDict,service_name,version=LATEST,capture_response=None):
+        pass
+
+    def get_topic_name(self,lambda_name):
+        pass
+
+    def publish(self,ctx, messageDict, arn=None,capture_response=False,lambda_function_name=None):
+        pass
+
+    def invoke_sync(self,ctx, messageDict, lambda_function_name,version=LATEST):
+        pass
+
+    def send_mail(self,req_context, vars, from1=None, to=None):
+        pass
+
+    def get_timeout(self,request):
+        pass
+
+    def get_func_name(self):
+        pass
+
+    def upload_file(self,file,file_name, bucket_name, object_name=None):
+        pass
+
+    def create_presigned_url(self,bucket_name, object_name, expiration=3600):
+        pass
+
+    def get_path(url):
+        pass
+
+    def get_params(url):
+        pass
+
+class ONPREMProvider(IProvider):
 
     PROVIDER_NAME = ONPREM
 
@@ -80,7 +133,7 @@ def get_onprem_provider():
     return Reflect.do_instantiate(module,class_name, None)
 
 provider = None
-def get_provider():
+def get_provider()->IProvider:
     global provider
     if provider:
         return provider

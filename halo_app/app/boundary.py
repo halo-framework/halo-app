@@ -5,15 +5,12 @@ import abc
 import datetime
 import logging
 import traceback
-from abc import ABCMeta,abstractmethod
 # app
 from halo_app.app.exceptions import HaloException, CommandNotMappedException, HaloException, QueryNotMappedException, \
     HaloRequestException, AppExceptionHandler
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
-from ..domain.exceptions import DomainException
 from ..logs import log_json
-from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory
 from ..classes import AbsBaseClass

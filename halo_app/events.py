@@ -6,7 +6,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 # DRF
-from halo_app.infra.providers.exceptions import ProviderError
+from halo_app.infra.providers.exceptions import ProviderException
 from halo_app.logs import log_json
 from halo_app.infra.providers.providers import get_provider
 from halo_app.classes import AbsBaseClass
@@ -76,7 +76,7 @@ class AbsBaseEvent(AbsBaseClass):
                 service_name = self.target_service_name[settings.ENV_TYPE]
                 logger.debug("send event to target_service:" + service_name, extra=log_json(ctx))
                 ret = get_provider().send_event(ctx,messageDict,service_name)
-            except ProviderError as e:
+            except ProviderException as e:
                 logger.error("Unexpected Provider Error", extra=log_json(ctx, messageDict, e))
             else:
                 logger.debug("send_event to service " + self.target_service + " ret: " + str(ret),

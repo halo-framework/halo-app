@@ -1098,7 +1098,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 config = get_app_config(app.config['SSM_TYPE'])
                 eq_(config.get_param("halo_app")["id"], '124')
             except Exception as e:
-                eq_(e.__class__.__name__, "ProviderError")
+                eq_(e.__class__.__name__, "ProviderException")
 
     def test_39_ssm_aws(self):  # @TODO test with HALO_AWS
         header = {'HTTP_HOST': '127.0.0.2'}
@@ -1392,7 +1392,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
-                eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
+                eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderException')
 
     def test_59_aws_invoke_sync_fail(self):
         app.config['PROVIDER'] = "AWS"
@@ -1411,7 +1411,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
-                eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderError')
+                eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderException')
 
     def test_60_aws_invoke_sync_success(self):
         app.config['PROVIDER'] = "AWS"

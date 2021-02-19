@@ -10,9 +10,7 @@ from jsonpath_ng import parse
 # app
 from .exceptions import NoApiClassException, ApiException, EngineException
 from halo_app.app.context import HaloContext
-from ..errors import status
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
-from ..entrypoints.client_type import ClientType
 from ..exceptions import *
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
