@@ -10,7 +10,7 @@ from abc import ABCMeta,abstractmethod
 from halo_app.app.exceptions import HaloException, CommandNotMappedException, HaloException, QueryNotMappedException, \
     HaloRequestException, AppExceptionHandler
 from .utilx import Util
-from ..const import SYSTEMChoice, LOGChoice, ERRType
+from ..const import SYSTEMChoice, LOGChoice
 from ..domain.exceptions import DomainException
 from ..logs import log_json
 from ..reflect import Reflect

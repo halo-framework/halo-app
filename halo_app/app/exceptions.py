@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import logging
 from halo_app.classes import AbsBaseClass
-from halo_app.const import ERRType
 from halo_app.domain.exceptions import DomainException
 from halo_app.exceptions import HaloException
 from halo_app.logs import log_json

@@ -8,7 +8,7 @@ from jsonpath_ng import parse
 # aws
 # common
 # app
-from .exceptions import  NoApiClassException, ApiException
+from .exceptions import NoApiClassException, ApiException, EngineException
 from halo_app.app.context import HaloContext
 from ..errors import status
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
@@ -88,7 +88,7 @@ class ProcessingEngine(AbsBaseClass):
                 logger.info(msg)
                 return ret
             except ApiException as e:
-                raise HaloError("failed to execute api:"+str(back_api.name),e)
+                raise EngineException("failed to execute api:"+str(back_api.name),e)
         return None
 
     def extract_json(self,halo_request,api, back_response, seq=None):

@@ -49,8 +49,3 @@ class BusinessEventCategory(Enum):  # A subclass of Enum - if no category then i
     SAGA = "saga" # define saga api in config json
     METHOD = "method" # define handle command/run query method
 
-
-class ERRType(Enum):  # A subclass of Enum
-    error = "ERROR"
-    exception = "EXCEPTION"
-    general = "GENERAL"
