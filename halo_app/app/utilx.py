@@ -1,12 +1,13 @@
 from __future__ import print_function
 
-import json
+
 # python
 import logging
 import os
 import random
 import importlib
-
+import json
+import datetime
 from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.infra.providers.providers import get_provider,ONPREM
@@ -184,7 +185,7 @@ class Util(AbsBaseClass):
         if hasattr(e, 'view'):
             error_data = json.dumps(e.data)
         payload = {"error":
-                       {"error_code": error_code, "error_message": message, "error_detail": error_detail,
+                       {"error_code": error_code, "error_message": message, "error_detail": error_detail,"timestamp": datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)"),
                              "view": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}
                    }
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
