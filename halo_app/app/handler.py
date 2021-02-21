@@ -19,6 +19,7 @@ from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..entrypoints.client_type import ClientType
 from ..exceptions import *
 from ..infra.engine import ProcessingEngine
+from ..notification import Notification
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
 from halo_app.app.response import AbsHaloResponse
@@ -58,12 +59,12 @@ class AbsBaseHandler(AbsBaseClass):
     def validate_req(self, halo_request):
         logger.debug("in validate_req ")
         if halo_request:
-            return True
+            return Notification()
         raise AppValidationException("Halo Request not valid")
 
     def validate_pre(self, halo_request):
         if halo_request:
-            return True
+            return Notification()
         raise AppValidationException("Fail pre validation for Halo Request")
 
     def create_resp_payload(self, halo_request, dict_back_json):
@@ -145,7 +146,7 @@ class AbsBaseHandler(AbsBaseClass):
     def validate_post(self, halo_request, halo_response):
         if True:
             return halo_response
-        raise ServerException(halo_response)
+        raise AppValidationException(halo_response)
 
 
     def do_filter(self, halo_request, halo_response):  #
@@ -191,9 +192,13 @@ class AbsQueryHandler(AbsBaseHandler):
     @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
-        self.validate_req(halo_request)
+        notification:Notification = self.validate_req(halo_request)
+        if notification.hasErrors():
+            return Util.create_response(halo_request,False, notification)
         # 2. run pre conditions
-        self.validate_pre(halo_request)
+        notification:Notification = self.validate_pre(halo_request)
+        if notification.hasErrors():
+            return Util.create_response(halo_request,False, notification)
         # 3. processing engine
         dict_dto = self.data_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
@@ -206,7 +211,7 @@ class AbsQueryHandler(AbsBaseHandler):
         # 7. post condition
         self.validate_post(halo_request, halo_response)
         # 8. do filter
-        #self.do_filter(halo_request,halo_response)
+        self.do_filter(halo_request,halo_response)
         # 9. return json response
         return halo_response
 
@@ -239,11 +244,17 @@ class AbsEventHandler(AbsBaseHandler):
     @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest):
         # 1. validate input params
-        self.validate_req(halo_request)
+        notification: Notification = self.validate_req(halo_request)
+        if notification.hasErrors():
+            return Util.log_notification(halo_request, notification)
         # 2. run pre conditions
-        self.validate_pre(halo_request)
-        # 3. processing engine
+        notification: Notification = self.validate_pre(halo_request)
+        if notification.hasErrors():
+            return Util.log_notification(halo_request, notification)
+        # 3. engine
         self.event_engine(halo_request)
+        # 4. do filter
+        self.do_filter(halo_request, None)
 
 
     def event_engine(self, halo_request:HaloEventRequest):
@@ -276,9 +287,13 @@ class AbsCommandHandler(AbsBaseHandler):
     @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
         # 1. validate input params
-        self.validate_req(halo_request)
+        notification: Notification = self.validate_req(halo_request)
+        if notification.hasErrors():
+            return Util.create_response(halo_request, False, notification)
         # 2. run pre conditions
-        self.validate_pre(halo_request)
+        notification: Notification = self.validate_pre(halo_request)
+        if notification.hasErrors():
+            return Util.create_response(halo_request, False, notification)
         # 3. processing engine
         table = self.processing_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
