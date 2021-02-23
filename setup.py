@@ -10,7 +10,7 @@ with open("README.md", "r") as h:
 
 setup(
     name='halo-app',
-    version='0.10.63',
+    version='0.10.64',
     packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.infra.providers', 'halo_app.infra.providers.cloud',
               'halo_app.infra.providers.cloud.aws', 'halo_app.infra.providers.onprem', 'halo_app.infra.providers.ssm',
               'halo_app.view','halo_app.infra','halo_app.infra.impl','halo_app.domain','halo_app.entrypoints',],
