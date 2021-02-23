@@ -10,10 +10,6 @@ class ApiException(InfraException):
 class MaxTryException(ApiException):
     pass
 
-class EngineException(InfraException):
-    pass
-
-
 class MaxTryHttpException(MaxTryException):
     pass
 

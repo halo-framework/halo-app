@@ -14,6 +14,9 @@ from halo_app.infra.providers.providers import get_provider,ONPREM
 from halo_app.app.response import HaloResponseFactory, AbsHaloResponse
 from halo_app.entrypoints.client_type import ClientType
 from halo_app.infra.providers.util import ProviderUtil
+from .notification import Notification
+from .request import AbsHaloRequest
+from .result import Result
 from ..reflect import Reflect
 from ..settingsx import settingsx
 
@@ -64,9 +67,30 @@ class Util(AbsBaseClass):
         return response_factory_ins
 
     @staticmethod
-    def create_response(halo_request,success, payload=None)->AbsHaloResponse:
+    def create_result_response(halo_request:AbsHaloRequest, result:Result)->AbsHaloResponse:
         response_factory = Util.get_response_factory()
+        success = result.success
+        if success:
+            payload = result.payload
+        else:
+            payload = result.error
         return response_factory.get_halo_response(halo_request,success, payload)
+
+    @staticmethod
+    def create_notification_response(halo_request:AbsHaloRequest, notification:Notification) -> AbsHaloResponse:
+        response_factory = Util.get_response_factory()
+        success = not notification.hasErrors()
+        return response_factory.get_halo_response(halo_request, success, notification.errors)
+
+    @staticmethod
+    def create_payload_response(halo_request: AbsHaloRequest,payload) -> AbsHaloResponse:
+        response_factory = Util.get_response_factory()
+        return response_factory.get_halo_response(halo_request, True, payload)
+
+    @staticmethod
+    def create_response(halo_request,success, payload=None) -> AbsHaloResponse:
+        response_factory = Util.get_response_factory()
+        return response_factory.get_halo_response(halo_request, success, payload)
 
     @classmethod
     def get_timeout(cls, halo_context:HaloContext):

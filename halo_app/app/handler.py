@@ -5,21 +5,21 @@ import logging
 import json
 import re
 from typing import Tuple
-
+from abc import ABCMeta,abstractmethod
 from jsonpath_ng import parse
 # aws
 # common
 # app
 from .exceptions import HaloMethodNotImplementedException, BusinessEventMissingSeqException, \
-    BusinessEventNotImplementedException, ConvertDomainExceptionHandler, AppValidationException
+    BusinessEventNotImplementedException, AppValidationException, ConvertDomainExceptionHandler
+from .result import Result
 from .uow import AbsUnitOfWork
-from halo_app.app.context import HaloContext
+from halo_app.exceptions import HaloException
 from ..domain.exceptions import DomainException
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..entrypoints.client_type import ClientType
-from ..exceptions import *
-from ..infra.engine import ProcessingEngine
-from ..notification import Notification
+from ..app.engine import ProcessingEngine
+from halo_app.app.notification import Notification
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
 from halo_app.app.response import AbsHaloResponse
@@ -190,29 +190,26 @@ class AbsQueryHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
+    def do_operation(self, halo_request: AbsHaloRequest) -> AbsHaloResponse:
         # 1. validate input params
-        notification:Notification = self.validate_req(halo_request)
+        notification: Notification = self.validate_req(halo_request)
         if notification.hasErrors():
-            return Util.create_response(halo_request,False, notification)
+            return Util.create_notification_response(halo_request, notification)
         # 2. run pre conditions
-        notification:Notification = self.validate_pre(halo_request)
+        notification: Notification = self.validate_pre(halo_request)
         if notification.hasErrors():
-            return Util.create_response(halo_request,False, notification)
+            return Util.create_notification_response(halo_request, notification)
         # 3. processing engine
         dict_dto = self.data_engine(halo_request)
         # 4. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(halo_request, dict_dto)
-        logger.debug("payload=" + str(payload))
-        # 5. setup headers for reply
-        #headers = self.set_resp_headers(halo_request)
-        # 6. build json and add to halo response
-        halo_response = Util.create_response(halo_request,True, payload)
-        # 7. post condition
+        # 5. build json and add to halo response
+        halo_response = Util.create_payload_response(halo_request, payload)
+        # 6. post condition
         self.validate_post(halo_request, halo_response)
-        # 8. do filter
-        self.do_filter(halo_request,halo_response)
-        # 9. return json response
+        # 7. do filter
+        self.do_filter(halo_request, halo_response)
+        # 8. return json response
         return halo_response
 
     def data_engine(self,halo_request:HaloQueryRequest)->dict:
@@ -252,15 +249,15 @@ class AbsEventHandler(AbsBaseHandler):
         if notification.hasErrors():
             return Util.log_notification(halo_request, notification)
         # 3. engine
-        self.event_engine(halo_request)
+        result:Result = self.event_engine(halo_request)
         # 4. do filter
-        self.do_filter(halo_request, None)
+        self.do_filter(halo_request, Util.create_result_response(halo_request, result))
 
 
-    def event_engine(self, halo_request:HaloEventRequest):
-        self.handle(halo_request,self.uow)
+    def event_engine(self, halo_request:HaloEventRequest)->Result:
+        return self.handle(halo_request,self.uow)
 
-    def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork):
+    def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork)->Result:
         raise HaloMethodNotImplementedException("method handle in command")
 
     def _run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
@@ -289,6 +286,27 @@ class AbsCommandHandler(AbsBaseHandler):
         # 1. validate input params
         notification: Notification = self.validate_req(halo_request)
         if notification.hasErrors():
+            return Util.create_notification_response(halo_request, notification)
+        # 2. run pre conditions
+        notification: Notification = self.validate_pre(halo_request)
+        if notification.hasErrors():
+            return Util.create_notification_response(halo_request, notification)
+        # 3. processing engine
+        result:Result = self.processing_engine(halo_request)
+        # 4. create response
+        halo_response = Util.create_result_response(halo_request, result)
+        # 4. post condition
+        self.validate_post(halo_request, halo_response)
+        # 5. do filter
+        self.do_filter(halo_request,halo_response)
+        # 6. return json response
+        return halo_response
+
+    @abstractmethod
+    def do_operation1(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
+        # 1. validate input params
+        notification: Notification = self.validate_req(halo_request)
+        if notification.hasErrors():
             return Util.create_response(halo_request, False, notification)
         # 2. run pre conditions
         notification: Notification = self.validate_pre(halo_request)
@@ -310,17 +328,17 @@ class AbsCommandHandler(AbsBaseHandler):
         # 9. return json response
         return halo_response
 
-    def processing_engine(self, halo_request:HaloCommandRequest)->dict:
-        domain_exception_handler = ConvertDomainExceptionHandler()
+    def processing_engine(self, halo_request:HaloCommandRequest)->Result:
         try:
             if self.business_event:
                 return self.processing_engine_dtl(halo_request)
             else:
                 return self.handle(halo_request,self.uow)
         except DomainException as e:
+            domain_exception_handler = ConvertDomainExceptionHandler()
             raise domain_exception_handler.handle(e)
 
-    def processing_engine_dtl(self, halo_request:HaloCommandRequest)->dict:
+    def processing_engine_dtl(self, halo_request:HaloCommandRequest)->Result:
         if self.business_event:
             processing_engine = ProcessingEngine(self.business_event,self.set_back_api(halo_request))
             if self.business_event.get_business_category() == BusinessEventCategory.SAGA:
@@ -334,7 +352,7 @@ class AbsCommandHandler(AbsBaseHandler):
                 return processing_engine.do_operation_1(halo_request)
         raise BusinessEventNotImplementedException("business_event for command method id:"+halo_request.method_id)
 
-    def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork)->dict:
+    def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork)->Result:
         raise HaloMethodNotImplementedException("method handle in command")
 
     ######################################################################

@@ -1,27 +1,13 @@
 from __future__ import print_function
 
 from abc import ABCMeta, abstractmethod
+import logging
+from halo_app.classes import AbsBaseClass
+from halo_app.logs import log_json
 
+logger = logging.getLogger(__name__)
 
 class HaloException(Exception):
-    __metaclass__ = ABCMeta
-    """The abstract Generic exception for halo"""
-
-    @abstractmethod
-    def __init__(self, message, original_exception=None, detail=None,data=None):
-        super(HaloException, self).__init__()
-        self.message = message
-        self.original_exception = original_exception
-        self.detail = detail
-        self.data = data
-
-    def __str__(self):
-        msg = str(self.message)
-        if self.original_exception:
-            msg = msg + " ,original:" +str(self.original_exception)
-        return msg  # __str__() obviously expects a string to be returned, so make sure not to send any other view types
-
-class HaloError(Exception):
     __metaclass__ = ABCMeta
     """The abstract Generic exception for halo"""
 
@@ -60,18 +46,6 @@ class BadSecurityTokenException(SecureException):
 class FilterValidationException(SecureException):
     pass
 
-
-class ConvertDomainExceptionHandler(AbsBaseClass):
-    message_service = None
-
-    #@todo add conversion service
-    def __init__(self, message_service=None):
-        self.message_service = message_service
-
-    def handle(self, de: DomainException) -> AppException:
-        #main_message = self.message_service.convert(de.message)
-        #detail_message = self.message_service.convert(de.detail)
-        return AppException (de.message, de, de.detail,de.data)
 
 class HaloErrorHandler(AbsBaseClass):
 

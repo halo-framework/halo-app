@@ -8,10 +8,12 @@ from jsonpath_ng import parse
 # aws
 # common
 # app
-from .exceptions import NoApiClassException, ApiException, EngineException
+from halo_app.infra.exceptions import NoApiClassException, ApiException
+from halo_app.app.exceptions import EngineException
 from halo_app.app.context import HaloContext
+from .result import Result
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
-from ..exceptions import *
+from halo_app.exceptions import HaloException
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
 from halo_app.app.response import AbsHaloResponse
@@ -175,7 +177,7 @@ class ProcessingEngine(AbsBaseClass):
         return []
 
 
-    def do_operation_1(self, halo_request):  # basic maturity - single request
+    def do_operation_1(self, halo_request)->Result:  # basic maturity - single request
         logger.debug("do_operation_1")
         # 1. get api definition to access the BANK API  - url + vars dict
         if self.business_event.EVENT_CATEGORY == BusinessEventCategory.EMPTY:
@@ -196,11 +198,11 @@ class ProcessingEngine(AbsBaseClass):
                                                    back_data)
         # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = self.extract_json(halo_request,back_api, back_response)
-        dict = {'1': back_json}
+        payload = {'1': back_json}
         # 8. return json response
-        return dict
+        return Result.ok(payload)
 
-    def do_operation_2(self, halo_request):  # medium maturity - foi
+    def do_operation_2(self, halo_request)->Result:  # medium maturity - foi
         logger.debug("do_operation_2")
         api_list = []
         dict = {}
@@ -221,7 +223,7 @@ class ProcessingEngine(AbsBaseClass):
             dict[seq] = back_json
         for api in api_list:
             api.terminate()
-        return dict
+        return Result.ok(dict)
 
     def do_api_async_work(self, halo_request, back_api, seq, dict=None):
         # 3. array to store the headers required for the API Access
@@ -276,7 +278,7 @@ class ProcessingEngine(AbsBaseClass):
         set_api = self.set_api_op(api,payload)
         return self.do_api_work(payload['request'], set_api, payload['seq'])
 
-    def do_operation_3(self, halo_request):  # high maturity - saga transactions
+    def do_operation_3(self, halo_request)->Result:  # high maturity - saga transactions
         logger.debug("do_operation_3")
         sagax = load_saga("test",halo_request, self.business_event.get_saga(), settings.SAGA_SCHEMA)
         payloads = {}
@@ -292,7 +294,7 @@ class ProcessingEngine(AbsBaseClass):
 
         try:
             ret = sagax.execute(halo_request.context, payloads, apis)
-            return ret
+            return Result.ok(ret)
         except SagaRollBack as e:
             raise ApiException(e.message,e,e.detail ,e.data,status_code=500)
 

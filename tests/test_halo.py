@@ -9,6 +9,7 @@ from nose.tools import eq_
 
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
+from halo_app.app.result import Result
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.app.event import AbsHaloEvent
@@ -131,7 +132,7 @@ class A0(AbsCommandHandler):
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->dict:
+    def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         if 'id' in halo_request.command.vars:
             if halo_request.command.vars['id'] != '1':
                 raise Exception()
@@ -140,7 +141,8 @@ class A0(AbsCommandHandler):
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
-            return {"1": {"a": "b"}}
+            payload = {"1": {"a": "b"}}
+            return Result.ok(payload) #Util.create_response(halo_request, True, payload)
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
@@ -479,7 +481,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
-                eq_(response.payload, {'a': 'b'})
+                eq_(response.payload['1'], {'a': 'b'})
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
