@@ -8,14 +8,14 @@ class Error(AbsBaseClass):
     message:str = None
     cause:Exception = None
 
-    def __init__(self,message:str, cause:Exception):
+    def __init__(self,message:str, cause:Exception=None):
       self.message = message
       self.cause = cause
 
 class Notification(AbsBaseClass):
     errors:[Error]  = []
 
-    def addError(self,message:str,exception:Exception):
+    def addError(self,message:str,exception:Exception=None):
         self.errors.add(Error(message,exception))
 
     def hasErrors(self)->bool:
