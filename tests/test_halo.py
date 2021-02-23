@@ -298,8 +298,8 @@ class A9(AbsEventHandler):
 
 class A10(AbsQueryHandler):
     def set_query_data(self,halo_query_request: HaloQueryRequest):
-        item_dtl_id = 1
-        qty = 2
+        item_dtl_id = halo_query_request.query.vars['id']
+        qty = halo_query_request.query.vars['qty']
         return 'SELECT desc,qty FROM items_view WHERE item_dtl_id=:item_dtl_id AND qty=:qty',dict(item_dtl_id=item_dtl_id, qty=qty)
 
 class A11(AbsQueryHandler):
@@ -489,7 +489,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1a_run_query(self):
         #app.config['UOW_CLASS'] = "halo_app.infra.fake.FakeUnitOfWork"
         #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
-        with app.test_request_context(method='GET', path='/?id=1'):
+        with app.test_request_context(method='GET', path='/?id=1&qty=2'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
                 t = TestHaloQuery(halo_context, "q1",  request.args)
@@ -640,7 +640,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9a_cli_query(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        t = TestHaloQuery(halo_context,"q1",{})
+        t = TestHaloQuery(halo_context,"q1",{'id':1,'qty':2})
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         eq_(response.success, True)
