@@ -1030,7 +1030,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(response.payload, [{"id": 1, "name": "Pankaj", "salary": "10000"}, {"name": "David", "salary": "5000", "id": 2}])
+                eq_(response.payload, {'1': {}})
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
