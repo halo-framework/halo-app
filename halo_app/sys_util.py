@@ -12,6 +12,7 @@ from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, AbsHaloRequest, HaloQueryRequest
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from .app.exceptions import HttpFailException
+from .app.notification import Error
 from .entrypoints.client_type import ClientType
 from .logs import log_json
 from .settingsx import settingsx
@@ -121,9 +122,9 @@ class SysUtil(AbsBaseClass):
                             return halo_response
                 else:
                     halo_response.code = HTTPStatus.INTERNAL_SERVER_ERROR
-                    if halo_response.errors:  # invalid params
-                        halo_response.code = HTTPStatus.BAD_REQUEST
-                    halo_response.payload = halo_response.errors
+                    if halo_response.payload:  # result-error,notification-errors,empty
+                        if isinstance(halo_response.payload,[Error]):
+                            halo_response.code = HTTPStatus.BAD_REQUEST
                     return halo_response
         raise HttpFailException(halo_response)
 
