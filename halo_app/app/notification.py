@@ -16,7 +16,7 @@ class Notification(AbsBaseClass):
     errors:[Error]  = []
 
     def addError(self,message:str,exception:Exception=None):
-        self.errors.add(Error(message,exception))
+        self.errors.append(Error(message,exception))
 
     def hasErrors(self)->bool:
         if len(self.errors) > 0:
