@@ -14,7 +14,7 @@ from halo_app.infra.providers.providers import get_provider,ONPREM
 from halo_app.app.response import HaloResponseFactory, AbsHaloResponse
 from halo_app.entrypoints.client_type import ClientType
 from halo_app.infra.providers.util import ProviderUtil
-from .notification import Notification
+from .notification import Notification, Error
 from .request import AbsHaloRequest
 from .result import Result
 from ..reflect import Reflect
@@ -226,4 +226,26 @@ class Util(AbsBaseClass):
             return str(e)+':'+detail
         return str(e)
 
+    @staticmethod
+    def json_notification_response(halo_context, errors:[Error]):  # code, msg, requestId):
+        """
 
+        :param req_context:
+        :param clazz:
+        :param e:
+        :return:
+        """
+        message = "Validation failed"
+        error_code = "validation"
+        payload = {
+            "error_code": error_code,
+            "error_message": message,
+            "timestamp": datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)"),
+            "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION]),
+            "errors": [],
+        }
+        for error in errors:
+            payload['errors'].append({"name": "username", "error": error.message})
+        if Util.isDebugEnabled(halo_context):
+            payload["context"] = json.dumps(halo_context.table)
+        return payload

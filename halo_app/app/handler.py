@@ -60,12 +60,11 @@ class AbsBaseHandler(AbsBaseClass):
         logger.debug("in validate_req ")
         if halo_request:
             return Notification()
-        raise AppValidationException("Halo Request not valid")
 
     def validate_pre(self, halo_request):
+        logger.debug("in validate_pre ")
         if halo_request:
             return Notification()
-        raise AppValidationException("Fail pre validation for Halo Request")
 
     def create_resp_payload(self, halo_request, dict_back_json):
         logger.debug("in create_resp_payload " + str(dict_back_json))

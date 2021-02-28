@@ -8,6 +8,7 @@ from flask import Flask, request
 from nose.tools import eq_
 
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
+from halo_app.app.notification import Notification
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
 from halo_app.app.result import Result
 from halo_app.app.uow import AbsUnitOfWork
@@ -19,7 +20,7 @@ from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.infra.exceptions import ApiException
-from halo_app.app.exceptions import HaloMethodNotImplementedException
+from halo_app.app.exceptions import HaloMethodNotImplementedException, AppValidationException
 from halo_app.domain.repository import AbsRepository
 from halo_app.infra.mail import AbsMailService
 from halo_app.logs import log_json
@@ -170,6 +171,7 @@ class A0(AbsCommandHandler):
                     return {"tst_post":"good2"}
             if halo_request.method_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
+
 class A1(A0):
     pass
 
@@ -288,6 +290,24 @@ class A6(A5):
 class A8(AbsCommandHandler):
     pass
 
+
+class A8a(AbsCommandHandler):
+
+    def validate_req(self, halo_request):
+        if halo_request:
+            n = Notification()
+            n.addError("test")
+            return n
+
+
+class A8b(AbsCommandHandler):
+
+    def validate_pre(self, halo_request):
+        if halo_request:
+            n = Notification()
+            n.addError("test")
+            return n
+
 class A9(AbsEventHandler):
 
     def handle(self, halo_event_request: HaloEventRequest, uow: AbsUnitOfWork):
@@ -398,7 +418,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class  # event empty api
         bootstrap.COMMAND_HANDLERS["z1b"] = A1.run_command_class  # event seq api
         bootstrap.COMMAND_HANDLERS["z1c"] = A1.run_command_class  # event saga api
-        bootstrap.COMMAND_HANDLERS["z2"] = A8.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2"] = A8a.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2a"] = A8b.run_command_class
         bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
         # bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
@@ -538,6 +559,31 @@ class TestUserDetailTestCase(unittest.TestCase):
             print(str(e))
             eq_(e.__class__.__name__, "NoApiClassException")
 
+    def test_1e_run_handle(self):
+        with app.test_request_context(method='GET', path='/?id=1'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z2", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,False)
+                response = SysUtil.process_api_ok(response, request.method)
+                eq_(response.payload['error_code'], 'validation')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_1f_run_handle(self):
+        with app.test_request_context(method='GET', path='/?id=1'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z2a", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,False)
+                response = SysUtil.process_api_ok(response, request.method)
+                eq_(response.payload['error_code'], 'validation')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_2_run_handle_fail(self):
         with app.test_request_context(method='GET', path='/?id=2'):

@@ -109,6 +109,7 @@ class AbsBaseApi(AbsBaseClass):
             if data:
                 x = str(data.decode('utf8').replace("'", '"'))
                 if x != "":
+                    #@todo fix this block
                     datax = json.loads(x)
                     datay = json.dump(datax)
                 else:
