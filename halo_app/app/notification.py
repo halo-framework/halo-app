@@ -13,7 +13,10 @@ class Error(AbsBaseClass):
       self.cause = cause
 
 class Notification(AbsBaseClass):
-    errors:[Error]  = []
+    errors:[Error]  = None
+
+    def __init__(self):
+        self.errors = []
 
     def addError(self,message:str,exception:Exception=None):
         self.errors.append(Error(message,exception))

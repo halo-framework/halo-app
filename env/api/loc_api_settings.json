@@ -1,6 +1,6 @@
 {
   "Google": {
-    "url": "http://www.yahoo.com",
+    "url": "http://www.google.com",
     "type": "api",
     "class": "tests.test_halo.GoogleApi"
   },
@@ -16,7 +16,7 @@
     "class": "tests.test_halo.PrimoServiceApi"
   },
   "Cnn": {
-    "url": "http://www.nytimes.com",
+    "url": "http://jsonplaceholder.typicode.com",
     "type": "api",
     "class": "tests.test_halo.CnnApi"
   },
