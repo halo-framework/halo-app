@@ -2,18 +2,18 @@
 from abc import ABCMeta, abstractmethod
 
 from halo_app.classes import AbsBaseClass
-from halo_app.exceptions import HaloException
+from halo_app.exceptions import AbsHaloException
 
 
-class DomainException(HaloException):
+class AbsDomainException(AbsHaloException):
     __metaclass__ = ABCMeta
 
 
-class IllegalBQException(DomainException):
+class IllegalBQException(AbsDomainException):
     pass
 
 
 
-class NoSuchPathException(DomainException):
+class NoSuchPathException(AbsDomainException):
     pass
 

@@ -5,10 +5,10 @@ from abc import ABCMeta, abstractmethod
 
 
 # provider
-from halo_app.infra.exceptions import InfraException
+from halo_app.infra.exceptions import AbsInfraException
 
 
-class ProviderException(InfraException):
+class ProviderException(AbsInfraException):
     __metaclass__ = ABCMeta
 
 class SSMException(ProviderException):

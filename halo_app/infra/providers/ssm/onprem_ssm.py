@@ -10,7 +10,7 @@ from environs import Env
 from abc import ABCMeta,abstractmethod
 
 from halo_app.app.exceptions import HaloMethodNotImplementedException
-from halo_app.infra.exceptions import CacheKeyException, CacheExpireException, HaloException
+from halo_app.infra.exceptions import CacheKeyException, CacheExpireException, AbsHaloException
 from halo_app.infra.providers.exceptions import  NoLocalSSMClassException, NoLocalSSMModuleException, SSMException
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
@@ -173,7 +173,7 @@ def load_config(ssm_parameter_path):
                 logger.debug("Found configuration: " + str(config_dict))
                 configuration.read_dict(config_dict)
 
-    except HaloException as e:
+    except AbsHaloException as e:
         logger.error("Encountered a client Exception loading config from SSM:" + str(e))
     except json.decoder.JSONDecodeException as e:
         logger.error("Encountered a json Exception loading config from SSM:" + str(e))
@@ -240,7 +240,7 @@ def set_config(ssm_parameter_path, value):
         full_config_path,short_config_path = BaseUtil.get_env()
         logger.debug(str(full_config_path) + "=" + str(ret))
         return True
-    except HaloException as e:
+    except AbsHaloException as e:
         msg = "Encountered a client Exception setting config from SSM"
         logger.error(msg)
         raise SSMException(msg,e)

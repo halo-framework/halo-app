@@ -13,7 +13,7 @@ from halo_app.app.exceptions import EngineException
 from halo_app.app.context import HaloContext
 from .result import Result
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
-from halo_app.exceptions import HaloException
+from halo_app.exceptions import AbsHaloException
 from ..reflect import Reflect
 from halo_app.app.request import AbsHaloRequest, HaloEventRequest, HaloCommandRequest, HaloQueryRequest
 from halo_app.app.response import AbsHaloResponse
@@ -60,14 +60,14 @@ class ProcessingEngine(AbsBaseClass):
         if halo_request and api.api_type == "service":
             return dict(halo_request.headers)
         return {}
-        raise HaloException("no headers")
+        raise AbsHaloException("no headers")
 
     def set_api_vars(self,halo_request,api, seq=None, dict=None):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
             return ret
-        raise HaloException("no var")
+        raise AbsHaloException("no var")
 
     def set_api_auth(self,halo_request,api, seq=None, dict=None):
         return None
@@ -114,7 +114,7 @@ class ProcessingEngine(AbsBaseClass):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise HaloException("mapping error for " + halo_request.method_id,e)
+                    raise AbsHaloException("mapping error for " + halo_request.method_id, e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -149,7 +149,7 @@ class ProcessingEngine(AbsBaseClass):
             mapping = settings.MAPPING[halo_request.method_id]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
-        raise HaloException("no mapping for "+halo_request.method_id)
+        raise AbsHaloException("no mapping for " + halo_request.method_id)
 
     def load_resp_mapping(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))

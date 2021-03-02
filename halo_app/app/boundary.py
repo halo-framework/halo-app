@@ -6,7 +6,7 @@ import datetime
 import logging
 import traceback
 # app
-from halo_app.app.exceptions import HaloException, CommandNotMappedException, HaloException, QueryNotMappedException, \
+from halo_app.app.exceptions import AbsHaloException, CommandNotMappedException, AbsHaloException, QueryNotMappedException, \
     HaloRequestException
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
@@ -66,7 +66,7 @@ class BoundaryService(IBoundaryService):
                                                             LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
             return ret
 
-        except HaloException as e:
+        except AbsHaloException as e:
             error = HaloExceptionHandler().handle(halo_request, e, traceback)
 
         except Exception as e:
@@ -80,13 +80,14 @@ class BoundaryService(IBoundaryService):
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        json_error = Util.json_error_response(halo_request.context,settings.ERR_MSG_CLASS, error)
-        return self.__do_abort(halo_request, errors=json_error)
+        #json_error = Util.json_exception_response(halo_request.context,settings.ERR_MSG_CLASS, error)
+        #return self.__do_abort(halo_request, errors=json_error)
+        return self.__do_abort(halo_request, error)
 
-    def __do_abort(self,halo_request, errors):
-        response = HaloResponseFactory().get_halo_response(halo_request,success=False)
-        response.errors = errors
-        return response
+    def __do_abort(self,halo_request, error):
+        #response = HaloResponseFactory().get_halo_response(halo_request,success=False)
+        #response.errors = errors
+        return Util.create_exception_response(halo_request, error)
 
     def __process_finally(self,halo_context, orig_log_level):
         """
@@ -110,7 +111,7 @@ class BoundaryService(IBoundaryService):
             elif isinstance(halo_request,HaloEventRequest) or issubclass(halo_request.__class__,HaloEventRequest):
                 self.__process_event(message)
             else:
-                raise HaloException(f'{message} was not an Event or Command or Query')
+                raise AbsHaloException(f'{message} was not an Event or Command or Query')
         return result
 
 

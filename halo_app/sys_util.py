@@ -12,8 +12,9 @@ from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, AbsHaloRequest, HaloQueryRequest
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from .app.exceptions import HttpFailException
-from .app.notification import Error
+from .app.notification import ValidError
 from .entrypoints.client_type import ClientType
+from .error import Error
 from .logs import log_json
 from .settingsx import settingsx
 settings = settingsx()
@@ -123,14 +124,13 @@ class SysUtil(AbsBaseClass):
                 else:
                     halo_response.code = HTTPStatus.INTERNAL_SERVER_ERROR
                     if halo_response.payload:  # result-error,notification-errors,empty
-                        if isinstance(halo_response.payload,[Error]):
+                        if isinstance(halo_response.payload, [ValidError]):
                             halo_response.code = HTTPStatus.BAD_REQUEST
                     return halo_response
         raise HttpFailException(halo_response)
 
-
     @staticmethod
-    def process_api_ok(halo_response, method):
+    def process_response_for_client(halo_response, method):
         if halo_response:
             if halo_response.request.context.get(HaloContext.client_type) == ClientType.api:
                 if halo_response.success:
@@ -159,14 +159,13 @@ class SysUtil(AbsBaseClass):
                             return halo_response
                 else:
                     halo_response.code = HTTPStatus.INTERNAL_SERVER_ERROR
-                    if halo_response.payload:  # result-error,notification-errors,empty
+                    if halo_response.payload:  # result-error,notification-errors,exception-error
                         from halo_app.app.utilx import Util
                         if isinstance(halo_response.payload,list):
                             halo_response.code = HTTPStatus.BAD_REQUEST
-                            json_err = Util.json_notification_response(halo_response.request.context,halo_response.payload)
-                            halo_response.payload = json_err
+                            halo_response.payload = Util.json_notification_response(halo_response.request.context,halo_response.payload)
                         else:
-                            if isinstance(halo_response.payload, Error) and halo_response.payload.cause:
-                                halo_response.payload = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.payload.cause)
+                            if isinstance(halo_response.payload, Error):
+                                halo_response.payload = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.payload)
                     return halo_response
         raise HttpFailException(halo_response)

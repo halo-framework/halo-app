@@ -1,55 +1,55 @@
 from abc import ABCMeta, abstractmethod
 import logging
 from halo_app.classes import AbsBaseClass
-from halo_app.domain.exceptions import DomainException
-from halo_app.exceptions import HaloException
+from halo_app.domain.exceptions import AbsDomainException
+from halo_app.exceptions import AbsHaloException
 from halo_app.logs import log_json
 
 logger = logging.getLogger(__name__)
 
-class AppException(HaloException):
+class AbsAppException(AbsHaloException):
     __metaclass__ = ABCMeta
 
-class AuthException(AppException):
+class AuthException(AbsAppException):
     pass
 
-class MissingMethodIdException(AppException):
+class MissingMethodIdException(AbsAppException):
     pass
 
-class CommandNotMappedException(AppException):
+class CommandNotMappedException(AbsAppException):
     pass
 
-class QueryNotMappedException(AppException):
+class QueryNotMappedException(AbsAppException):
     pass
 
-class MissingResponsetoClientTypeException(AppException):
+class MissingResponsetoClientTypeException(AbsAppException):
     pass
 
-class MissingHaloContextException(AppException):
+class MissingHaloContextException(AbsAppException):
     pass
 
-class NoCorrelationIdException(AppException):
+class NoCorrelationIdException(AbsAppException):
     pass
 
-class HaloMethodNotImplementedException(AppException):
+class HaloMethodNotImplementedException(AbsAppException):
     pass
 
-class BusinessEventMissingSeqException(AppException):
+class BusinessEventMissingSeqException(AbsAppException):
     pass
 
-class BusinessEventNotImplementedException(AppException):
+class BusinessEventNotImplementedException(AbsAppException):
     pass
 
-class HaloRequestException(AppException):
+class HaloRequestException(AbsAppException):
     pass
 
-class HttpFailException(AppException):
+class HttpFailException(AbsAppException):
     pass
 
-class AppValidationException(AppException):
+class AppValidationException(AbsAppException):
     pass
 
-class EngineException(AppException):
+class EngineException(AbsAppException):
     pass
 
 
@@ -60,7 +60,7 @@ class ConvertDomainExceptionHandler(AbsBaseClass):
     def __init__(self, message_service=None):
         self.message_service = message_service
 
-    def handle(self, de: DomainException) -> AppException:
+    def handle(self, de: AbsDomainException) -> AbsAppException:
         #main_message = self.message_service.convert(de.message)
         #detail_message = self.message_service.convert(de.detail)
-        return AppException (de.message, de, de.detail,de.data)
+        return AbsAppException (de.message, de, de.detail, de.data)

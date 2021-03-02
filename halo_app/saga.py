@@ -3,7 +3,7 @@ from http import HTTPStatus
 import logging
 from halo_app.infra.apis import ApiMngr
 from .base_util import BaseUtil
-from halo_app.exceptions import HaloException
+from halo_app.exceptions import AbsHaloException
 from halo_app.infra.exceptions import ApiException
 from .logs import log_json
 from  .classes import AbsBaseClass
@@ -23,20 +23,20 @@ For forward recovery you also need to ensure the requests are imdempotent.
 
 #@todo enable use of other saga engine like aws step functions
 
-class SagaException(HaloException):
+class SagaException(AbsHaloException):
     """
     Raised when an action failed and no compensation was found.
     """
     pass
 
 
-class SagaRollBack(HaloException):
+class SagaRollBack(AbsHaloException):
     """
     Raised when an action failed and the compensations complited.
     """
     pass
 
-class SagaError(HaloException):
+class SagaError(AbsHaloException):
     """
     Raised when an action failed and at least one compensation also failed.
     """

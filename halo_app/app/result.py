@@ -1,7 +1,7 @@
 import abc
 
-from halo_app.app.notification import Error
 from halo_app.classes import AbsBaseClass
+from halo_app.error import Error
 
 
 class Result(AbsBaseClass):
@@ -14,7 +14,7 @@ class Result(AbsBaseClass):
 
     def __init__(self,message=None,exception=None,payload=payload):
         if message:
-            self.error = Error(message,exception)
+            self.error = Error(message, exception)
             self.failure = True
             self.success = not self.failure
         else:
@@ -23,7 +23,7 @@ class Result(AbsBaseClass):
             self.failure = not self.success
 
     @staticmethod
-    def fail(message:str,exception:Exception):
+    def fail(message:str,exception:Exception=None):
         return Result(message=message,exception=exception)
 
     @staticmethod

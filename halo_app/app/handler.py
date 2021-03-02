@@ -14,8 +14,8 @@ from .exceptions import HaloMethodNotImplementedException, BusinessEventMissingS
     BusinessEventNotImplementedException, AppValidationException, ConvertDomainExceptionHandler
 from .result import Result
 from .uow import AbsUnitOfWork
-from halo_app.exceptions import HaloException
-from ..domain.exceptions import DomainException
+from halo_app.exceptions import AbsHaloException
+from ..domain.exceptions import AbsDomainException
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..entrypoints.client_type import ClientType
 from ..app.engine import ProcessingEngine
@@ -80,7 +80,7 @@ class AbsBaseHandler(AbsBaseClass):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise HaloException("mapping Exception for " + halo_request.method_id,e)
+                    raise AbsHaloException("mapping Exception for " + halo_request.method_id, e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -115,7 +115,7 @@ class AbsBaseHandler(AbsBaseClass):
             mapping = settings.MAPPING[halo_request.method_id]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
-        raise HaloException("no mapping for "+halo_request.method_id)
+        raise AbsHaloException("no mapping for " + halo_request.method_id)
 
     def load_resp_mapping(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
@@ -301,39 +301,13 @@ class AbsCommandHandler(AbsBaseHandler):
         # 6. return json response
         return halo_response
 
-    @abstractmethod
-    def do_operation1(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
-        # 1. validate input params
-        notification: Notification = self.validate_req(halo_request)
-        if notification.hasErrors():
-            return Util.create_response(halo_request, False, notification)
-        # 2. run pre conditions
-        notification: Notification = self.validate_pre(halo_request)
-        if notification.hasErrors():
-            return Util.create_response(halo_request, False, notification)
-        # 3. processing engine
-        table = self.processing_engine(halo_request)
-        # 4. Build the payload target response structure which is Compliant
-        payload = self.create_resp_payload(halo_request, table)
-        #logger.debug("payload=" + str(payload))
-        # 5. setup headers for reply
-        #headers = self.set_resp_headers(halo_request)
-        # 6. build json and add to halo response
-        halo_response = Util.create_response(halo_request,True,payload)
-        # 7. post condition
-        self.validate_post(halo_request, halo_response)
-        # 8. do filter
-        self.do_filter(halo_request,halo_response)
-        # 9. return json response
-        return halo_response
-
     def processing_engine(self, halo_request:HaloCommandRequest)->Result:
         try:
             if self.business_event:
                 return self.processing_engine_dtl(halo_request)
             else:
                 return self.handle(halo_request,self.uow)
-        except DomainException as e:
+        except AbsDomainException as e:
             domain_exception_handler = ConvertDomainExceptionHandler()
             raise domain_exception_handler.handle(e)
 

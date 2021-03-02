@@ -11,7 +11,7 @@ from halo_app.logs import log_json
 from halo_app.infra.providers.providers import get_provider
 from halo_app.classes import AbsBaseClass
 from .app.utilx import Util
-from .exceptions import HaloException
+from .exceptions import AbsHaloException
 from .reflect import Reflect
 from .settingsx import settingsx
 
@@ -19,11 +19,11 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-class NoMessageException(HaloException):
+class NoMessageException(AbsHaloException):
     pass
 
 
-class NoTargetUrlException(HaloException):
+class NoTargetUrlException(AbsHaloException):
     pass
 
 class AbsBaseEvent(AbsBaseClass):

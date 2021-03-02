@@ -7,13 +7,13 @@ from halo_app.logs import log_json
 
 logger = logging.getLogger(__name__)
 
-class HaloException(Exception):
+class AbsHaloException(Exception):
     __metaclass__ = ABCMeta
     """The abstract Generic exception for halo"""
 
     @abstractmethod
     def __init__(self, message, original_exception=None, detail=None,data=None):
-        super(HaloException, self).__init__()
+        super(AbsHaloException, self).__init__()
         self.message = message
         self.original_exception = original_exception
         self.detail = detail
@@ -25,13 +25,13 @@ class HaloException(Exception):
             msg = msg + " ,original:" +str(self.original_exception)
         return msg  # __str__() obviously expects a string to be returned, so make sure not to send any other view types
 
-class StoreException(HaloException):
+class StoreException(AbsHaloException):
     pass
 
-class StoreClearException(HaloException):
+class StoreClearException(AbsHaloException):
     pass
 
-class SecureException(HaloException):
+class SecureException(AbsHaloException):
     pass
 
 class MissingRoleException(SecureException):

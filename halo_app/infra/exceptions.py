@@ -1,10 +1,12 @@
-from halo_app.exceptions import HaloException
+from abc import ABCMeta
+
+from halo_app.exceptions import AbsHaloException
 
 
-class InfraException(HaloException):
-    pass
+class AbsInfraException(AbsHaloException):
+    __metaclass__ = ABCMeta
 
-class ApiException(InfraException):
+class ApiException(AbsInfraException):
     pass
 
 class MaxTryException(ApiException):
@@ -22,15 +24,15 @@ class ApiTimeOutExpired(ApiException):
     pass
 
 
-class DbException(InfraException):
+class DbException(AbsInfraException):
     pass
 
 
-class DbIdemException(InfraException):
+class DbIdemException(AbsInfraException):
     pass
 
 
-class CacheException(InfraException):
+class CacheException(AbsInfraException):
     pass
 
 
@@ -40,21 +42,21 @@ class CacheKeyException(CacheException):
 class CacheExpireException(CacheException):
     pass
 
-class ReflectException(InfraException):
+class ReflectException(AbsInfraException):
     pass
 
 
-class NoApiDefinitionException(InfraException):
+class NoApiDefinitionException(AbsInfraException):
     pass
 
-class ApiClassException(InfraException):
+class ApiClassException(AbsInfraException):
     pass
 
-class NoApiClassException(InfraException):
+class NoApiClassException(AbsInfraException):
     pass
 
-class MissingClassConfigException(InfraException):
+class MissingClassConfigException(AbsInfraException):
     pass
 
-class IllegalMethodException(InfraException):
+class IllegalMethodException(AbsInfraException):
     pass

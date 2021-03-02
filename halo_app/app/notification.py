@@ -4,22 +4,24 @@ from enum import Enum
 
 from halo_app.classes import AbsBaseClass
 
-class Error(AbsBaseClass):
+class ValidError(AbsBaseClass):
+    name:str = None
     message:str = None
     cause:Exception = None
 
-    def __init__(self,message:str, cause:Exception=None):
-      self.message = message
-      self.cause = cause
+    def __init__(self,name:str,message:str, cause:Exception=None):
+        self.name = name
+        self.message = message
+        self.cause = cause
 
 class Notification(AbsBaseClass):
-    errors:[Error]  = None
+    errors:[ValidError]  = None
 
     def __init__(self):
         self.errors = []
 
     def addError(self,message:str,exception:Exception=None):
-        self.errors.append(Error(message,exception))
+        self.errors.append(ValidError(message, exception))
 
     def hasErrors(self)->bool:
         if len(self.errors) > 0:

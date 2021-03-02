@@ -14,12 +14,13 @@ from halo_app.app.result import Result
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.app.event import AbsHaloEvent
+from halo_app.domain.exceptions import AbsDomainException
 from halo_app.entrypoints import client_util
 from halo_app.infra.impl.redis_event_publisher import Publisher
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.view.query import AbsHaloQuery, HaloQuery
 from halo_app.domain.service import AbsDomainService
-from halo_app.infra.exceptions import ApiException
+from halo_app.infra.exceptions import ApiException, AbsInfraException
 from halo_app.app.exceptions import HaloMethodNotImplementedException
 from halo_app.domain.repository import AbsRepository
 from halo_app.infra.mail import AbsMailService
@@ -135,8 +136,19 @@ class A0(AbsCommandHandler):
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         if 'id' in halo_request.command.vars:
-            if halo_request.command.vars['id'] != '1':
-                raise Exception()
+            if halo_request.command.vars['id'] == '2':
+                raise Exception("test2") # generic
+            if halo_request.command.vars['id'] == '3':
+                raise AbsInfraException("test3")# infra
+            if halo_request.command.vars['id'] == '4':
+                raise AbsDomainException("test4")# domain
+            if halo_request.command.vars['id'] == '5':
+                return Result.fail("fail5")
+            if halo_request.command.vars['id'] == '6':
+                return Result.fail("fail6",Exception(""))
+            if halo_request.command.vars['id'] == '7':
+                return Result.fail("fail7",AbsDomainException(""))
+
         with uow:
             item = self.repository.load(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
@@ -525,7 +537,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 t = TestHaloQuery(halo_context, "q2",  request.args)
                 halo_request = SysUtil.create_query_request(t)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 print(str(e))
@@ -538,7 +550,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response,request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,True)
                 eq_(response.code, HTTPStatus.ACCEPTED)
             except Exception as e:
@@ -559,7 +571,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z15", request.args)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success, False)
                 eq_(response.payload['error_code'], 'validation')
             except Exception as e:
@@ -572,7 +584,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z16", request.args)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
                 eq_(response.payload['error_code'], 'validation')
             except Exception as e:
@@ -580,40 +592,112 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "NoApiClassException")
 
 
-    def test_2_run_handle_fail(self):
+    def test_2_run_handle_fail_exception(self):
         with app.test_request_context(method='GET', path='/?id=2'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
+                print(str(response.payload))
                 eq_(response.success,False)
+                eq_(response.payload['error']['error_message'], 'test2')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
 
-    def test_2a_run_api_from_event_config(self):
+    def test_2a_run_handle_fail_result(self):
+        with app.test_request_context(method='GET', path='/?id=3'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response, request.method)
+                print(str(response.payload))
+                eq_(response.success,False)
+                eq_(response.payload['error']['error_message'], 'test3')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "Exception")
+
+    def test_2b_run_handle_fail_result(self):
+        with app.test_request_context(method='GET', path='/?id=4'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response, request.method)
+                print(str(response.payload))
+                eq_(response.success,False)
+                eq_(response.payload['error']['error_message'], 'test4 ,original:test4')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "Exception")
+
+    def test_2c_run_handle_fail_result(self):
+        with app.test_request_context(method='GET', path='/?id=5'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response, request.method)
+                print(str(response.payload))
+                eq_(response.success,False)
+                eq_(response.payload['error']['error_message'], 'fail5')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "Exception")
+
+    def test_2d_run_handle_fail_result(self):
+        with app.test_request_context(method='GET', path='/?id=6'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response, request.method)
+                print(str(response.payload))
+                eq_(response.success,False)
+                eq_(response.payload['error']['error_message'], 'fail6')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "Exception")
+
+    def test_2e_run_handle_fail_result(self):
+        with app.test_request_context(method='GET', path='/?id=7'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
+                response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response, request.method)
+                print(str(response.payload))
+                eq_(response.success,False)
+                eq_(response.payload['error']['error_message'], 'fail7')
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "Exception")
+
+    def test_2f_run_api_from_event_config(self):
         os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,True)
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_2b_run_api_from_event_config_empty(self):
+    def test_2g_run_api_from_event_config_empty(self):
         os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z1a", request.args)
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,True)
             except Exception as e:
@@ -626,7 +710,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1b", request.args)
             response = self.boundary.execute(halo_request)
-            response = SysUtil.process_api_ok(response, request.method)
+            response = SysUtil.process_response_for_client(response, request.method)
             print(str(response.payload))
             eq_(response.success,True)
 
@@ -635,7 +719,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers)
             halo_request = SysUtil.create_command_request(halo_context, "z1c", {})
             response = self.boundary.execute(halo_request)
-            response = SysUtil.process_api_ok(response, request.method)
+            response = SysUtil.process_response_for_client(response, request.method)
             eq_(response.success,True)
 
     def test_5_cli_handle(self):
@@ -699,7 +783,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         eq_(response.success,False)
-        eq_(response.errors['error']['error_code'], 500)
+        eq_(response.payload.message, 'exception thrown!')
 
     def test_10_event(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
@@ -1098,7 +1182,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1109,7 +1193,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiException")
@@ -1120,7 +1204,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z6", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                response = SysUtil.process_api_ok(response, request.method)
+                response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "SagaError")
