@@ -249,8 +249,12 @@ class AbsEventHandler(AbsBaseHandler):
             return Util.log_notification(halo_request, notification)
         # 3. engine
         result:Result = self.event_engine(halo_request)
-        # 4. do filter
-        self.do_filter(halo_request, Util.create_result_response(halo_request, result))
+        # 4. create fake rsponse
+        halo_response = Util.create_result_response(halo_request, result)
+        # 5. post condition
+        self.validate_post(halo_request, halo_response)
+        # 7. do filter
+        self.do_filter(halo_request, halo_response)
 
 
     def event_engine(self, halo_request:HaloEventRequest)->Result:
@@ -294,11 +298,11 @@ class AbsCommandHandler(AbsBaseHandler):
         result:Result = self.processing_engine(halo_request)
         # 4. create response
         halo_response = Util.create_result_response(halo_request, result)
-        # 4. post condition
+        # 5. post condition
         self.validate_post(halo_request, halo_response)
-        # 5. do filter
+        # 6. do filter
         self.do_filter(halo_request,halo_response)
-        # 6. return json response
+        # 7. return json response
         return halo_response
 
     def processing_engine(self, halo_request:HaloCommandRequest)->Result:

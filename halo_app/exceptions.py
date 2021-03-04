@@ -47,21 +47,6 @@ class FilterValidationException(SecureException):
     pass
 
 
-class HaloErrorHandler(AbsBaseClass):
-
-    def __init__(self):
-        pass
-
-    def handle(self,halo_request,e:Exception,traceback):
-        # @todo check if stack needed and working
-        e.stack = traceback.format_exc()
-        logger.error(e.__str__(), extra=log_json(halo_request.context, {}, e))
-        # exc_type, exc_obj, exc_tb = sys.exc_info()
-        # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        # logger.debug('An Exception occured in '+str(fname)+' lineno: '+str(exc_tb.tb_lineno)+' exc_type '+str(exc_type)+' '+e.message)
-        return e
-
-
 class HaloExceptionHandler(AbsBaseClass):
 
     def __init__(self):
