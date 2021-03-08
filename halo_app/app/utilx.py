@@ -288,7 +288,7 @@ class Util(AbsBaseClass):
         :param e:
         :return:
         """
-        default_message = 'A Validation occurred!'
+        default_message = 'A Validation error occurred!'
         #@todo set validation error code
         error_code = "validation"
         payload = {

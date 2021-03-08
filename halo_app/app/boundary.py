@@ -80,13 +80,10 @@ class BoundaryService(IBoundaryService):
                                                                            {LOGChoice.type.value: SYSTEMChoice.server.value,
                                                               LOGChoice.milliseconds.value: int(total.total_seconds() * 1000)}))
 
-        #json_error = Util.json_exception_response(halo_request.context,settings.ERR_MSG_CLASS, error)
-        #return self.__do_abort(halo_request, errors=json_error)
         return self.__do_abort(halo_request, error)
 
     def __do_abort(self,halo_request, error):
-        #response = HaloResponseFactory().get_halo_response(halo_request,success=False)
-        #response.errors = errors
+        logger.info("do_abort:" ,extra=log_json(halo_request.context))
         return Util.create_exception_response(halo_request, error)
 
     def __process_finally(self,halo_context, orig_log_level):
@@ -111,7 +108,7 @@ class BoundaryService(IBoundaryService):
             elif isinstance(halo_request,HaloEventRequest) or issubclass(halo_request.__class__,HaloEventRequest):
                 self.__process_event(message)
             else:
-                raise AbsHaloException(f'{message} was not an Event or Command or Query')
+                raise HaloRequestException(f'{message} was not an Event or Command or Query')
         return result
 
 
@@ -155,40 +152,30 @@ class BoundaryService(IBoundaryService):
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
             raise CommandNotMappedException("command method_id " + command.method_id)
-        try:
-            # The command dispatcher expects just one handler per command.
-            handler = self.command_handlers[command.method_id]
-            ret = handler(command)
-            if self.uow.items:
-                new_events = self.uow.collect_new_events()
-                self.queue.extend(new_events)
-            return ret
-        except Exception as e:
-            logger.exception('Exception %s handling command %s',e, command)
-            raise
+        # The command dispatcher expects just one handler per command.
+        handler = self.command_handlers[command.method_id]
+        ret = handler(command)
+        if self.uow.items:
+            new_events = self.uow.collect_new_events()
+            self.queue.extend(new_events)
+        return ret
+
 
     def __process_async_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
         if command.method_id not in self.command_handlers:
             raise CommandNotMappedException("command method_id " + command.method_id)
-        try:
-            self.publisher.send(settings.HANDLER_TARGET, command.command)
-            return Util.create_response(command,True)
-        except Exception as e:
-            logger.exception('Exception %s handling command %s',e, command)
-            raise
+        self.publisher.send(settings.HANDLER_TARGET, command.command)
+        return Util.create_response(command,True)
 
     def __process_query(self, query: HaloQueryRequest)->AbsHaloResponse:
         logger.debug('handling query %s', query)
         if query.method_id not in self.query_handlers:
             raise QueryNotMappedException("query method_id " + query.method_id)
-        try:
-            # The query dispatcher expects just one handler per command.
-            handler = self.query_handlers[query.method_id]
-            ret = handler(query)
-            return ret
-        except Exception as e:
-            logger.exception('Exception %s handling query %s',e, query)
-            raise
+        # The query dispatcher expects just one handler per command.
+        handler = self.query_handlers[query.method_id]
+        ret = handler(query)
+        return ret
+
 
 

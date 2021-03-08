@@ -253,9 +253,8 @@ class AbsEventHandler(AbsBaseHandler):
         halo_response = Util.create_result_response(halo_request, result)
         # 5. post condition
         self.validate_post(halo_request, halo_response)
-        # 7. do filter
+        # 6. do filter
         self.do_filter(halo_request, halo_response)
-
 
     def event_engine(self, halo_request:HaloEventRequest)->Result:
         return self.handle(halo_request,self.uow)
