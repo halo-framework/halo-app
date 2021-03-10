@@ -143,11 +143,11 @@ class A0(AbsCommandHandler):
             if halo_request.command.vars['id'] == '4':
                 raise AbsDomainException("test4")# domain
             if halo_request.command.vars['id'] == '5':
-                return Result.fail("fail5")
+                return Result.fail("code","msg","fail5")
             if halo_request.command.vars['id'] == '6':
-                return Result.fail("fail6",Exception(""))
+                return Result.fail("code","msg","fail6",Exception(""))
             if halo_request.command.vars['id'] == '7':
-                return Result.fail("fail7",AbsDomainException(""))
+                return Result.fail("code","msg","fail7",AbsDomainException(""))
 
         with uow:
             item = self.repository.load(halo_request.command.vars['id'])
@@ -300,14 +300,14 @@ class A6(A5):
 class A15a(AbsCommandHandler):
     def validate_req(self, halo_request):
         n = Notification()
-        n.addError("valid test1")
+        n.addError("test","valid test1")
         return n
 
 class A15b(AbsCommandHandler):
 
     def validate_pre(self, halo_request):
         n = Notification()
-        n.addError("valid test2")
+        n.addError("test","valid test2")
         return n
 
 class A8(AbsCommandHandler):

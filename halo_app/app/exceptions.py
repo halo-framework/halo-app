@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 import logging
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.exceptions import AbsDomainException
-from halo_app.exceptions import AbsHaloException
+from halo_app.exceptions import AbsHaloException, AbsExceptionHandler
 from halo_app.logs import log_json
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class EngineException(AbsAppException):
     pass
 
 
-class ConvertDomainExceptionHandler(AbsBaseClass):
+class ConvertDomainExceptionHandler(AbsExceptionHandler):
     message_service = None
 
     #@todo add conversion service

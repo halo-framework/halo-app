@@ -10,7 +10,7 @@ from halo_app.app.exceptions import AbsHaloException, CommandNotMappedException,
     HaloRequestException
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice
-from ..exceptions import  HaloExceptionHandler, ExceptionHandler
+from ..exceptions import  HaloExceptionHandler, GeneralExceptionHandler
 from ..logs import log_json
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory
@@ -70,7 +70,7 @@ class BoundaryService(IBoundaryService):
             error = HaloExceptionHandler().handle(halo_request, e, traceback)
 
         except Exception as e:
-            error = ExceptionHandler().handle(halo_request, e, traceback)
+            error = GeneralExceptionHandler().handle(halo_request, e, traceback)
 
         finally:
             self.__process_finally(halo_request.context,orig_log_level)

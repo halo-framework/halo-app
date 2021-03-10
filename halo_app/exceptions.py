@@ -46,8 +46,10 @@ class BadSecurityTokenException(SecureException):
 class FilterValidationException(SecureException):
     pass
 
+class AbsExceptionHandler(AbsBaseClass):
+    pass
 
-class HaloExceptionHandler(AbsBaseClass):
+class HaloExceptionHandler(AbsExceptionHandler):
 
     def __init__(self):
         pass
@@ -62,7 +64,7 @@ class HaloExceptionHandler(AbsBaseClass):
         return e
 
 
-class ExceptionHandler(AbsBaseClass):
+class GeneralExceptionHandler(AbsExceptionHandler):
 
     def __init__(self):
         pass

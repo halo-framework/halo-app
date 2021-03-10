@@ -1,20 +1,21 @@
 import abc
 
 from halo_app.classes import AbsBaseClass
-from halo_app.error import Error
+from halo_app.error import HaloError, Error
 
 
 class Result(AbsBaseClass):
     # only for command
 
-    error:Error = None
+    error:HaloError = None
     payload = None
     success:bool = None
     failure:bool = None
 
-    def __init__(self,message=None,exception=None,payload=payload):
+    def __init__(self,code=None,message=None,error_message=None,exception=None,payload=None):
         if message:
-            self.error = Error(message, exception)
+            the_error = Error(error_message, exception)
+            self.error = HaloError(code,message,[the_error])
             self.failure = True
             self.success = not self.failure
         else:
@@ -23,8 +24,8 @@ class Result(AbsBaseClass):
             self.failure = not self.success
 
     @staticmethod
-    def fail(message:str,exception:Exception=None):
-        return Result(message=message,exception=exception)
+    def fail(code:str,message:str,err_message:str,exception:Exception=None):
+        return Result(code=code,message=message,error_message=err_message,exception=exception)
 
     @staticmethod
     def ok(payload=None):
