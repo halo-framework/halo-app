@@ -145,9 +145,9 @@ class A0(AbsCommandHandler):
             if halo_request.command.vars['id'] == '5':
                 return Result.fail("code","msg","fail5")
             if halo_request.command.vars['id'] == '6':
-                return Result.fail("code","msg","fail6",Exception(""))
+                return Result.fail("code","msg","fail6",Exception("exc"))
             if halo_request.command.vars['id'] == '7':
-                return Result.fail("code","msg","fail7",AbsDomainException(""))
+                return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
         with uow:
             item = self.repository.load(halo_request.command.vars['id'])
@@ -643,7 +643,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload['error']['error_message'], 'fail5')
+                eq_(response.payload.errors[0].message, 'fail5')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -657,7 +657,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload['error']['error_message'], 'fail6')
+                eq_(response.payload.errors[0].message, 'fail6')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -671,7 +671,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload['error']['error_message'], 'fail7')
+                eq_(response.payload.errors[0].message, 'fail7')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")

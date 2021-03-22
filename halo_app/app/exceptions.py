@@ -52,6 +52,9 @@ class AppValidationException(AbsAppException):
 class EngineException(AbsAppException):
     pass
 
+class MissingDtoAssemblerException(AbsAppException):
+    pass
+
 
 class ConvertDomainExceptionHandler(AbsExceptionHandler):
     message_service = None

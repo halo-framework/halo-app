@@ -215,7 +215,7 @@ class AbsQueryHandler(AbsBaseHandler):
         return self.run(halo_request,self.uow)
 
     def set_query_data(self,halo_query_request: HaloQueryRequest)->Tuple[str,dict]:
-        raise HaloMethodNotImplementedException("method set_query_data in Query")
+        raise HaloMethodNotImplementedException("method set_query_data in query")
 
     def run(self, halo_query_request: HaloQueryRequest,uow:AbsUnitOfWork) -> dict:
         query_str, dict_params = self.set_query_data(halo_query_request)
@@ -260,7 +260,7 @@ class AbsEventHandler(AbsBaseHandler):
         return self.handle(halo_request,self.uow)
 
     def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork)->Result:
-        raise HaloMethodNotImplementedException("method handle in command")
+        raise HaloMethodNotImplementedException("method handle in event")
 
     def _run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
         self.uow = uow

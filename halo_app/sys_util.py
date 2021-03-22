@@ -169,3 +169,5 @@ class SysUtil(AbsBaseClass):
                                 halo_response.payload = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.payload)
                     return halo_response
         raise HttpFailException(halo_response)
+
+
