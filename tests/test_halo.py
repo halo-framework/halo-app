@@ -2,11 +2,13 @@ from __future__ import print_function
 
 import json
 import os
+from dataclasses import dataclass
 from http import HTTPStatus
 from faker import Faker
 from flask import Flask, request
 from nose.tools import eq_
 
+from halo_app.app.dto_assembler import DtoAssemblerFactory, AbsDtoAssembler
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.notification import Notification
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
@@ -14,7 +16,10 @@ from halo_app.app.result import Result
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.base_util import BaseUtil
 from halo_app.app.event import AbsHaloEvent
+from halo_app.domain.entity import AbsHaloEntity
 from halo_app.domain.exceptions import AbsDomainException
+from halo_app.domain.model import Item
+from halo_app.dto import AbsHaloDto
 from halo_app.entrypoints import client_util
 from halo_app.infra.impl.redis_event_publisher import Publisher
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
@@ -333,6 +338,32 @@ class A11(AbsQueryHandler):
         sku = 2
         return 'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',dict(orderid=orderid, sku=sku)
 
+@dataclass
+class ItemDto(AbsHaloDto):
+    data = None
+
+class ItemAssembler(AbsDtoAssembler):
+    def writeDto(self,entity:Item) -> ItemDto:
+        dto = ItemDto()
+        dto.data = entity.data
+        return dto
+
+    def writeEntity(self,dto:AbsHaloDto)->AbsHaloEntity:
+        pass
+
+class A17(A0):
+
+    def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
+        with uow:
+            entity = Item("1","123")
+            self.repository.save(entity)
+            self.infra_service.send(entity)
+            uow.commit()
+            dto_assembler = DtoAssemblerFactory.getAssembler(entity)
+            dto = dto_assembler.writeDto(entity)
+            payload = dto
+            return Result.ok(payload) #Util.create_response(halo_request, True, payload)
+
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
 
@@ -432,6 +463,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
         bootstrap.COMMAND_HANDLERS["z15"] = A15a.run_command_class
         bootstrap.COMMAND_HANDLERS["z16"] = A15b.run_command_class
+        bootstrap.COMMAND_HANDLERS["z17"] = A17.run_command_class
         bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
         bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
         bootstrap.QUERY_HANDLERS["q2"] = A11.run_query_class
@@ -1588,3 +1620,15 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 print(str(e))
                 eq_(1,2)
+
+    def test_62_run_handle(self):
+        with app.test_request_context(method='GET', path='/?id=1'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,True)
+                eq_(response.payload.data, "123")
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")

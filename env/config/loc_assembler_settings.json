@@ -1,0 +1,5 @@
+{
+  "halo_app.domain.model.Item": "tests.test_halo.ItemAssembler",
+  "tests.test_halo.Part": "tests.test_halo.PartAssembler",
+  "tests.test_halo.PartDto": "tests.test_halo.PartAssembler"
+}

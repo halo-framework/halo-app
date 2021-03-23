@@ -16,7 +16,6 @@ items = Table(
     'items', metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('data', String(255)),
-    Column('item_dtl_id', ForeignKey('item_dtls.id')),
 )
 
 item_dtls = Table(
@@ -24,6 +23,7 @@ item_dtls = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('desc', String(255)),
     Column('qty', Integer, nullable=False),
+    Column('item_id', ForeignKey('items.id')),
 )
 
 
@@ -38,14 +38,8 @@ items_view = Table(
 
 def start_mappers():
     logger.info("Starting mappers")
-    item_mapper = mapper(model.Item, items)
-    dtls_mapper = mapper(model.Detail, item_dtls, properties={
-        '_dtls': relationship(
-            item_mapper,
-            secondary=items,
-            collection_class=set,
-        )
-    })
+    dtls_mapper = mapper(model.Detail, item_dtls)
+
 
 
 @event.listens_for(model.Item, 'load')

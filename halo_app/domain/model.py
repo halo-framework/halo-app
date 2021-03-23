@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional, List, Set
 
 from halo_app.app.context import HaloContext
-from halo_app.domain.entity import AbsHaloAggregateRoot
+from halo_app.domain.entity import AbsHaloAggregateRoot, AbsHaloEntity
 from halo_app.domain.event import AbsHaloDomainEvent
 
 
@@ -15,7 +15,7 @@ class Item(AbsHaloAggregateRoot):
         self.data = data
         self.events = []
 
-class Detail(AbsHaloAggregateRoot):
+class Detail(AbsHaloEntity):
 
     def __init__(self, id: str,  desc: str, qty:int):
         super(Item, self).__init__(id)
