@@ -381,6 +381,16 @@ class Config(object):
     else:
         print("no api config file")
 
+    ASSEMBLERS = None
+    ASSEMBLER_SETTINGS = ENV_NAME + '_assembler_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', ASSEMBLER_SETTINGS)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as fi:
+            map = json.load(fi)
+            ASSEMBLERS = map
+    else:
+        print("no assembler config files")
+
     BUSINESS_EVENT_MAP = None
     HANDLER_MAP = {}
     EVENT_SETTINGS = ENV_NAME + '_event_settings.json'

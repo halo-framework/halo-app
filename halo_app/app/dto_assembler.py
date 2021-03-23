@@ -18,8 +18,8 @@ class AbsDtoAssembler(AbsBaseClass, abc.ABC):
     def writeEntity(dto:AbsHaloDto)->AbsHaloEntity:
         pass
 
-
 class DtoAssemblerFactory(AbsBaseClass):
+
     @classmethod
     def getAssembler(cls,entity:AbsHaloEntity)->AbsDtoAssembler:
         if type(entity) in settings.ASSEMBLERS:
@@ -27,3 +27,11 @@ class DtoAssemblerFactory(AbsBaseClass):
             assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
         raise MissingDtoAssemblerException(type(entity))
+
+    @classmethod
+    def getAssembler(cls,dto:AbsHaloDto)->AbsDtoAssembler:
+        if type(dto) in settings.ASSEMBLERS:
+            dto_assembler_type = settings.ASSEMBLERS[type(dto)]
+            assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
+            return assembler
+        raise MissingDtoAssemblerException(type(dto))
