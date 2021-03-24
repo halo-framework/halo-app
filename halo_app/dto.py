@@ -4,5 +4,8 @@ from halo_app.classes import AbsBaseClass
 
 @dataclass
 class AbsHaloDto(AbsBaseClass):
-    pass
+    id = None
+
+    def __init__(self, id: str):
+        self.id = id
 

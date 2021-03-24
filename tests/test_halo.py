@@ -342,27 +342,41 @@ class A11(AbsQueryHandler):
 class ItemDto(AbsHaloDto):
     data = None
 
+    def __init__(self,id,data):
+        super(ItemDto, self).__init__(id)
+        self.data = data
+
 class ItemAssembler(AbsDtoAssembler):
     def writeDto(self,entity:Item) -> ItemDto:
         dto = ItemDto()
         dto.data = entity.data
         return dto
 
-    def writeEntity(self,dto:AbsHaloDto)->AbsHaloEntity:
-        pass
+    def writeEntity(self,dto:ItemDto)->Item:
+        entity = Item(dto.id,dto.data)
+        return entity
 
 class A17(A0):
 
-    def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
+    def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            entity = Item("1","123")
-            self.repository.save(entity)
-            self.infra_service.send(entity)
-            uow.commit()
-            dto_assembler = DtoAssemblerFactory.getAssembler(entity)
-            dto = dto_assembler.writeDto(entity)
-            payload = dto
-            return Result.ok(payload) #Util.create_response(halo_request, True, payload)
+            if 'id' in halo_request.command.vars:
+                if halo_request.command.vars['id'] == '1':
+                    entity = Item("1","123")
+                    self.repository.save(entity)
+                    self.infra_service.send(entity)
+                    uow.commit()
+                    dto_assembler = DtoAssemblerFactory.getAssembler(entity)
+                    dto = dto_assembler.writeDto(entity)
+                    payload = dto
+                if halo_request.command.vars['id'] == '2':
+                    dto = ItemDto("1","456")
+                    dto_assembler = DtoAssemblerFactory.getAssembler(dto)
+                    entity = dto_assembler.writeEntity(dto)
+                    self.repository.save(entity)
+                    uow.commit()
+                    payload = dto
+                return Result.ok(payload) #Util.create_response(halo_request, True, payload)
 
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
@@ -605,7 +619,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success, False)
-                eq_(response.payload['error_code'], 'validation')
+                eq_(response.error['error_code'], 'validation')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -618,7 +632,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
-                eq_(response.payload['error_code'], 'validation')
+                eq_(response.error['error_code'], 'validation')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -633,7 +647,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload['error']['error_message'], 'test2')
+                eq_(response.error['error']['error_message'], 'test2')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -647,7 +661,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload['error']['error_message'], 'test3')
+                eq_(response.error['error']['error_message'], 'test3')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -661,7 +675,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload['error']['error_message'], 'test4 ,original:test4')
+                eq_(response.error['error']['error_message'], 'test4 ,original:test4')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -675,7 +689,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload.errors[0].message, 'fail5')
+                eq_(response.error.errors[0].message, 'fail5')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -689,7 +703,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload.errors[0].message, 'fail6')
+                eq_(response.error.errors[0].message, 'fail6')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -703,7 +717,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.payload.errors[0].message, 'fail7')
+                eq_(response.error.errors[0].message, 'fail7')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -815,7 +829,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         eq_(response.success,False)
-        eq_(response.payload.message, 'exception thrown!')
+        eq_(response.error.message, 'exception thrown!')
 
     def test_10_event(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
@@ -1193,7 +1207,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
                 response = self.boundary.execute(halo_request)
-                eq_(response.payload, {})
+                eq_(response.payload['1'], {})
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
@@ -1621,7 +1635,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(1,2)
 
-    def test_62_run_handle(self):
+    def test_62_run_handle_with_entity_assembler(self):
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
@@ -1629,6 +1643,18 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
                 eq_(response.payload.data, "123")
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_63_run_handle_with_dto_assembler(self):
+        with app.test_request_context(method='GET', path='/?id=2'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,True)
+                eq_(response.payload.data, "456")
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")

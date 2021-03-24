@@ -39,11 +39,15 @@ class HaloCommandResponse(AbsHaloResponse):
 
     success = None
     payload = None
+    error = None
 
-    def __init__(self,halo_request:AbsHaloRequest,success:bool=True,payload=None):
+    def __init__(self,halo_request:AbsHaloRequest,success:bool=True,data=None):
         super(HaloCommandResponse,self).__init__(halo_request)
         self.success = success
-        self.payload = payload
+        if success:
+            self.payload = data
+        else:
+            self.error = data
 
 class HaloQueryResponse(HaloCommandResponse):
 
@@ -53,11 +57,11 @@ class HaloQueryResponse(HaloCommandResponse):
 
 class HaloResponseFactory(AbsBaseClass):
 
-    def get_halo_response(self,halo_request:AbsHaloRequest,success:bool,payload=None)->AbsHaloResponse:
+    def get_halo_response(self,halo_request:AbsHaloRequest,success:bool,data=None)->AbsHaloResponse:
         if isinstance(halo_request, HaloCommandRequest) or issubclass(halo_request.__class__, HaloCommandRequest):
-            return HaloCommandResponse(halo_request,success,payload)
+            return HaloCommandResponse(halo_request,success,data)
         else:
-            return HaloQueryResponse(halo_request, success, payload)
+            return HaloQueryResponse(halo_request, success, data)
 
 
 

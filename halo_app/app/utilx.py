@@ -73,10 +73,10 @@ class Util(AbsBaseClass):
         response_factory = Util.get_response_factory()
         success = result.success
         if success:
-            payload = result.payload
+            data = result.payload
         else:
-            payload = result.error
-        return response_factory.get_halo_response(halo_request,success, payload)
+            data = result.error
+        return response_factory.get_halo_response(halo_request,success, data)
 
     @staticmethod
     def create_notification_response(halo_request:AbsHaloRequest, notification:Notification) -> AbsHaloResponse:
@@ -86,24 +86,24 @@ class Util(AbsBaseClass):
         return response_factory.get_halo_response(halo_request, success, notification.errors)
 
     @staticmethod
-    def create_payload_response(halo_request: AbsHaloRequest,payload) -> AbsHaloResponse:
+    def create_payload_response(halo_request: AbsHaloRequest,data) -> AbsHaloResponse:
         # for query result
         response_factory = Util.get_response_factory()
-        return response_factory.get_halo_response(halo_request, True, payload)
+        return response_factory.get_halo_response(halo_request, True, data)
 
     @staticmethod
-    def create_response(halo_request,success, payload=None) -> AbsHaloResponse:
+    def create_response(halo_request,success, data=None) -> AbsHaloResponse:
         # for async command
         response_factory = Util.get_response_factory()
-        return response_factory.get_halo_response(halo_request, success, payload)
+        return response_factory.get_halo_response(halo_request, success, data)
 
     @staticmethod
     def create_exception_response(halo_request: AbsHaloRequest, e: Exception) -> AbsHaloResponse:
         # for exception
         response_factory = Util.get_response_factory()
         success = False
-        payload = Error("exception thrown!",e)
-        return response_factory.get_halo_response(halo_request, success, payload)
+        data = Error("exception thrown!",e)
+        return response_factory.get_halo_response(halo_request, success, data)
 
     @classmethod
     def get_timeout(cls, halo_context:HaloContext):

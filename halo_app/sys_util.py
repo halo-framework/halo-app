@@ -159,14 +159,14 @@ class SysUtil(AbsBaseClass):
                             return halo_response
                 else:
                     halo_response.code = HTTPStatus.INTERNAL_SERVER_ERROR
-                    if halo_response.payload:  # result-error,notification-errors,exception-error
+                    if halo_response.error:  # result-error,notification-errors,exception-error
                         from halo_app.app.utilx import Util
-                        if isinstance(halo_response.payload,list):
+                        if isinstance(halo_response.error,list):
                             halo_response.code = HTTPStatus.BAD_REQUEST
-                            halo_response.payload = Util.json_notification_response(halo_response.request.context,halo_response.payload)
+                            halo_response.error = Util.json_notification_response(halo_response.request.context,halo_response.error)
                         else:
-                            if isinstance(halo_response.payload, Error):
-                                halo_response.payload = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.payload)
+                            if isinstance(halo_response.error, Error):
+                                halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
                     return halo_response
         raise HttpFailException(halo_response)
 
