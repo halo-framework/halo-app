@@ -340,10 +340,12 @@ class A11(AbsQueryHandler):
 
 @dataclass
 class ItemDto(AbsHaloDto):
+    id = None
     data = None
 
     def __init__(self,id,data):
-        super(ItemDto, self).__init__(id)
+        super(ItemDto, self).__init__()
+        self.id = id
         self.data = data
 
 class ItemAssembler(AbsDtoAssembler):
