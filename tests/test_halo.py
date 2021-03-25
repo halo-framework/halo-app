@@ -369,6 +369,7 @@ class A17(A0):
                     dto_assembler = DtoAssemblerFactory.getAssembler(entity)
                     dto = dto_assembler.writeDto(entity)
                     payload = dto
+                    return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
                     dto = ItemDto("1","456")
                     dto_assembler = DtoAssemblerFactory.getAssembler(dto)
@@ -376,7 +377,8 @@ class A17(A0):
                     self.repository.save(entity)
                     uow.commit()
                     payload = dto
-                return Result.ok(payload) #Util.create_response(halo_request, True, payload)
+                    return Result.ok(payload)
+                return Result.fail("code","msg","failx")
 
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
@@ -499,6 +501,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     @pytest.fixture(autouse=True)
     def init_boundary(self, sqlite_boundary):
         self.boundary = sqlite_boundary
+
 
     def test_000_start(self):
         from halo_app.const import LOC
@@ -1655,6 +1658,18 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
                 eq_(response.payload.data, "456")
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_64_run_handle_with_dto_assembler_err(self):
+        with app.test_request_context(method='GET', path='/?id=3'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,False)
+                eq_(response.error.message, "msg")
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
