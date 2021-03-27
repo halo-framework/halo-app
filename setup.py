@@ -13,7 +13,7 @@ setup(
     version='0.10.70',
     packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.infra.providers', 'halo_app.infra.providers.cloud',
               'halo_app.infra.providers.cloud.aws', 'halo_app.infra.providers.onprem', 'halo_app.infra.providers.ssm',
-              'halo_app.view','halo_app.infra','halo_app.infra.impl','halo_app.domain','halo_app.entrypoints',],
+              'halo_app.infra','halo_app.infra.impl','halo_app.domain','halo_app.entrypoints',],
     data_files=[('schema', ['halo_app/schema/saga_schema.json'])],
     package_data={'schema': ['halo_app/schema/saga_schema.json']},
     url='https://github.com/halo-framework/halo-app',
