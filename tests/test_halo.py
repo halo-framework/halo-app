@@ -320,11 +320,12 @@ class A8(AbsCommandHandler):
 
 class A9(AbsEventHandler):
 
-    def handle(self, halo_event_request: HaloEventRequest, uow: AbsUnitOfWork):
+    def handle(self, halo_event_request: HaloEventRequest, uow: AbsUnitOfWork)->Result:
         if halo_event_request.event.xid != '12':
             print("exception:"+halo_event_request.event.xid)
             raise Exception("id not good")
         print("success:"+halo_event_request.event.xid)
+        return Result.ok()
 
 class A10(AbsQueryHandler):
     def set_query_data(self,halo_query_request: HaloQueryRequest):
