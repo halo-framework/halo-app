@@ -10,7 +10,7 @@ from halo_app.app.event import AbsHaloEvent
 from halo_app.const import LOC, OPType
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, AbsHaloRequest, HaloQueryRequest
-from halo_app.view.query import AbsHaloQuery, HaloQuery
+from halo_app.app.query import HaloQuery
 from .app.exceptions import HttpFailException
 from .app.notification import ValidError
 from .entrypoints.client_type import ClientType

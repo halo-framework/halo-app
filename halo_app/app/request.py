@@ -11,7 +11,7 @@ from halo_app.reflect import Reflect
 from halo_app.security import HaloSecurity
 from halo_app.app.context import HaloContext
 from halo_app.settingsx import settingsx
-from halo_app.view.query import AbsHaloQuery, HaloQuery
+from halo_app.app.query import HaloQuery
 
 logger = logging.getLogger(__name__)
 

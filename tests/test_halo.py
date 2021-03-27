@@ -23,7 +23,7 @@ from halo_app.dto import AbsHaloDto
 from halo_app.entrypoints import client_util
 from halo_app.infra.impl.redis_event_publisher import Publisher
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
-from halo_app.view.query import AbsHaloQuery, HaloQuery
+from halo_app.app.query import HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.infra.exceptions import ApiException, AbsInfraException
 from halo_app.app.exceptions import HaloMethodNotImplementedException
@@ -1060,7 +1060,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.view.query_filters import Filter
+                from halo_app.app.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -1087,7 +1087,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.view.query_filters import Filter
+                from halo_app.app.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -1114,7 +1114,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.view.query_filters import Filter
+                from halo_app.app.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -1144,7 +1144,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.view.query_filters import Filter
+                from halo_app.app.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
