@@ -3,7 +3,7 @@ import abc
 from halo_app.app.exceptions import MissingDtoAssemblerException
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.entity import AbsHaloEntity
-from halo_app.dto import AbsHaloDto
+from halo_app.app.dto import AbsHaloDto
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 from halo_app.sys_util import SysUtil

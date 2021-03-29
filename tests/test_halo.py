@@ -19,7 +19,7 @@ from halo_app.app.event import AbsHaloEvent
 from halo_app.domain.entity import AbsHaloEntity
 from halo_app.domain.exceptions import AbsDomainException
 from halo_app.domain.model import Item
-from halo_app.dto import AbsHaloDto
+from halo_app.app.dto import AbsHaloDto
 from halo_app.entrypoints import client_util
 from halo_app.infra.impl.redis_event_publisher import Publisher
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
