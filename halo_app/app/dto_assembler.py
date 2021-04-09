@@ -1,6 +1,7 @@
 import abc
 
 from halo_app.app.exceptions import MissingDtoAssemblerException
+from halo_app.app.request import AbsHaloRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.entity import AbsHaloEntity
 from halo_app.app.dto import AbsHaloDto
@@ -20,7 +21,19 @@ class AbsDtoAssembler(AbsBaseClass, abc.ABC):
     def writeEntity(self,dto:AbsHaloDto)->AbsHaloEntity:
         pass
 
+    @abc.abstractmethod
+    def writeDto(self, method_id: str,data:dict) -> AbsHaloDto:
+        pass
+
 class DtoAssemblerFactory(AbsBaseClass):
+
+    @classmethod
+    def getAssembler(cls, request: AbsHaloRequest) -> AbsDtoAssembler:
+        if request.method_id in settings.ASSEMBLERS:
+            dto_assembler_type = settings.ASSEMBLERS[request.method_id]
+            assembler: AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
+            return assembler
+        raise MissingDtoAssemblerException(request.method_id)
 
     @classmethod
     def getAssembler(cls,entity:AbsHaloEntity)->AbsDtoAssembler:
