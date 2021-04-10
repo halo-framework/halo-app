@@ -14,40 +14,40 @@ settings = settingsx()
 class AbsDtoAssembler(AbsBaseClass, abc.ABC):
 
     @abc.abstractmethod
-    def writeDto(self,entity:AbsHaloEntity) -> AbsHaloDto:
+    def write_dto(self,entity:AbsHaloEntity) -> AbsHaloDto:
         pass
 
     @abc.abstractmethod
-    def writeEntity(self,dto:AbsHaloDto)->AbsHaloEntity:
+    def write_entity(self,dto:AbsHaloDto)->AbsHaloEntity:
         pass
 
     @abc.abstractmethod
-    def writeDto(self, method_id: str,data:dict) -> AbsHaloDto:
+    def write_dto_for_method(self, method_id: str,data:dict,flag:str=None) -> AbsHaloDto:
         pass
 
 class DtoAssemblerFactory(AbsBaseClass):
 
     @classmethod
-    def getAssembler(cls, request: AbsHaloRequest) -> AbsDtoAssembler:
-        if request.method_id in settings.ASSEMBLERS:
-            dto_assembler_type = settings.ASSEMBLERS[request.method_id]
+    def get_assembler_by_request(cls, request: AbsHaloRequest) -> AbsDtoAssembler:
+        if request.method_id in settings.DTO_ASSEMBLERS:
+            dto_assembler_type = settings.DTO_ASSEMBLERS[request.method_id]
             assembler: AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
         raise MissingDtoAssemblerException(request.method_id)
 
     @classmethod
-    def getAssembler(cls,entity:AbsHaloEntity)->AbsDtoAssembler:
-        if type(entity) in settings.ASSEMBLERS:
-            dto_assembler_type = settings.ASSEMBLERS[type(entity)]
+    def get_assembler_by_entity(cls,entity:AbsHaloEntity)->AbsDtoAssembler:
+        if type(entity) in settings.DTO_ASSEMBLERS:
+            dto_assembler_type = settings.DTO_ASSEMBLERS[type(entity)]
             assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
         raise MissingDtoAssemblerException(type(entity))
 
     @classmethod
-    def getAssembler(cls,dto:AbsHaloDto)->AbsDtoAssembler:
+    def get_assembler_by_dto(cls,dto:AbsHaloDto)->AbsDtoAssembler:
         dto_type = SysUtil.instance_full_name(dto)
-        if dto_type in settings.ASSEMBLERS:
-            dto_assembler_type = settings.ASSEMBLERS[dto_type]
+        if dto_type in settings.DTO_ASSEMBLERS:
+            dto_assembler_type = settings.DTO_ASSEMBLERS[dto_type]
             assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
         raise MissingDtoAssemblerException(dto_type)

@@ -381,13 +381,13 @@ class Config(object):
     else:
         print("no api config file")
 
-    ASSEMBLERS = None
+    DTO_ASSEMBLERS = None
     ASSEMBLER_SETTINGS = ENV_NAME + '_assembler_settings.json'
     file_path = os.path.join(BASE_DIR, '..', 'env', 'config', ASSEMBLER_SETTINGS)
     if os.path.exists(file_path):
         with open(file_path, 'r') as fi:
             map = json.load(fi)
-            ASSEMBLERS = map
+            DTO_ASSEMBLERS = map
     else:
         print("no assembler config files")
 
