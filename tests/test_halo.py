@@ -9,6 +9,7 @@ from flask import Flask, request
 from nose.tools import eq_
 
 from halo_app.app.dto_assembler import DtoAssemblerFactory, AbsDtoAssembler
+from halo_app.app.dto_mapper import AbsHaloDtoMapper
 from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.notification import Notification
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
@@ -344,10 +345,23 @@ class ItemDto(AbsHaloDto):
     id = None
     data = None
 
-    def __init__(self,id,data):
+    def __init__(self,id=None,data=None):
         super(ItemDto, self).__init__()
         self.id = id
         self.data = data
+
+class DtoMapper(AbsHaloDtoMapper):
+    def __init__(self):
+        super(DtoMapper, self).__init__()
+
+    def map_to_dto(self,object,dto_class_type):
+        self.mapper.create_map(object.__class__, dto_class_type)
+        dto = self.mapper.map(object, dto_class_type)
+        return dto
+
+
+    def map_from_dto(self,AbsHaloDto,object):
+        pass
 
 class ItemAssembler(AbsDtoAssembler):
     def write_dto(self,entity:Item) -> ItemDto:
@@ -359,8 +373,11 @@ class ItemAssembler(AbsDtoAssembler):
         return entity
 
     def write_dto_for_method(self, method_id: str,data:dict,flag:str=None) -> AbsHaloDto:
-        if method_id == "z17":
+        if method_id == "z17" and flag:
             return ItemDto("1",data["i"])
+        dto_mapper = DtoMapper()
+        dto = dto_mapper.map_to_dto(data,ItemDto.__class__)
+        return dto
 
 class A17(A0):
 
@@ -386,7 +403,13 @@ class A17(A0):
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '3':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"i":"789"})
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"i":"789"},"x")
+                    uow.commit()
+                    payload = dto
+                    return Result.ok(payload)
+                if halo_request.command.vars['id'] == '4':
+                    dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"})
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
@@ -1687,8 +1710,20 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_65_run_handle_with_dto_assembler_err(self):
+    def test_65_run_handle_with_dto_assembler(self):
         with app.test_request_context(method='GET', path='/?id=4'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,True)
+                eq_(response.payload.data, "789")
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_66_run_handle_with_dto_assembler_err(self):
+        with app.test_request_context(method='GET', path='/?id=5'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
