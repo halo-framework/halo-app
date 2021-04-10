@@ -37,11 +37,12 @@ class DtoAssemblerFactory(AbsBaseClass):
 
     @classmethod
     def get_assembler_by_entity(cls,entity:AbsHaloEntity)->AbsDtoAssembler:
-        if type(entity) in settings.DTO_ASSEMBLERS:
-            dto_assembler_type = settings.DTO_ASSEMBLERS[type(entity)]
+        entity_type = SysUtil.instance_full_name(entity)
+        if entity_type in settings.DTO_ASSEMBLERS:
+            dto_assembler_type = settings.DTO_ASSEMBLERS[entity_type]
             assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
-        raise MissingDtoAssemblerException(type(entity))
+        raise MissingDtoAssemblerException(entity_type)
 
     @classmethod
     def get_assembler_by_dto(cls,dto:AbsHaloDto)->AbsDtoAssembler:

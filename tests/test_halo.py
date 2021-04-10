@@ -350,14 +350,17 @@ class ItemDto(AbsHaloDto):
         self.data = data
 
 class ItemAssembler(AbsDtoAssembler):
-    def writeDto(self,entity:Item) -> ItemDto:
-        dto = ItemDto()
-        dto.data = entity.data
+    def write_dto(self,entity:Item) -> ItemDto:
+        dto = ItemDto("1",entity.data)
         return dto
 
-    def writeEntity(self,dto:ItemDto)->Item:
+    def write_entity(self,dto:ItemDto)->Item:
         entity = Item(dto.id,dto.data)
         return entity
+
+    def write_dto_for_method(self, method_id: str,data:dict,flag:str=None) -> AbsHaloDto:
+        if method_id == "z17":
+            return ItemDto("1",data["i"])
 
 class A17(A0):
 
@@ -369,18 +372,25 @@ class A17(A0):
                     self.repository.save(entity)
                     self.infra_service.send(entity)
                     uow.commit()
-                    dto_assembler = DtoAssemblerFactory.getAssembler(entity)
-                    dto = dto_assembler.writeDto(entity)
+                    dto_assembler = DtoAssemblerFactory.get_assembler_by_entity(entity)
+                    dto = dto_assembler.write_dto(entity)
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
                     dto = ItemDto("1","456")
-                    dto_assembler = DtoAssemblerFactory.getAssembler(dto)
-                    entity = dto_assembler.writeEntity(dto)
+                    dto_assembler = DtoAssemblerFactory.get_assembler_by_dto(dto)
+                    entity = dto_assembler.write_entity(dto)
                     self.repository.save(entity)
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
+                if halo_request.command.vars['id'] == '3':
+                    dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"i":"789"})
+                    uow.commit()
+                    payload = dto
+                    return Result.ok(payload)
+
                 return Result.fail("code","msg","failx")
 
 class TestHaloEvent(AbsHaloEvent):
@@ -1665,8 +1675,20 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
 
-    def test_64_run_handle_with_dto_assembler_err(self):
+    def test_64_run_handle_with_dto_assembler(self):
         with app.test_request_context(method='GET', path='/?id=3'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
+                response = self.boundary.execute(halo_request)
+                eq_(response.success,True)
+                eq_(response.payload.data, "789")
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_65_run_handle_with_dto_assembler_err(self):
+        with app.test_request_context(method='GET', path='/?id=4'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
