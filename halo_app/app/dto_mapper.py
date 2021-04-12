@@ -23,8 +23,8 @@ class DtoMapper(AbsHaloDtoMapper):
         super(DtoMapper, self).__init__()
 
     def map_from_dto(self,dto:AbsHaloDto,object_class_type):
-        super.mapper.create_map(dto.__class__, object_class_type)
-        object = super.mapper.map(dto, object_class_type)
+        self.mapper.create_map(dto.__class__, object_class_type)
+        object = self.mapper.map(dto, object_class_type)
         return object
 
     def map_to_dto(self,object,dto_class_type):
