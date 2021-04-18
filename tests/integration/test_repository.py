@@ -1,6 +1,6 @@
 import pytest
 from halo_app.domain import model
-from halo_app.infra import item_repository as repository
+from halo_app.infra import sql_repository as repository
 
 pytestmark = pytest.mark.usefixtures('mappers')
 
