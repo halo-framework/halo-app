@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import annotations
 from http import HTTPStatus
 import logging
 from halo_app.infra.apis import ApiMngr

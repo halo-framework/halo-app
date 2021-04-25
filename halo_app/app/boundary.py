@@ -1,12 +1,12 @@
-from __future__ import print_function
-
+# pylint disable=import-error
+from __future__ import annotations
 # python
 import abc
 import datetime
 import logging
 import traceback
 # app
-from halo_app.app.exceptions import AbsHaloException, CommandNotMappedException, AbsHaloException, QueryNotMappedException, \
+from halo_app.app.exceptions import CommandNotMappedException, AbsHaloException, QueryNotMappedException, \
     HaloRequestException
 from .utilx import Util
 from ..const import SYSTEMChoice, LOGChoice

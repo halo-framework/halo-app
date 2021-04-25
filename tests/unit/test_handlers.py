@@ -8,7 +8,7 @@ from halo_app import bootstrap
 from halo_app.app import command
 from halo_app.app import handler, uow as unit_of_work
 from halo_app.domain import repository
-
+from ..fake import FakeUnitOfWork
 
 
 

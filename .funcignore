@@ -1,0 +1,9 @@
+.git*
+.vscode
+local.settings.json
+#test
+venv
+venv1
+build
+dist
+#env

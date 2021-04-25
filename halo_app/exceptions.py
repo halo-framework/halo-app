@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 import logging

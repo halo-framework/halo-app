@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import annotations
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 
