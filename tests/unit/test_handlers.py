@@ -8,7 +8,9 @@ from halo_app import bootstrap
 from halo_app.app import command
 from halo_app.app import handler, uow as unit_of_work
 from halo_app.domain import repository
-from ..fake import FakeUnitOfWork
+from halo_app.entrypoints import client_util
+from halo_app.sys_util import SysUtil
+from fake import FakeUnitOfWork
 
 
 
@@ -21,11 +23,13 @@ def bootstrap_test_app():
     )
 
 
-class TestAddBatch:
+class TestCommand:
 
     def test_for_new_product(self):
         boundray = bootstrap_test_app()
-        boundray.execute(command.CreateBatch("b1", "CRUNCHY-ARMCHAIR", 100, None))
+        halo_context = client_util.get_halo_context({})
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
+        boundray.execute(halo_request)
         assert boundray.uow.products.get("CRUNCHY-ARMCHAIR") is not None
         assert boundray.uow.committed
 
