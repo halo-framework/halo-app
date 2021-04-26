@@ -1,5 +1,7 @@
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.event import AbsHaloEvent
+from halo_app.app.request import AbsHaloRequest, HaloCommandRequest
+from halo_app.app.response import HaloResponseFactory, AbsHaloResponse, HaloCommandResponse
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
 from halo_app.app.uow import AbsUnitOfWork
@@ -60,3 +62,15 @@ class FakeBoundary(BoundaryService):
         super(FakeBoundary,self)._process_event(event)
 
 
+
+class XClientType(ClientType):
+    tester = 'TESTER'
+
+class XHaloResponseFactory(HaloResponseFactory):
+
+    def get_halo_response(self, halo_request: AbsHaloRequest, success: bool, payload) -> AbsHaloResponse:
+        class TesterHaloResponse(HaloCommandResponse):
+            pass
+        if isinstance(halo_request, HaloCommandRequest) or issubclass(halo_request.__class__, HaloCommandRequest):
+            return TesterHaloResponse(halo_request, success,payload)
+        return super(XHaloResponseFactory,self).get_halo_response(halo_request,success, payload)
