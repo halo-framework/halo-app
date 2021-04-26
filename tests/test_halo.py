@@ -34,7 +34,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
-from tests.fake import FakeBoundary, FakePublisher
+from .unit.fake import FakeBoundary, FakePublisher
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -50,7 +50,7 @@ from halo_app.app.request import AbsHaloRequest
 import unittest
 import pytest
 
-from tests.fake import FakeConsumer
+from .unit.fake import FakeConsumer
 
 faker = Faker()
 app = Flask(__name__)
