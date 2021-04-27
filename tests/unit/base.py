@@ -86,7 +86,7 @@ class A0(AbsCommandHandler):
 
     def __init__(self):
         super(A0,self).__init__()
-        self.repository = AbsRepository()
+        self.repository = ItemRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
