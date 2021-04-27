@@ -31,6 +31,7 @@ class AbsHaloResponse(AbsHaloExchange,abc.ABC):
 
     @abc.abstractmethod
     def __init__(self,halo_request:AbsHaloRequest):
+        super().__init__()
         self.request = halo_request
 
 

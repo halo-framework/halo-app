@@ -17,7 +17,6 @@ settings = settingsx()
 class AbsHaloCommand(AbsHaloMessage,abc.ABC):
     name = None
     vars = None
-    version = None
 
     @abc.abstractmethod
     def __init__(self):
