@@ -33,6 +33,12 @@ class ErrorMessages(AbsBaseClass):
         """
         e = type(ex).__name__
         emsg = str(ex)
+        if hasattr(e, 'message'):
+            emsg = e.message
+        if hasattr(e, 'detail'):
+            emsg = e.detail
+        if hasattr(e, 'original_exception'):
+            emsg = emsg + "["+ str(e.original_exception)+"]"
         logger.debug("e=" + emsg)
         if e in self.hashx:
             code = self.hashx[e]["code"]

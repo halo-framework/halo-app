@@ -286,15 +286,6 @@ class Util(AbsBaseClass):
         return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack)
 
     @staticmethod
-    def get_detail(e):
-        detail = None
-        if e.original_exception:
-            detail = Util.get_detail(e.original_exception)
-        if detail:
-            return str(e)+':'+detail
-        return str(e)
-
-    @staticmethod
     def json_notification_response(halo_context, errors:[ValidError]):  # code, msg, requestId):
         """
 
