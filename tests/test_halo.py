@@ -34,7 +34,7 @@ from halo_app.logs import log_json
 from halo_app import saga
 from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
-from .unit.fake import FakeBoundary, FakePublisher
+from .unit.fake import FakeBus, FakePublisher
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.bus import Bus
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
@@ -877,7 +877,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         halo_event = TestHaloEvent( "z9","12")
         halo_request = SysUtil.create_event_request(halo_context,halo_event)
-        fake_boundary = FakeBoundary(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
+        fake_boundary = FakeBus(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
     def test_10a_event(self):
@@ -885,7 +885,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers)
             halo_event = TestHaloEvent( "z9", "12")
             halo_request = SysUtil.create_event_request(halo_context,halo_event)
-            fake_boundary = FakeBoundary(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
+            fake_boundary = FakeBus(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
                                         self.boundary.query_handlers)
             fake_boundary.fake_process(halo_request)
 

@@ -12,7 +12,26 @@ from halo_app.entrypoints import client_util
 from halo_app.sys_util import SysUtil
 from fake import FakeUnitOfWork
 
+from base import *
 
+bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class  # simple handle + fail
+bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class  # event 1 api
+bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class  # event empty api
+bootstrap.COMMAND_HANDLERS["z1b"] = A1.run_command_class  # event seq api
+bootstrap.COMMAND_HANDLERS["z1c"] = A1.run_command_class  # event saga api
+bootstrap.COMMAND_HANDLERS["z2"] = A8.run_command_class
+bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
+bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
+# bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
+bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
+bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
+bootstrap.COMMAND_HANDLERS["z15"] = A15a.run_command_class
+bootstrap.COMMAND_HANDLERS["z16"] = A15b.run_command_class
+bootstrap.COMMAND_HANDLERS["z17"] = A17.run_command_class
+bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
+bootstrap.QUERY_HANDLERS["q2"] = A11.run_query_class
 
 
 def bootstrap_test_app():
@@ -23,7 +42,18 @@ def bootstrap_test_app():
     )
 
 
+
+
 class TestCommand:
+
+    def test_for_new_item(self):
+        boundray = bootstrap_test_app()
+        halo_context = client_util.get_halo_context({})
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
+        ret = boundray.execute(halo_request)
+        assert ret.success is True
+        #assert boundray.uow.products.get("CRUNCHY-ARMCHAIR") is not None
+        #assert boundray.uow.committed
 
     def test_for_new_product(self):
         boundray = bootstrap_test_app()
