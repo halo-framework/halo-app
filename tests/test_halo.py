@@ -419,14 +419,14 @@ class A17(A0):
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
 
-    def __init__(self, ctx, mid, xid:str):
-        super(TestHaloEvent, self).__init__(ctx, mid)
+    def __init__(self, mid, xid:str):
+        super(TestHaloEvent, self).__init__(mid)
         self.xid = xid
 
 class TestHaloQuery(HaloQuery):
 
-    def __init__(self, ctx, name,vars):
-        super(TestHaloQuery, self).__init__(ctx, name,vars)
+    def __init__(self, name,vars):
+        super(TestHaloQuery, self).__init__(name,vars)
 
 from halo_app.app.anlytx_filter import RequestFilter,RequestFilterClear
 class TestFilter(RequestFilter):
@@ -603,9 +603,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
         with app.test_request_context(method='GET', path='/?id=1&qty=2'):
             try:
-                halo_context = client_util.get_halo_context(request.headers)
-                t = TestHaloQuery(halo_context, "q1",  request.args)
-                halo_request = SysUtil.create_query_request(t)
+                env = request.headers
+                env[HaloContext.path] = request.path
+                halo_context = client_util.get_halo_context(env)
+                t = TestHaloQuery( "q1",  request.args)
+                halo_request = SysUtil.create_query_request(halo_context,t)
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
                 eq_(response.payload, {})
@@ -616,14 +618,16 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1b_run_query_error(self):
         #app.config['UOW_CLASS'] = "halo_app.infra.fake.FakeUnitOfWork"
         #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
-        with app.test_request_context(method='GET', path='/?id=1'):
+        with app.test_request_context(method='GET', path='/abc?id=1'):
             try:
                 halo_context = client_util.get_halo_context(request.headers)
-                t = TestHaloQuery(halo_context, "q2",  request.args)
-                halo_request = SysUtil.create_query_request(t)
+                halo_context.put(HaloContext.path,request.path)
+                t = TestHaloQuery( "q2",  request.args)
+                halo_request = SysUtil.create_query_request(halo_context,t)
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
+                print(json.dumps(response.error, indent=4, sort_keys=True))
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -856,32 +860,32 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_9a_cli_query(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        t = TestHaloQuery(halo_context,"q1",{'id':1,'qty':2})
-        halo_request = SysUtil.create_query_request(t)
+        t = TestHaloQuery("q1",{'id':1,'qty':2})
+        halo_request = SysUtil.create_query_request(halo_context,t)
         response = self.boundary.execute(halo_request)
         eq_(response.success, True)
         eq_(response.payload,{})
 
     def test_9b_cli_query_error(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        t = TestHaloQuery(halo_context, "q2", {})
-        halo_request = SysUtil.create_query_request(t)
+        t = TestHaloQuery( "q2", {})
+        halo_request = SysUtil.create_query_request(halo_context,t)
         response = self.boundary.execute(halo_request)
         eq_(response.success,False)
         eq_(response.error.message, 'exception thrown!')
 
     def test_10_event(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_event = TestHaloEvent(halo_context, "z9","12")
-        halo_request = SysUtil.create_event_request(halo_event)
+        halo_event = TestHaloEvent( "z9","12")
+        halo_request = SysUtil.create_event_request(halo_context,halo_event)
         fake_boundary = FakeBoundary(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
     def test_10a_event(self):
         with app.test_request_context(method='GET', path='/?a=b'):
             halo_context = client_util.get_halo_context(request.headers)
-            halo_event = TestHaloEvent(halo_context, "z9", "12")
-            halo_request = SysUtil.create_event_request(halo_event)
+            halo_event = TestHaloEvent( "z9", "12")
+            halo_request = SysUtil.create_event_request(halo_context,halo_event)
             fake_boundary = FakeBoundary(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
                                         self.boundary.query_handlers)
             fake_boundary.fake_process(halo_request)
@@ -1483,15 +1487,15 @@ class TestUserDetailTestCase(unittest.TestCase):
         app.config['DBACCESS_CLASS'] = 'tests.test_halo.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = client_util.get_halo_context(request.headers)
-            db = DbTest()
-            req = AbsHaloRequest(halo_context, "z1", {})
-            db.get_dbaccess(req,True)
+            db = DbTest(halo_context,True)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", {})
+            db.get_dbaccess(halo_request,True)
 
     def test_51_db(self):
         app.config['DBACCESS_CLASS'] = 'tests.test_halo.DbMixin'
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = client_util.get_halo_context(request.headers)
-            db = DbTest()
+            db = DbTest(halo_context,True)
             req = AbsHaloRequest(halo_context, "z1", {})
             db.get_dbaccess(req,False)
 

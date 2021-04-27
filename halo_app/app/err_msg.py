@@ -37,9 +37,11 @@ class ErrorMessages(AbsBaseClass):
         if e in self.hashx:
             code = self.hashx[e]["code"]
             msg = self.hashx[e]["message"]
+            dtl = emsg
         else:
-            code = 500
-            msg = "Server Error"
+            code = 1000
+            msg = e
+            dtl = ""
             if emsg is not None and emsg != 'None' and emsg != "":
-                msg = emsg
-        return code, msg
+                dtl = emsg
+        return code, msg, dtl

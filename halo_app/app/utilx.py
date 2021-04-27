@@ -204,7 +204,8 @@ class Util(AbsBaseClass):
         my_class = getattr(module, 'ErrorMessages')
         msgs = my_class()
         e = err.cause
-        error_code, message = msgs.get_code(e)
+        error_code, error_message,error_detail = msgs.get_code(e)
+        """
         error_detail = type(e)
         e_msg = err.message
         if hasattr(e, 'detail'):
@@ -218,16 +219,34 @@ class Util(AbsBaseClass):
                 e_msg = str(e)
             if e_msg is not None and e_msg != 'None' and e_msg != "":
                 error_detail = e_msg
+        """
+        error_type = None
+        help_url = None
+        stack = None
+        if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
+            stack = e.stack
+        return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack)
+
+    @staticmethod
+    def create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url=None,stack=None):
         #@todo check when to use data
         error_data = {}
-        if hasattr(e, 'view'):
-            error_data = json.dumps(e.data)
         payload = {"error":
-                       {"error_code": error_code, "error_message": message, "error_detail": error_detail,"timestamp": datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)"),
-                             "view": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}
+                       {"code": error_code,
+                        "message": error_message,
+                        "detail": error_detail,
+                        "timestamp": datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)"),
+                        "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])
+                        }
                    }
-        if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
-            payload["stack"] = json.dumps(e.stack)
+        if error_type:
+            payload["error"]["type"]: error_type
+        if help_url:
+            payload["error"]["help"] = help_url
+        if halo_context.get(HaloContext.path):
+            payload["error"]["path"] = halo_context.get(HaloContext.path)
+        if stack:
+            payload["stack"] = json.dumps(stack)
             payload["context"] = json.dumps(halo_context.table)
         return payload
 
@@ -243,7 +262,7 @@ class Util(AbsBaseClass):
         module = importlib.import_module(clazz)
         my_class = getattr(module, 'ErrorMessages')
         msgs = my_class()
-        error_code, message = msgs.get_code(e)
+        error_code, error_message = msgs.get_code(e)
         error_detail = type(e)
         e_msg = ""
         if hasattr(e, 'detail'):
@@ -257,18 +276,12 @@ class Util(AbsBaseClass):
                 e_msg = str(e)
             if e_msg is not None and e_msg != 'None' and e_msg != "":
                 error_detail = e_msg
-        #@todo check when to use data
-        error_data = {}
-        if hasattr(e, 'view'):
-            error_data = json.dumps(e.data)
-        payload = {"error":
-                       {"error_code": error_code, "error_message": message, "error_detail": error_detail,"timestamp": datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)"),
-                             "view": error_data, "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION])}
-                   }
+        error_type = None
+        help_url = None
+        stack = None
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
-            payload["stack"] = json.dumps(e.stack)
-            payload["context"] = json.dumps(halo_context.table)
-        return payload
+            stack = e.stack
+        return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack)
 
     @staticmethod
     def get_detail(e):
@@ -290,16 +303,19 @@ class Util(AbsBaseClass):
         """
         default_message = 'A Validation error occurred!'
         #@todo set validation error code
-        error_code = "validation"
+        error_code = "validation error"
         payload = {
-            "error_code": error_code,
-            "error_message": default_message,
+            "code": error_code,
+            "message": default_message,
             "timestamp": datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)"),
             "trace_id": halo_context.get(HaloContext.items[HaloContext.CORRELATION]),
             "errors": [],
         }
         for error in errors:
-            payload['errors'].append({"name": error.name,"error": error.message})
+            payload['errors'].append({
+                "name": error.name,
+                "error": error.message
+            })
         if Util.isDebugEnabled(halo_context):
             payload["context"] = json.dumps(halo_context.table)
         return payload

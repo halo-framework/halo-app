@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 settings = settingsx()
 
 class AbsHaloQuery(AbsHaloMessage):
-    context = None
     name = None
     vars = None
 
@@ -23,9 +22,8 @@ class AbsHaloQuery(AbsHaloMessage):
 
 class HaloQuery(AbsHaloQuery):
 
-    def __init__(self, context:HaloContext,name:str,vars:dict):
+    def __init__(self, name:str,vars:dict):
         super(HaloQuery,self).__init__()
-        self.context = context
         self.name = name
         self.vars = vars
 

@@ -28,6 +28,7 @@ class AbsHaloEntity(AbsHaloObject):
             self.id = id
 
 class AbsHaloAggregateRoot (AbsHaloEntity):
+    version:int = 0
     events = []
     def __init__(self,id=None):
         super(AbsHaloAggregateRoot, self).__init__(id)

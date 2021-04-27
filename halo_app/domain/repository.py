@@ -10,7 +10,7 @@ class AbsRepository(AbsBaseClass):
 
     aggregate_type = None
 
-    def __init__(self,):
+    def __init__(self):
         self.seen = set()
 
 

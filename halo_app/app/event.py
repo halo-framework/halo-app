@@ -15,13 +15,11 @@ settings = settingsx()
 
 @dataclass
 class AbsHaloEvent(AbsHaloMessage,abc.ABC):
-    context = None
     name = None
 
     @abc.abstractmethod
-    def __init__(self, context:HaloContext,name:str):
+    def __init__(self, name:str):
         super(AbsHaloEvent, self).__init__()
-        self.context = context
         self.name = name
 
 

@@ -24,7 +24,7 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
     security = None
 
     @abc.abstractmethod
-    def __init__(self,halo_context, method_id,vars,secure=False,method_roles=None):
+    def __init__(self,halo_context:HaloContext, method_id:str,vars,secure=False,method_roles=None):
         self.method_id = method_id
         self.context = halo_context
         for i in settings.HALO_CONTEXT_LIST:
@@ -44,22 +44,22 @@ class HaloCommandRequest(AbsHaloRequest):
     command = None
     usecase_id = None
 
-    def __init__(self, halo_command:HaloCommand, secure=False, method_roles=None):
-        super(HaloCommandRequest,self).__init__(halo_command.context,halo_command.name,secure,method_roles)
+    def __init__(self,halo_context:HaloContext, halo_command:HaloCommand, secure=False, method_roles=None):
+        super(HaloCommandRequest,self).__init__(halo_context,halo_command.name,secure,method_roles)
         self.command = halo_command
 
 class HaloEventRequest(AbsHaloRequest):
     event = None
 
-    def __init__(self, halo_event:AbsHaloEvent,secure=False, method_roles=None):
-        super(HaloEventRequest, self).__init__(halo_event.context, halo_event.name, secure, method_roles)
+    def __init__(self,halo_context:HaloContext, halo_event:AbsHaloEvent,secure=False, method_roles=None):
+        super(HaloEventRequest, self).__init__(halo_context, halo_event.name, secure, method_roles)
         self.event = halo_event
 
 class HaloQueryRequest(AbsHaloRequest):
     query = None
 
-    def __init__(self, halo_query:HaloQuery,secure=False, method_roles=None):
-        super(HaloQueryRequest, self).__init__(halo_query.context, halo_query.name, secure, method_roles)
+    def __init__(self,halo_context:HaloContext, halo_query:HaloQuery,secure=False, method_roles=None):
+        super(HaloQueryRequest, self).__init__(halo_context, halo_query.name, secure, method_roles)
         self.query = halo_query
 
 

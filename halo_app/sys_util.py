@@ -53,13 +53,13 @@ class SysUtil(AbsBaseClass):
     @staticmethod
     def create_command_request(halo_context: HaloContext, method_id: str, vars: dict,
                                security=None, roles=None) -> AbsHaloRequest:
-        halo_command = HaloCommand(halo_context, method_id, vars)
-        return HaloCommandRequest(halo_command, security, roles)
+        halo_command = HaloCommand(method_id, vars)
+        return HaloCommandRequest(halo_context,halo_command, security, roles)
 
     @staticmethod
-    def create_event_request(halo_event: AbsHaloEvent,
+    def create_event_request(halo_context:HaloContext,halo_event: AbsHaloEvent,
                                security=None, roles=None) -> AbsHaloRequest:
-        return HaloEventRequest(halo_event, security, roles)
+        return HaloEventRequest(halo_context,halo_event, security, roles)
 
     @staticmethod
     def create_query_request(halo_query: HaloQuery,
@@ -164,9 +164,12 @@ class SysUtil(AbsBaseClass):
                         if isinstance(halo_response.error,list):
                             halo_response.code = HTTPStatus.BAD_REQUEST
                             halo_response.error = Util.json_notification_response(halo_response.request.context,halo_response.error)
+                            halo_response.error["status_code"]=halo_response.code
+                            halo_response.error["path"] = halo_response.request
                         else:
                             if isinstance(halo_response.error, Error):
                                 halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
+                                halo_response.error["status_code"] = halo_response.code
                     return halo_response
         raise HttpFailException(halo_response)
 

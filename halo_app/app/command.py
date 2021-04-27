@@ -15,13 +15,9 @@ settings = settingsx()
 
 @dataclass
 class AbsHaloCommand(AbsHaloMessage,abc.ABC):
-    context = None
     name = None
     vars = None
     version = None
-    aggregate_id = None
-    aggregate_name = None
-    aggregate_revision = None
 
     @abc.abstractmethod
     def __init__(self):
@@ -30,9 +26,8 @@ class AbsHaloCommand(AbsHaloMessage,abc.ABC):
 
 class HaloCommand(AbsHaloCommand):
 
-    def __init__(self, context:HaloContext,name:str,vars:dict):
+    def __init__(self, name:str,vars:dict):
         super(HaloCommand,self).__init__()
-        self.context = context
         self.name = name
         self.vars = vars
 
