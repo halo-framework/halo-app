@@ -262,7 +262,8 @@ class Util(AbsBaseClass):
         module = importlib.import_module(clazz)
         my_class = getattr(module, 'ErrorMessages')
         msgs = my_class()
-        error_code, error_message = msgs.get_code(e)
+        error_code, error_message,error_detail = msgs.get_code(e)
+        """
         error_detail = type(e)
         e_msg = ""
         if hasattr(e, 'detail'):
@@ -276,6 +277,7 @@ class Util(AbsBaseClass):
                 e_msg = str(e)
             if e_msg is not None and e_msg != 'None' and e_msg != "":
                 error_detail = e_msg
+        """
         error_type = None
         help_url = None
         stack = None
@@ -303,7 +305,7 @@ class Util(AbsBaseClass):
         """
         default_message = 'A Validation error occurred!'
         #@todo set validation error code
-        error_code = "validation error"
+        error_code = "validation"
         payload = {
             "code": error_code,
             "message": default_message,

@@ -603,9 +603,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
         with app.test_request_context(method='GET', path='/?id=1&qty=2'):
             try:
-                env = request.headers
-                env[HaloContext.path] = request.path
-                halo_context = client_util.get_halo_context(env)
+                halo_context = client_util.get_halo_context(request.headers)
+                halo_context.put(HaloContext.path, request.path)
                 t = TestHaloQuery( "q1",  request.args)
                 halo_request = SysUtil.create_query_request(halo_context,t)
                 response = self.boundary.execute(halo_request)
@@ -662,7 +661,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success, False)
-                eq_(response.error['error_code'], 'validation')
+                eq_(response.error['code'], 'validation')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -675,7 +674,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response, request.method)
                 eq_(response.success,False)
-                eq_(response.error['error_code'], 'validation')
+                eq_(response.error['code'], 'validation')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
@@ -690,7 +689,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.error['error']['error_message'], 'test2')
+                eq_(response.error['error']['detail'], 'test2')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -704,7 +703,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.error['error']['error_message'], 'test3')
+                eq_(response.error['error']['detail'], 'test3')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
@@ -718,7 +717,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(response, request.method)
                 print(str(response.payload))
                 eq_(response.success,False)
-                eq_(response.error['error']['error_message'], 'test4 ,original:test4')
+                eq_(response.error['error']['detail'], 'test4 ,original:test4')
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "Exception")
