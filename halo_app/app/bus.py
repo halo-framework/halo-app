@@ -21,7 +21,7 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-class IBoundaryService(AbsBaseClass, abc.ABC):
+class IBus(AbsBaseClass, abc.ABC):
     """
     the only port exposed from the boundray
     """
@@ -29,7 +29,7 @@ class IBoundaryService(AbsBaseClass, abc.ABC):
     def execute(self, halo_request: AbsHaloRequest)->AbsHaloResponse:
         pass
 
-class BoundaryService(IBoundaryService):
+class Bus(IBus):
 
     """
         the only point of communication with left-side driver
@@ -40,7 +40,7 @@ class BoundaryService(IBoundaryService):
         """
 
     def __init__(self, uow,publisher,event_handlers,command_handlers,query_handlers):
-        super(BoundaryService, self).__init__()
+        super(Bus, self).__init__()
         self.uow = uow
         self.publisher = publisher
         self.event_handlers = event_handlers

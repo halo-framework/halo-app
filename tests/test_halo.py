@@ -36,7 +36,7 @@ from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
 from .unit.fake import FakeBoundary, FakePublisher
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
-from halo_app.app.boundary import BoundaryService
+from halo_app.app.bus import Bus
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.infra.apis import load_api_config
 from halo_app.models import AbsDbMixin

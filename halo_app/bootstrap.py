@@ -3,7 +3,7 @@ from typing import Callable
 
 from halo_app.classes import AbsBaseClass
 from halo_app.app.uow import AbsUnitOfWork
-from halo_app.app.boundary import BoundaryService
+from halo_app.app.bus import Bus
 from halo_app.infra.event_publisher import AbsPublisher
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
@@ -14,7 +14,7 @@ def bootstrap(
     start_orm: bool = settings.START_ORM,#True,
     uow: AbsUnitOfWork = Reflect.instantiate(settings.UOW_CLASS,AbsUnitOfWork),#SqlAlchemyUnitOfWork(),
     publish: Callable = Reflect.instantiate(settings.PUBLISHER_CLASS,AbsPublisher),#Publisher(),
-) -> BoundaryService:
+) -> Bus:
 
     if start_orm:
         from halo_app.infra.sql_orm import clear_mappers
@@ -43,7 +43,7 @@ def bootstrap(
         for query_type, handler in QUERY_HANDLERS.items()
     }
 
-    return BoundaryService(
+    return Bus(
         uow=uow,
         publisher = publish,
         event_handlers=injected_event_handlers,
