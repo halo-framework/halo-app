@@ -43,7 +43,7 @@ class BusinessEventNotImplementedException(AbsAppException):
 class HaloRequestException(AbsAppException):
     pass
 
-class HttpFailException(AbsAppException):
+class FailException(AbsAppException):
     pass
 
 class AppValidationException(AbsAppException):

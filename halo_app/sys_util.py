@@ -11,7 +11,7 @@ from halo_app.const import LOC, OPType
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, AbsHaloRequest, HaloQueryRequest
 from halo_app.app.query import HaloQuery
-from .app.exceptions import HttpFailException
+from .app.exceptions import FailException
 from .app.notification import ValidError
 from .entrypoints.client_type import ClientType
 from .error import Error
@@ -67,7 +67,7 @@ class SysUtil(AbsBaseClass):
         return HaloQueryRequest(halo_query, security, roles)
 
     @staticmethod
-    def get_boundary():
+    def get_bus():
         global BOUNDARY
         if BOUNDARY:
             return BOUNDARY
@@ -127,50 +127,68 @@ class SysUtil(AbsBaseClass):
                         if isinstance(halo_response.payload, [ValidError]):
                             halo_response.code = HTTPStatus.BAD_REQUEST
                     return halo_response
-        raise HttpFailException(halo_response)
+        raise FailException(halo_response)
 
     @staticmethod
-    def process_response_for_client(halo_response, method):
+    def process_response_for_client(halo_response):
         if halo_response:
             if halo_response.request.context.get(HaloContext.client_type) == ClientType.api:
-                if halo_response.success:
-                    if settings.ASYNC_MODE:
-                        success = HTTPStatus.ACCEPTED
+                if halo_response.request.context.get(HaloContext.method):
+                    method = halo_response.request.context.get(HaloContext.method)
+                    if halo_response.success:
+                        if settings.ASYNC_MODE:
+                            success = HTTPStatus.ACCEPTED
+                        else:
+                            success = HTTPStatus.OK
+                        if halo_response.request:
+                            if halo_response.request.context:
+                                halo_response.code = success
+                                if method == 'GET':
+                                    halo_response.code = success
+                                if method == 'POST':
+                                    if success == HTTPStatus.ACCEPTED:
+                                        halo_response.code = HTTPStatus.ACCEPTED
+                                    else:
+                                        halo_response.code = HTTPStatus.CREATED
+                                if method == 'PUT':
+                                    halo_response.code = HTTPStatus.ACCEPTED
+                                if method == 'PATCH':
+                                    halo_response.code = HTTPStatus.ACCEPTED
+                                if method == 'DELETE':
+                                    halo_response.code = success
+                                logger.info('process_service_operation : ' + halo_response.request.method_id,
+                                            extra=log_json(halo_response.request.context, {"return": "success"}))
+                                return halo_response
                     else:
-                        success = HTTPStatus.OK
+                        halo_response.code = HTTPStatus.INTERNAL_SERVER_ERROR
+                        if halo_response.error:  # result-error,notification-errors,exception-error
+                            from halo_app.app.utilx import Util
+                            if isinstance(halo_response.error,list):
+                                halo_response.code = HTTPStatus.BAD_REQUEST
+                                halo_response.error = Util.json_notification_response(halo_response.request.context,halo_response.error)
+                                halo_response.error["status_code"]=halo_response.code
+                                halo_response.error["path"] = halo_response.request
+                            else:
+                                if isinstance(halo_response.error, Error):
+                                    halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
+                                    halo_response.error["status_code"] = halo_response.code
+                        return halo_response
+            if halo_response.request.context.get(HaloContext.client_type) == ClientType.cli:
+                if halo_response.success:
                     if halo_response.request:
                         if halo_response.request.context:
-                            halo_response.code = success
-                            if method == 'GET':
-                                halo_response.code = success
-                            if method == 'POST':
-                                if success == HTTPStatus.ACCEPTED:
-                                    halo_response.code = HTTPStatus.ACCEPTED
-                                else:
-                                    halo_response.code = HTTPStatus.CREATED
-                            if method == 'PUT':
-                                halo_response.code = HTTPStatus.ACCEPTED
-                            if method == 'PATCH':
-                                halo_response.code = HTTPStatus.ACCEPTED
-                            if method == 'DELETE':
-                                halo_response.code = success
                             logger.info('process_service_operation : ' + halo_response.request.method_id,
                                         extra=log_json(halo_response.request.context, {"return": "success"}))
                             return halo_response
                 else:
-                    halo_response.code = HTTPStatus.INTERNAL_SERVER_ERROR
                     if halo_response.error:  # result-error,notification-errors,exception-error
                         from halo_app.app.utilx import Util
                         if isinstance(halo_response.error,list):
-                            halo_response.code = HTTPStatus.BAD_REQUEST
                             halo_response.error = Util.json_notification_response(halo_response.request.context,halo_response.error)
-                            halo_response.error["status_code"]=halo_response.code
-                            halo_response.error["path"] = halo_response.request
                         else:
                             if isinstance(halo_response.error, Error):
                                 halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
-                                halo_response.error["status_code"] = halo_response.code
                     return halo_response
-        raise HttpFailException(halo_response)
+        raise FailException(halo_response)
 
 

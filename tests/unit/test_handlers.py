@@ -47,47 +47,50 @@ def bootstrap_test_app():
 class TestCommand:
 
     def test_for_new_item(self):
-        boundray = bootstrap_test_app()
+        bus = bootstrap_test_app()
         halo_context = client_util.get_halo_context({})
         halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
-        ret = boundray.execute(halo_request)
-        assert ret.success is True
-        #assert boundray.uow.products.get("CRUNCHY-ARMCHAIR") is not None
-        #assert boundray.uow.committed
+        halo_response = bus.execute(halo_request)
+        response = SysUtil.process_response_for_client(halo_response)
+        if response.error:
+            print(json.dumps(response.error, indent=4, sort_keys=True))
+        assert response.success is True
+        assert bus.uow.items.get("CRUNCHY-ARMCHAIR") is not None
+        #assert bus.uow.committed
 
     def test_for_new_product(self):
-        boundray = bootstrap_test_app()
+        bus = bootstrap_test_app()
         halo_context = client_util.get_halo_context({})
         halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
-        boundray.execute(halo_request)
-        assert boundray.uow.products.get("CRUNCHY-ARMCHAIR") is not None
-        assert boundray.uow.committed
+        bus.execute(halo_request)
+        assert bus.uow.products.get("CRUNCHY-ARMCHAIR") is not None
+        assert bus.uow.committed
 
 
     def test_for_existing_product(self):
-        boundray = bootstrap_test_app()
-        boundray.execute(command.CreateBatch("b1", "GARISH-RUG", 100, None))
-        boundray.execute(command.CreateBatch("b2", "GARISH-RUG", 99, None))
-        assert "b2" in [b.reference for b in boundray.uow.products.get("GARISH-RUG").batches]
+        bus = bootstrap_test_app()
+        bus.execute(command.CreateBatch("b1", "GARISH-RUG", 100, None))
+        bus.execute(command.CreateBatch("b2", "GARISH-RUG", 99, None))
+        assert "b2" in [b.reference for b in bus.uow.products.get("GARISH-RUG").batches]
 
 
 
 class TestAllocate:
 
     def test_allocates(self):
-        boundray = bootstrap_test_app()
-        boundray.execute(command.CreateBatch("batch1", "COMPLICATED-LAMP", 100, None))
-        boundray.execute(command.Allocate("o1", "COMPLICATED-LAMP", 10))
-        [batch] = boundray.uow.products.get("COMPLICATED-LAMP").batches
+        bus = bootstrap_test_app()
+        bus.execute(command.CreateBatch("batch1", "COMPLICATED-LAMP", 100, None))
+        bus.execute(command.Allocate("o1", "COMPLICATED-LAMP", 10))
+        [batch] = bus.uow.products.get("COMPLICATED-LAMP").batches
         assert batch.available_quantity == 90
 
 
     def test_errors_for_invalid_sku(self):
-        boundray = bootstrap_test_app()
-        boundray.execute(command.CreateBatch("b1", "AREALSKU", 100, None))
+        bus = bootstrap_test_app()
+        bus.execute(command.CreateBatch("b1", "AREALSKU", 100, None))
 
         with pytest.raises(handler.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
-            boundray.execute(command.Allocate("o1", "NONEXISTENTSKU", 10))
+            bus.execute(command.Allocate("o1", "NONEXISTENTSKU", 10))
 
     def test_commits(self):
         boundary = bootstrap_test_app()

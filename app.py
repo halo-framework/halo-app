@@ -41,7 +41,7 @@ def create_app(config_object='settings'):
 
 
         from halo_app.sys_util import SysUtil
-        SysUtil.get_boundary()
+        SysUtil.get_bus()
 
     site_map(app)
 

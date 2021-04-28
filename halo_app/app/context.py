@@ -14,10 +14,11 @@ settings = settingsx()
 
 class HaloContext(AbsBaseClass):
 
-    remote_addr = "remote_addr"
-    host = "ctx_host"
-    client_type = "client_type"
-    path = "ctx_path"
+    remote_addr = "halo_remote_addr"
+    host = "halo_host"
+    client_type = "halo_client_type"
+    path = "halo_http_path"
+    method = "halo_http_method"
 
     CORRELATION = "CORRELATION"
     USER_AGENT = "USER AGENT"
