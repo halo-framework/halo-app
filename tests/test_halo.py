@@ -165,9 +165,11 @@ class A0(AbsCommandHandler):
 
         with uow:
             self.repository = uow(ItemRepository)
-            item1 = Item(1,"test")
-            self.repository.add(item1)
-            item = self.repository.get(halo_request.command.vars['id'])
+            try:
+                item = self.repository.get(halo_request.command.vars['id'])
+            except Exception:
+                item = Item(1,"test")
+                self.repository.add(item)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
@@ -362,6 +364,7 @@ class ItemDto(AbsHaloDto):
         self.data = data
 
 class DtoMapper(AbsHaloDtoMapper):
+
     def __init__(self):
         super(DtoMapper, self).__init__()
 
@@ -370,22 +373,21 @@ class DtoMapper(AbsHaloDtoMapper):
         dto = self.mapper.map(object, dto_class_type)
         return dto
 
-
     def map_from_dto(self,AbsHaloDto,object):
         pass
 
 class ItemAssembler(AbsDtoAssembler):
     def write_dto(self,entity:Item) -> ItemDto:
-        dto = ItemDto("1",entity.data)
+        dto = ItemDto(entity.id,entity.data)
         return dto
 
     def write_entity(self,dto:ItemDto)->Item:
         entity = Item(dto.id,dto.data)
         return entity
 
-    def write_dto_for_method(self, method_id: str,data:dict,flag:str=None) -> AbsHaloDto:
+    def write_dto_for_method(self, method_id: str,data,flag:str=None) -> AbsHaloDto:
         if method_id == "z17" and flag:
-            return ItemDto("1",data["i"])
+            return ItemDto(data["id"],data["data"])
         dto_mapper = DtoMapper()
         dto = dto_mapper.map_to_dto(data,ItemDto.__class__)
         return dto
@@ -394,10 +396,11 @@ class A17(A0):
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
+            self.repository = uow(ItemRepository)
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
-                    entity = Item("1","123")
-                    self.repository.save(entity)
+                    entity = Item(1,"123")
+                    self.repository.add(entity)
                     self.infra_service.send(entity)
                     uow.commit()
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_entity(entity)
@@ -405,22 +408,25 @@ class A17(A0):
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
-                    dto = ItemDto("1","456")
+                    dto = ItemDto("2","456")
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_dto(dto)
                     entity = dto_assembler.write_entity(dto)
-                    self.repository.save(entity)
+                    self.repository.add(entity)
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '3':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"i":"789"},"x")
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '4':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"})
+                    class d:
+                        id = "1"
+                        data = "789"
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,d())
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
@@ -823,7 +829,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.success,True)
+        response = SysUtil.process_response_for_client(response)
+        if response.error:
+            print(json.dumps(response.error, indent=4, sort_keys=True))
+        eq_(response.success, True)
 
     def test_5a_cli_handle(self):
         from halo_app.settingsx import settingsx
@@ -834,7 +843,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = client_util.get_halo_context({},client_type=client_type)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
         response = self.boundary.execute(halo_request)
-        eq_(response.success,True)
+        response = SysUtil.process_response_for_client(response)
+        if response.error:
+            print(json.dumps(response.error, indent=4, sort_keys=True))
+        eq_(response.success, True)
 
     def test_6_cli_handle_with_event(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
@@ -1692,6 +1704,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
                 response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
                 eq_(response.payload.data, "123")
             except Exception as e:
@@ -1704,6 +1719,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
                 response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
                 eq_(response.payload.data, "456")
             except Exception as e:
@@ -1716,6 +1734,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
                 response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
                 eq_(response.payload.data, "789")
             except Exception as e:
@@ -1728,6 +1749,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
                 response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
                 eq_(response.payload.data, "789")
             except Exception as e:
