@@ -134,7 +134,7 @@ class ItemRepository(SqlAlchemyRepository):
 
     def __init__(self, session):
         super(ItemRepository, self).__init__(session)
-        self.aggregate_type = type(Item)
+        self.aggregate_type = Item
 
 
 class A0(AbsCommandHandler):
@@ -163,8 +163,10 @@ class A0(AbsCommandHandler):
             if halo_request.command.vars['id'] == '7':
                 return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
-        with uow(ItemRepository):
-            self.repository = uow.items
+        with uow:
+            self.repository = uow(ItemRepository)
+            item1 = Item(1,"test")
+            self.repository.add(item1)
             item = self.repository.get(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)

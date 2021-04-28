@@ -13,7 +13,7 @@ class AbsRepository(AbsBaseClass):
     aggregate_type = None
 
     def __init__(self):
-        self.seen:Set[AbsHaloAggregateRoot] = Set[AbsHaloAggregateRoot]
+        self.seen:set = set()
 
     def add(self, item: AbsHaloAggregateRoot):
         self._add(item)

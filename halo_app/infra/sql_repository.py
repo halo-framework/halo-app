@@ -13,5 +13,7 @@ class SqlAlchemyRepository(AbsRepository,abc.ABC):
         self.session.add(item)
 
     def _get(self, aggregate_id):
-        return self.session.query(self.aggregate_type).filter_by(id=aggregate_id).first()
+        #return self.session.query(self.aggregate_type).filter_by(id=aggregate_id).first()
+        q = self.session.query(self.aggregate_type)
+        return q.filter_by(id=aggregate_id).first()
 

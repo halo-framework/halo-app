@@ -22,13 +22,18 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
             ))
             self.session_factory = DEFAULT_SESSION_FACTORY
 
-    def __call__(self, repo):
+    def __call__1(self, repo):
         self.repo = repo
         return self
 
-    def __enter__(self):
+    def __call__(self, repository_type):
         self.session = self.session_factory()
-        self.items = self.repo(self.session)#SqlAlchemyRepository(self.session)
+        repository = repository_type(self.session)
+        return repository
+
+    def __enter__(self):
+        #self.session = self.session_factory()
+        #self.items = self.repo(self.session)#SqlAlchemyRepository(self.session)
         return super().__enter__()
 
     def __exit__(self, *args):
