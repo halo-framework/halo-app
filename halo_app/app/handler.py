@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 import json
 import re
-from typing import Tuple
+from typing import Tuple,List, Dict, Callable, Type, TYPE_CHECKING
+
 from abc import ABCMeta,abstractmethod
 from jsonpath_ng import parse
 # aws
@@ -211,13 +212,13 @@ class AbsQueryHandler(AbsBaseHandler):
         # 8. return json response
         return halo_response
 
-    def data_engine(self,halo_request:HaloQueryRequest)->dict:
+    def data_engine(self,halo_request:HaloQueryRequest)->Dict:
         return self.run(halo_request,self.uow)
 
-    def set_query_data(self,halo_query_request: HaloQueryRequest)->Tuple[str,dict]:
+    def set_query_data(self,halo_query_request: HaloQueryRequest)->Tuple[str,Dict]:
         raise HaloMethodNotImplementedException("method set_query_data in query")
 
-    def run(self, halo_query_request: HaloQueryRequest,uow:AbsUnitOfWork) -> dict:
+    def run(self, halo_query_request: HaloQueryRequest,uow:AbsUnitOfWork) -> Dict:
         query_str, dict_params = self.set_query_data(halo_query_request)
         with uow:
             results = list(uow.session.execute(query_str, dict_params))

@@ -5,6 +5,8 @@ import logging
 import json
 import re
 from jsonpath_ng import parse
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
+
 # aws
 # common
 # app
@@ -62,20 +64,20 @@ class ProcessingEngine(AbsBaseClass):
         return {}
         raise AbsHaloException("no headers")
 
-    def set_api_vars(self,halo_request,api, seq=None, dict=None):
+    def set_api_vars(self,halo_request,api, seq=None, dict:Dict=None):
         logger.debug("in set_api_vars " + str(halo_request))
         if True:
             ret = {}
             return ret
         raise AbsHaloException("no var")
 
-    def set_api_auth(self,halo_request,api, seq=None, dict=None):
+    def set_api_auth(self,halo_request,api, seq=None, dict:Dict=None):
         return None
 
-    def set_api_data(self,halo_request,api, seq=None, dict=None):
+    def set_api_data(self,halo_request,api, seq=None, dict:Dict=None):
         return {}
 
-    def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
+    def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict:Dict=None):
         logger.debug("in execute_api "+back_api.name)
         if back_api:
             timeout = Util.get_timeout(halo_request.context)
@@ -225,7 +227,7 @@ class ProcessingEngine(AbsBaseClass):
             api.terminate()
         return Result.ok(dict)
 
-    def do_api_async_work(self, halo_request, back_api, seq, dict=None):
+    def do_api_async_work(self, halo_request, back_api, seq, dict:Dict=None):
         # 3. array to store the headers required for the API Access
         back_headers = self.set_api_headers(halo_request,back_api, seq, dict)
         # 4. set vars
@@ -239,7 +241,7 @@ class ProcessingEngine(AbsBaseClass):
                                          back_data, seq, dict)
         return {}
 
-    def do_api_work(self,halo_request, back_api, seq, dict=None):
+    def do_api_work(self,halo_request, back_api, seq, dict:Dict=None):
         # 3. array to store the headers required for the API Access
         back_headers = self.set_api_headers(halo_request,back_api, seq, dict)
         # 4. set vars

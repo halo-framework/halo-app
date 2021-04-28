@@ -1,15 +1,17 @@
+import abc
+from halo_app.domain.entity import AbsHaloAggregateRoot
 from halo_app.domain.repository import AbsRepository
-from halo_app.domain.model import Item
 
-class SqlAlchemyRepository(AbsRepository):
+class SqlAlchemyRepository(AbsRepository,abc.ABC):
 
+    @abc.abstractmethod
     def __init__(self, session):
         super().__init__()
         self.session = session
 
-    def _add(self, item):
+    def _add(self, item: AbsHaloAggregateRoot):
         self.session.add(item)
 
-    def _get(self, other):
-        return self.session.query(Item).filter_by(other=other).first()
+    def _get(self, aggregate_id):
+        return self.session.query(self.aggregate_type).filter_by(id=aggregate_id).first()
 

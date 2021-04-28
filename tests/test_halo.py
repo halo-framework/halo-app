@@ -7,6 +7,7 @@ from http import HTTPStatus
 from faker import Faker
 from flask import Flask, request
 from nose.tools import eq_
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
 from halo_app.app.dto_assembler import DtoAssemblerFactory, AbsDtoAssembler
 from halo_app.app.dto_mapper import AbsHaloDtoMapper
@@ -28,7 +29,7 @@ from halo_app.app.query import HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.infra.exceptions import ApiException, AbsInfraException
 from halo_app.app.exceptions import HaloMethodNotImplementedException
-from halo_app.domain.repository import AbsRepository
+from halo_app.infra.sql_repository import SqlAlchemyRepository
 from halo_app.infra.mail import AbsMailService
 from halo_app.logs import log_json
 from halo_app import saga
@@ -129,6 +130,13 @@ class Sec(HaloSecurity):
 
 #ApiMngr.set_api_list(API_LIST)
 
+class ItemRepository(SqlAlchemyRepository):
+
+    def __init__(self, session):
+        super(ItemRepository, self).__init__(session)
+        self.aggregate_type = type(Item)
+
+
 class A0(AbsCommandHandler):
     repository = None
     domain_service = None
@@ -136,11 +144,11 @@ class A0(AbsCommandHandler):
 
     def __init__(self):
         super(A0,self).__init__()
-        self.repository = AbsRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
+
         if 'id' in halo_request.command.vars:
             if halo_request.command.vars['id'] == '2':
                 raise Exception("test2") # generic
@@ -155,8 +163,9 @@ class A0(AbsCommandHandler):
             if halo_request.command.vars['id'] == '7':
                 return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
-        with uow:
-            item = self.repository.load(halo_request.command.vars['id'])
+        with uow(ItemRepository):
+            self.repository = uow.items
+            item = self.repository.get(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
@@ -200,7 +209,7 @@ class A3(AbsCommandHandler):
 
 class A2(A1):
 
-    def set_api_data(self,halo_request,api, seq=None, dict=None):
+    def set_api_data(self,halo_request,api, seq=None, dict:Dict=None):
         if seq == '1':
             return {}
         if seq == '3':

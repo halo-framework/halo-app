@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import logging
 from http import HTTPStatus
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
 from halo_app.classes import AbsBaseClass
 from halo_app.app.command import HaloCommand
@@ -51,7 +52,7 @@ class SysUtil(AbsBaseClass):
             return module + '.' + o.__class__.__name__
 
     @staticmethod
-    def create_command_request(halo_context: HaloContext, method_id: str, vars: dict,
+    def create_command_request(halo_context: HaloContext, method_id: str, vars: Dict,
                                security=None, roles=None) -> AbsHaloRequest:
         halo_command = HaloCommand(method_id, vars)
         return HaloCommandRequest(halo_context,halo_command, security, roles)

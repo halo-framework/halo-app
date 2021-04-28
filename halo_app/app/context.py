@@ -3,6 +3,8 @@ import importlib
 import jwt
 import logging
 import datetime
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
+
 # halo
 from halo_app.classes import AbsBaseClass
 from halo_app.settingsx import settingsx
@@ -42,7 +44,7 @@ class HaloContext(AbsBaseClass):
 
     table:dict = {}
 
-    def __init__(self, env:dict=None):
+    def __init__(self, env:Dict=None):
         if env:
             for key in self.items:
                 flag = self.items[key]
@@ -71,7 +73,7 @@ class HaloContext(AbsBaseClass):
 class InitCtxFactory(AbsBaseClass):
 
     @staticmethod
-    def get_initial_context(env:dict)->HaloContext:
+    def get_initial_context(env:Dict)->HaloContext:
         return HaloContext(env)
 
 

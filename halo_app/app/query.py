@@ -2,6 +2,8 @@ from __future__ import annotations
 import abc
 import logging
 import uuid
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
+
 # halo
 from halo_app.classes import AbsBaseClass
 from halo_app.app.context import HaloContext
@@ -22,7 +24,7 @@ class AbsHaloQuery(AbsHaloMessage):
 
 class HaloQuery(AbsHaloQuery):
 
-    def __init__(self, name:str,vars:dict):
+    def __init__(self, name:str,vars:Dict):
         super(HaloQuery,self).__init__()
         self.name = name
         self.vars = vars

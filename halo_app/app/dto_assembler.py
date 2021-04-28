@@ -1,4 +1,5 @@
 import abc
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
 from halo_app.app.exceptions import MissingDtoAssemblerException
 from halo_app.app.request import AbsHaloRequest
@@ -22,7 +23,7 @@ class AbsDtoAssembler(AbsBaseClass, abc.ABC):
         pass
 
     @abc.abstractmethod
-    def write_dto_for_method(self, method_id: str,data:dict,flag:str=None) -> AbsHaloDto:
+    def write_dto_for_method(self, method_id: str,data:Dict,flag:str=None) -> AbsHaloDto:
         pass
 
 class DtoAssemblerFactory(AbsBaseClass):

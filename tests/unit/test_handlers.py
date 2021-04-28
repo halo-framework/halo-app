@@ -48,7 +48,7 @@ class TestCommand:
 
     def test_for_new_item(self):
         bus = bootstrap_test_app()
-        halo_context = client_util.get_halo_context({})
+        halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
         halo_response = bus.execute(halo_request)
         response = SysUtil.process_response_for_client(halo_response)

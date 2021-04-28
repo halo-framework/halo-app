@@ -25,6 +25,7 @@ from halo_app.entrypoints.client_type import ClientType
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.infra.exceptions import AbsInfraException
 from halo_app.infra.mail import AbsMailService
+from halo_app.infra.sql_repository import SqlAlchemyRepository
 from halo_app.models import AbsDbMixin
 from halo_app.security import HaloSecurity
 
@@ -79,6 +80,12 @@ class Sec(HaloSecurity):
 
 #ApiMngr.set_api_list(API_LIST)
 
+
+class ItemRepository(SqlAlchemyRepository):
+
+    def __init__(self):
+        self.aggregate_type = type(Item)
+
 class A0(AbsCommandHandler):
     repository = None
     domain_service = None
@@ -106,7 +113,7 @@ class A0(AbsCommandHandler):
                 return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
         with uow:
-            item = self.repository.load(halo_request.command.vars['id'])
+            item = self.repository.get(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
+from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
 from abc import ABCMeta,abstractmethod
 
@@ -38,7 +39,7 @@ class ApiBusinessEvent(AbsBusinessEvent):
 
     __api = {}
 
-    def __init__(self,event_name:str,event_category:BusinessEventCategory, dict):
+    def __init__(self,event_name:str,event_category:BusinessEventCategory, dict:Dict):
         super(ApiBusinessEvent,self).__init__(event_name,event_category)
         self.event_type = BusinessEventCategory.API
         self.__api = OrderedDict(sorted(dict.items(), key=lambda t: t[0]))
@@ -52,7 +53,7 @@ class FoiBusinessEvent(AbsBusinessEvent):
     __foi = {} #first order interactions
 
 
-    def __init__(self,event_name:str,event_category:BusinessEventCategory, dict):
+    def __init__(self,event_name:str,event_category:BusinessEventCategory, dict:Dict):
         super(FoiBusinessEvent,self).__init__(event_name,event_category)
         self.event_type = BusinessEventCategory.SEQ
         self.__foi = OrderedDict(sorted(dict.items(), key=lambda t: t[0])) #SEQUANCE : api for target service

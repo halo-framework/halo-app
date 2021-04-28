@@ -44,7 +44,7 @@ def strx(str1):
 class Util(AbsBaseClass):
 
     @classmethod
-    def init_halo_context(cls,env:dict=None):
+    def init_halo_context(cls,env:Dict=None):
         if settings.HALO_CONTEXT_CLASS:
             context = Reflect.instantiate(settings.HALO_CONTEXT_CLASS,HaloContext,env)
         else:
