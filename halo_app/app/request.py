@@ -42,7 +42,6 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
 
 class HaloCommandRequest(AbsHaloRequest):
     command = None
-    usecase_id = None
 
     def __init__(self,halo_context:HaloContext, halo_command:HaloCommand, secure=False, method_roles=None):
         super(HaloCommandRequest,self).__init__(halo_context,halo_command.name,secure,method_roles)
