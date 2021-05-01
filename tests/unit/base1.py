@@ -80,12 +80,11 @@ class Sec(HaloSecurity):
 
 #ApiMngr.set_api_list(API_LIST)
 
+
 class ItemRepository(SqlAlchemyRepository):
 
-    def __init__(self, session):
-        super(ItemRepository, self).__init__(session)
-        self.aggregate_type = Item
-
+    def __init__(self):
+        self.aggregate_type = type(Item)
 
 class A0(AbsCommandHandler):
     repository = None
@@ -94,11 +93,11 @@ class A0(AbsCommandHandler):
 
     def __init__(self):
         super(A0,self).__init__()
+        self.repository = ItemRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
-
         if 'id' in halo_request.command.vars:
             if halo_request.command.vars['id'] == '2':
                 raise Exception("test2") # generic
@@ -114,15 +113,7 @@ class A0(AbsCommandHandler):
                 return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
         with uow:
-            self.repository = uow(ItemRepository)
-            item = None
-            try:
-                item = self.repository.get(halo_request.command.vars['id'])
-            except Exception:
-                pass
-            if item is None:
-                item = Item(1,"test")
-                self.repository.add(item)
+            item = self.repository.get(halo_request.command.vars['id'])
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
@@ -166,7 +157,7 @@ class A3(AbsCommandHandler):
 
 class A2(A1):
 
-    def set_api_data(self,halo_request,api, seq=None, dict:dict=None):
+    def set_api_data(self,halo_request,api, seq=None, dict=None):
         if seq == '1':
             return {}
         if seq == '3':
@@ -317,7 +308,6 @@ class ItemDto(AbsHaloDto):
         self.data = data
 
 class DtoMapper(AbsHaloDtoMapper):
-
     def __init__(self):
         super(DtoMapper, self).__init__()
 
@@ -326,21 +316,22 @@ class DtoMapper(AbsHaloDtoMapper):
         dto = self.mapper.map(object, dto_class_type)
         return dto
 
+
     def map_from_dto(self,AbsHaloDto,object):
         pass
 
 class ItemAssembler(AbsDtoAssembler):
     def write_dto(self,entity:Item) -> ItemDto:
-        dto = ItemDto(entity.id,entity.data)
+        dto = ItemDto("1",entity.data)
         return dto
 
     def write_entity(self,dto:ItemDto)->Item:
         entity = Item(dto.id,dto.data)
         return entity
 
-    def write_dto_for_method(self, method_id: str,data,flag:str=None) -> AbsHaloDto:
+    def write_dto_for_method(self, method_id: str,data:dict,flag:str=None) -> AbsHaloDto:
         if method_id == "z17" and flag:
-            return ItemDto(data["id"],data["data"])
+            return ItemDto("1",data["i"])
         dto_mapper = DtoMapper()
         dto = dto_mapper.map_to_dto(data,ItemDto.__class__)
         return dto
@@ -349,11 +340,10 @@ class A17(A0):
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            self.repository = uow(ItemRepository)
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
-                    entity = Item(1,"123")
-                    self.repository.add(entity)
+                    entity = Item("1","123")
+                    self.repository.save(entity)
                     self.infra_service.send(entity)
                     uow.commit()
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_entity(entity)
@@ -361,25 +351,22 @@ class A17(A0):
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
-                    dto = ItemDto("2","456")
+                    dto = ItemDto("1","456")
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_dto(dto)
                     entity = dto_assembler.write_entity(dto)
-                    self.repository.add(entity)
+                    self.repository.save(entity)
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '3':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"i":"789"},"x")
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '4':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    class d:
-                        id = "1"
-                        data = "789"
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,d())
+                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"})
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)

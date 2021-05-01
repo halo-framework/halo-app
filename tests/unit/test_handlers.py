@@ -9,8 +9,9 @@ from halo_app.app import command
 from halo_app.app import handler, uow as unit_of_work
 from halo_app.domain import repository
 from halo_app.entrypoints import client_util
+from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from halo_app.sys_util import SysUtil
-from fake import FakeUnitOfWork
+from fake import FakeUnitOfWork, FakePublisher
 
 from base import *
 
@@ -43,11 +44,11 @@ def bootstrap_test_app():
 
 
 
-
 class TestCommand:
 
     def test_for_new_item(self):
         bus = bootstrap_test_app()
+        os.environ['DEBUG_LOG'] = 'true'
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
         halo_response = bus.execute(halo_request)
@@ -55,7 +56,7 @@ class TestCommand:
         if response.error:
             print(json.dumps(response.error, indent=4, sort_keys=True))
         assert response.success is True
-        assert bus.uow.items.get("CRUNCHY-ARMCHAIR") is not None
+        assert bus.uow.items.get(1) is not None
         #assert bus.uow.committed
 
     def test_for_new_product(self):

@@ -1,3 +1,9 @@
+from __future__ import annotations
+from collections import defaultdict
+from datetime import date
+from typing import Dict, List
+import pytest
+
 from halo_app.app.bus import Bus
 from halo_app.app.event import AbsHaloEvent
 from halo_app.app.request import AbsHaloRequest, HaloCommandRequest
@@ -9,6 +15,7 @@ from halo_app.entrypoints import client_util
 from halo_app.entrypoints.client_type import ClientType
 from halo_app.entrypoints.event_consumer import AbsConsumer
 from halo_app.infra.event_publisher import AbsPublisher
+from halo_app.infra.notifications import AbstractNotifications
 
 
 class FakeRepository(AbsRepository):
@@ -20,20 +27,16 @@ class FakeRepository(AbsRepository):
     def _add(self, product):
         self._products.add(product)
 
-    def _get(self, sku):
-        return next((p for p in self._products if p.sku == sku), None)
+    def _get(self, id):
+        return next((p for p in self._products if p.id == id), None)
 
-    def _get_by_batchref(self, batchref):
-        return next((
-            p for p in self._products for b in p.batches
-            if b.reference == batchref
-        ), None)
+
 
 
 class FakeUnitOfWork(AbsUnitOfWork):
 
     def __init__(self):
-        self.products = FakeRepository([])
+        self.items = FakeRepository([])
         self.committed = False
 
     def _commit(self):
@@ -41,6 +44,10 @@ class FakeUnitOfWork(AbsUnitOfWork):
 
     def rollback(self):
         pass
+
+
+    def __call__(self, repository_type):
+        return self.items
 
 
 class FakePublisher(AbsPublisher):
@@ -61,6 +68,15 @@ class FakeBus(Bus):
     def fake_process(self,event):
         super(FakeBus,self)._process_event(event)
 
+
+
+class FakeNotifications(AbstractNotifications):
+
+    def __init__(self):
+        self.sent = defaultdict(list)  # type: Dict[str, List[str]]
+
+    def send(self, destination, message):
+        self.sent[destination].append(message)
 
 
 class XClientType(ClientType):

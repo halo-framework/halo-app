@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from typing import Dict
 
 # python
 import logging
@@ -164,15 +164,18 @@ class Util(AbsBaseClass):
         return settings.FUNC_VER
 
     @classmethod
-    def get_system_debug_enabled(cls):
+    def get_system_debug_enabled(cls,rate=False):
         """
 
         :return:
         """
         # check if env var for sampled debug logs is on and activate for percentage in settings (5%)
         if ('DEBUG_LOG' in os.environ and os.environ['DEBUG_LOG'] == 'true') or (ProviderUtil.get_debug_param() == 'true'):
-            rand = random.random()
-            if settings.LOG_SAMPLE_RATE > rand:
+            if rate:
+                rand = random.random()
+                if settings.LOG_SAMPLE_RATE > rand:
+                    return 'true'
+            else:
                 return 'true'
         return 'false'
 
