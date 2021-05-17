@@ -121,7 +121,7 @@ class TestQuery:
     def init_bus(self, bootstrap_test_app_sqlite):
         self.bus = bootstrap_test_app_sqlite
 
-    def test_changes_available_quantity(self):
+    def test_query(self):
         os.environ['DEBUG_LOG'] = 'true'
         halo_context = client_util.get_halo_context({}, client_type=ClientType.cli)
         t = TestHaloQuery("q1", {"id":"1","qty":"2"})
@@ -134,23 +134,12 @@ class TestQuery:
         assert response.payload == {}
 
 
-    def test_reallocates_if_necessary(self):
-        boundary = bootstrap_test_app()
-        history = [
-            command.CreateBatch("batch1", "INDIFFERENT-TABLE", 50, None),
-            command.CreateBatch("batch2", "INDIFFERENT-TABLE", 50, date.today()),
-            command.Allocate("order1", "INDIFFERENT-TABLE", 20),
-            command.Allocate("order2", "INDIFFERENT-TABLE", 20),
-        ]
-        for msg in history:
-            boundary.execute(msg)
-        [batch1, batch2] = boundary.uow.products.get(sku="INDIFFERENT-TABLE").batches
-        assert batch1.available_quantity == 10
-        assert batch2.available_quantity == 50
-
-        boundary.execute(command.ChangeBatchQuantity("batch1", 25))
-
-        # order1 or order2 will be deallocated, so we'll have 25 - 20
-        assert batch1.available_quantity == 5
-        # and 20 will be reallocated to the next batch
-        assert batch2.available_quantity == 30
+    def test_query_error(self):
+        halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
+        t = TestHaloQuery("q2", {"id":1})
+        halo_request = SysUtil.create_query_request(halo_context, t)
+        halo_response = self.bus.execute(halo_request)
+        response = SysUtil.process_response_for_client(halo_response)
+        if response.error:
+            print(json.dumps(response.error, indent=4, sort_keys=True))
+        assert not response.success
