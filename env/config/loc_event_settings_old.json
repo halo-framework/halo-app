@@ -1,0 +1,134 @@
+{
+  "tests.test_halo.A1": {
+    "command": {
+      "z1": {
+        "url": "api1.json",
+        "type": "api"
+      },
+      "z1a": {
+        "url": "api1.json",
+        "type": "empty"
+      },
+      "z1b": {
+        "url": "base_seq.json",
+        "type": "seq"
+      },
+      "z1c": {
+        "url": "saga.json",
+        "type": "saga"
+      }
+    }
+  },
+
+  "tests.test_halo.A8": {
+    "command": {
+      "z8": {
+        "url": "base_seq.json",
+        "type": "seq"
+      }
+    }
+  },
+  "tests.test_halo.A3": {
+    "command": {
+      "z3": {
+        "url": "saga.json",
+        "type": "saga"
+      }
+    }
+  },
+  "tests.test_halo.A1x": {
+    "command": {
+      "z2": {
+        "url": "base_seq.json",
+        "type": "seq"
+      }
+    }
+  },
+  "tests.test_halo.A2": {
+    "command": {
+      "z6": {
+        "url": "saga_rlbk_brk.json",
+        "type": "saga"
+      },
+      "z4": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      },
+      "z5": {
+        "url": "saga_rlbk.json",
+        "type": "empty"
+      }
+    }
+  },
+  "tests.test_halo.A15a": {
+    "command": {
+
+    }
+  },
+  "tests.test_halo.A5x": {
+    "command": {
+      "GET": {
+        "url": "base_seq_provider.json",
+        "type": "seq",
+        "name": "get loan",
+        "desc": "this is the get event"
+      },
+      "POST": {
+        "url": "base_seq_provider_good.json",
+        "type": "seq",
+        "name": "update loan",
+        "desc": "this is the post event"
+      },
+      "PATCH": {
+        "url": "tst_saga.json",
+        "type": "saga",
+        "name": "update loan",
+        "desc": "this is the patch event"
+      }
+    },
+    "bq1": {
+
+    }
+  },
+  "tests.test_halo.A6x": {
+    "command": {
+      "GET": {
+        "url": "base_seq_provider.json",
+        "type": "seq",
+        "name": "get loan",
+        "desc": "this is the get event"
+      },
+      "POST": {
+        "url": "base_seq_provider_good.json",
+        "type": "seq",
+        "name": "update loan",
+        "desc": "this is the post event"
+      },
+      "PATCH": {
+        "url": "tst_saga.json",
+        "type": "saga",
+        "name": "update loan",
+        "desc": "this is the patch event"
+      }
+    },
+    "bq1": {
+
+    }
+  },
+  "tests.test_halo.T3":{
+    "command": {
+      "GET": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      },
+      "DELETE": {
+        "url": "base_seq.json",
+        "type": "seq"
+      },
+      "PUT": {
+        "url": "base_seq.json",
+        "type": "seq"
+      }
+    }
+  }
+}

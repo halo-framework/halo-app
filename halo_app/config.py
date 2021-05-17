@@ -443,6 +443,7 @@ class Config(object):
     REDIS_URI = get_redis_host_and_port()
     HANDLER_TARGET = "handler_target"
     ORM_METHOD = env.str('ORM_METHOD',default='halo_app.infra.sql_orm.start_mappers')
+    ORM_CLEAR = env.str('ORM_CLEAR', default='halo_app.infra.sql_orm.clear_mappers')
 
 print('== The base settings file has been loaded.')
 

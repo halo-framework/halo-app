@@ -17,7 +17,8 @@ def bootstrap(
 ) -> Bus:
 
     if start_orm:
-        from halo_app.infra.sql_orm import clear_mappers
+        #from halo_app.infra.sql_orm import clear_mappers
+        clear_mappers = Reflect.import_method_from(settings.ORM_CLEAR)
         clear_mappers()
         start_mappers = Reflect.import_method_from(settings.ORM_METHOD)
         start_mappers()
