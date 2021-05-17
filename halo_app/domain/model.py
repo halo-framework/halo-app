@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional, List, Set
@@ -7,34 +8,25 @@ from halo_app.app.context import HaloContext
 from halo_app.domain.entity import AbsHaloAggregateRoot, AbsHaloEntity
 from halo_app.domain.event import AbsHaloDomainEvent
 
+logger = logging.getLogger(__name__)
 
 class Item(AbsHaloAggregateRoot):
 
     def __init__(self, id: str,  data: str):
         super(Item, self).__init__(id)
         self.data = data
+        self.details = []
         self.events = []
 
-class Detail(AbsHaloEntity):
-
-    def __init__(self, id: str,  desc: str, qty:int):
-        super(Item, self).__init__(id)
-        self.desc = desc
-        self.qty = qty
-        self.events = []
-
-
-    def add(self, context, something: str) -> str:
+    def add(self, name: str,qty:int) -> str:
         try:
-            self.qty += 1
-            self.desc = something
-            self.events.append(self.add_domain_event(context, something))
-            return something
-        except Exception:
-            self.events.append(self.add_error_domain_event(context, something))
+            detail = ItemDetail(None,self.id,name,qty)
+            self.details.append(detail)
+            self.events.append(self.add_domain_event(name,qty))
+            return detail.id
+        except Exception as e:
+            self.events.append(self.add_error_domain_event(e))
             return None
-
-
 
     def add_domain_event(self, context, something: str):
         class HaloDomainEvent(AbsHaloDomainEvent):
@@ -51,3 +43,26 @@ class Detail(AbsHaloEntity):
                 self.something = something
 
         return HaloDomainEvent(context, "bad",self.agg_root_id,something)
+
+
+
+class ItemDetail(AbsHaloEntity):
+
+    def __init__(self, id: str, item_id: str,name:str, qty:int):
+        super(ItemDetail, self).__init__(id)
+        self.item_id = item_id
+        self.name = name
+        self.qty = qty
+        self.events = []
+
+
+    def add(self, qty:int) -> int:
+        try:
+            self.qty += qty
+            return self.qty
+        except Exception as e:
+            logger.error("error",e)
+            return None
+
+
+

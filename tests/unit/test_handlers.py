@@ -4,9 +4,10 @@ from collections import defaultdict
 from datetime import date
 from typing import Dict, List
 import pytest
-from halo_app import bootstrap
+from halo_app import bootstrap, exceptions
 from halo_app.app import command
-from halo_app.app import handler, uow as unit_of_work
+from halo_app.app.exceptions import CommandNotMappedException
+from halo_app.app import handlers, uow as unit_of_work
 from halo_app.domain import repository
 from halo_app.entrypoints import client_util
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
@@ -50,54 +51,61 @@ class TestCommand:
         bus = bootstrap_test_app()
         os.environ['DEBUG_LOG'] = 'true'
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':'1'})
         halo_response = bus.execute(halo_request)
         response = SysUtil.process_response_for_client(halo_response)
         if response.error:
             print(json.dumps(response.error, indent=4, sort_keys=True))
         assert response.success is True
-        assert bus.uow.items.get(1) is not None
-        #assert bus.uow.committed
-
-    def test_for_new_product(self):
-        bus = bootstrap_test_app()
-        halo_context = client_util.get_halo_context({})
-        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id':1})
-        bus.execute(halo_request)
-        assert bus.uow.products.get("CRUNCHY-ARMCHAIR") is not None
+        assert bus.uow.items.get("1") is not None
         assert bus.uow.committed
 
 
-    def test_for_existing_product(self):
+    def test_for_existing_item(self):
         bus = bootstrap_test_app()
-        bus.execute(command.CreateBatch("b1", "GARISH-RUG", 100, None))
-        bus.execute(command.CreateBatch("b2", "GARISH-RUG", 99, None))
-        assert "b2" in [b.reference for b in bus.uow.products.get("GARISH-RUG").batches]
+        os.environ['DEBUG_LOG'] = 'true'
+        halo_context = client_util.get_halo_context({}, client_type=ClientType.cli)
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id': '0'})
+        halo_response = bus.execute(halo_request)
+        response = SysUtil.process_response_for_client(halo_response)
+        if response.error:
+            print(json.dumps(response.error, indent=4, sort_keys=True))
+        item = bus.uow.items.get("1")
+        bs = [item]
+        assert '1' in [b.id for b in bs]
 
 
-
-class TestAllocate:
-
-    def test_allocates(self):
+    def test_errors_for_invalid_command(self):
         bus = bootstrap_test_app()
-        bus.execute(command.CreateBatch("batch1", "COMPLICATED-LAMP", 100, None))
-        bus.execute(command.Allocate("o1", "COMPLICATED-LAMP", 10))
-        [batch] = bus.uow.products.get("COMPLICATED-LAMP").batches
-        assert batch.available_quantity == 90
+        os.environ['DEBUG_LOG'] = 'true'
+        halo_context = client_util.get_halo_context({}, client_type=ClientType.cli)
+        halo_request = SysUtil.create_command_request(halo_context, "zk0", {'id': '0'})
+        halo_response = bus.execute(halo_request)
+        assert halo_response.error.message == "exception thrown!"
+        assert halo_response.error.cause.message == "command method_id zk0"
+        #with pytest.raises(CommandNotMappedException, match="Invalid"):
+        #    halo_response = bus.execute(halo_request)
 
-
-    def test_errors_for_invalid_sku(self):
+    def test_errors_for_invalid_item_id(self):
         bus = bootstrap_test_app()
-        bus.execute(command.CreateBatch("b1", "AREALSKU", 100, None))
-
-        with pytest.raises(handler.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
-            bus.execute(command.Allocate("o1", "NONEXISTENTSKU", 10))
+        os.environ['DEBUG_LOG'] = 'true'
+        halo_context = client_util.get_halo_context({}, client_type=ClientType.cli)
+        halo_request = SysUtil.create_command_request(halo_context, "zk0", {'id': '0'})
+        halo_response = bus.execute(halo_request)
+        assert halo_response.error.message == "exception thrown!"
+        assert halo_response.error.cause.message == "command method_id zk0"
+        #with pytest.raises(CommandNotMappedException, match="Invalid"):
+        #    halo_response = bus.execute(halo_request)
 
     def test_commits(self):
-        boundary = bootstrap_test_app()
-        boundary.execute(command.CreateBatch("b1", "OMINOUS-MIRROR", 100, None))
-        boundary.execute(command.Allocate("o1", "OMINOUS-MIRROR", 10))
-        assert boundary.uow.committed
+        bus = bootstrap_test_app()
+        os.environ['DEBUG_LOG'] = 'true'
+        halo_context = client_util.get_halo_context({}, client_type=ClientType.cli)
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {'id': '0'})
+        halo_response = bus.execute(halo_request)
+        halo_request1 = SysUtil.create_command_request(halo_context, "z1", {'id': '1'})
+        halo_response1 = bus.execute(halo_request1)
+        assert bus.uow.committed
 
 
 class TestChangeBatchQuantity:

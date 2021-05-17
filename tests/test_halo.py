@@ -11,7 +11,7 @@ from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
 from halo_app.app.dto_assembler import DtoAssemblerFactory, AbsDtoAssembler
 from halo_app.app.dto_mapper import AbsHaloDtoMapper
-from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
+from halo_app.app.handlers import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.notification import Notification
 from halo_app.app.response import AbsHaloResponse, HaloResponseFactory, HaloCommandResponse
 from halo_app.app.result import Result
@@ -168,7 +168,7 @@ class A0(AbsCommandHandler):
             try:
                 item = self.repository.get(halo_request.command.vars['id'])
             except Exception:
-                item = Item(1,"test")
+                item = Item("1","test")
                 self.repository.add(item)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
@@ -399,7 +399,7 @@ class A17(A0):
             self.repository = uow(ItemRepository)
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
-                    entity = Item(1,"123")
+                    entity = Item("1","123")
                     self.repository.add(entity)
                     self.infra_service.send(entity)
                     uow.commit()

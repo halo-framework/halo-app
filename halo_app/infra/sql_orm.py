@@ -38,7 +38,7 @@ items_view = Table(
 
 def start_mappers():
     logger.info("Starting mappers")
-    dtls_mapper = mapper(model.Detail, item_dtls)
+    dtls_mapper = mapper(model.ItemDetail, item_dtls)
     items_mapper = mapper(model.Item, items)
 
 

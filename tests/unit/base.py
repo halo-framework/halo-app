@@ -8,7 +8,7 @@ from halo_app.app.dto import AbsHaloDto
 from halo_app.app.dto_assembler import DtoAssemblerFactory, AbsDtoAssembler
 from halo_app.app.dto_mapper import AbsHaloDtoMapper
 from halo_app.app.event import AbsHaloEvent
-from halo_app.app.handler import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
+from halo_app.app.handlers import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.notification import Notification
 from halo_app.app.query import HaloQuery
 from halo_app.app.request import AbsHaloRequest
@@ -121,7 +121,7 @@ class A0(AbsCommandHandler):
             except Exception:
                 pass
             if item is None:
-                item = Item(1,"test")
+                item = Item("1","test")
                 self.repository.add(item)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
@@ -352,7 +352,7 @@ class A17(A0):
             self.repository = uow(ItemRepository)
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
-                    entity = Item(1,"123")
+                    entity = Item("1","123")
                     self.repository.add(entity)
                     self.infra_service.send(entity)
                     uow.commit()

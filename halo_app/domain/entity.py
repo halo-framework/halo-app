@@ -32,3 +32,9 @@ class AbsHaloAggregateRoot (AbsHaloEntity):
     events = []
     def __init__(self,id=None):
         super(AbsHaloAggregateRoot, self).__init__(id)
+
+    def add_domain_event(self, *args):
+        pass
+
+    def add_error_domain_event(self, *args):
+        pass

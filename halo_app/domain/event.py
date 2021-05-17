@@ -17,9 +17,10 @@ settings = settingsx()
 
 class AbsHaloDomainEvent(AbsHaloEvent):
     agg_root_id = None
-    def __init__(self, context: HaloContext, name: str,agg_root_id:str):
-        super(AbsHaloEvent, self).__init__(context,name)
+    def __init__(self, name: str,agg_root_id:str):
+        super(AbsHaloEvent, self).__init__(name)
         self.agg_root_id = agg_root_id
+
 
 
 # concre events are data classes as opose to commands
