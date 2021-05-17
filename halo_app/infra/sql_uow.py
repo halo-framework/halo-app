@@ -32,7 +32,7 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
         return repository
 
     def __enter__(self):
-        #self.session = self.session_factory()
+        self.session = self.session_factory()
         #self.items = self.repo(self.session)#SqlAlchemyRepository(self.session)
         return super().__enter__()
 

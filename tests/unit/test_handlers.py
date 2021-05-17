@@ -43,6 +43,13 @@ def bootstrap_test_app():
         publish=lambda *args: None,
     )
 
+@pytest.fixture
+def bootstrap_test_app_sqlite(sqlite_session_factory):
+    return bootstrap.bootstrap(
+        start_orm=True,
+        uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
+        publish=FakePublisher()
+    )
 
 
 class TestCommand:
@@ -108,16 +115,23 @@ class TestCommand:
         assert bus.uow.committed
 
 
-class TestChangeBatchQuantity:
+class TestQuery:
+
+    @pytest.fixture(autouse=True)
+    def init_bus(self, bootstrap_test_app_sqlite):
+        self.bus = bootstrap_test_app_sqlite
 
     def test_changes_available_quantity(self):
-        boundary = bootstrap_test_app()
-        boundary.execute(command.CreateBatch("batch1", "ADORABLE-SETTEE", 100, None))
-        [batch] = boundary.uow.products.get(sku="ADORABLE-SETTEE").batches
-        assert batch.available_quantity == 100
-
-        boundary.execute(command.ChangeBatchQuantity("batch1", 50))
-        assert batch.available_quantity == 50
+        os.environ['DEBUG_LOG'] = 'true'
+        halo_context = client_util.get_halo_context({}, client_type=ClientType.cli)
+        t = TestHaloQuery("q1", {"id":"1","qty":"2"})
+        halo_request = SysUtil.create_query_request(halo_context, t)
+        halo_response = self.bus.execute(halo_request)
+        response = SysUtil.process_response_for_client(halo_response)
+        if response.error:
+            print(json.dumps(response.error, indent=4, sort_keys=True))
+        assert response.success
+        assert response.payload == {}
 
 
     def test_reallocates_if_necessary(self):
