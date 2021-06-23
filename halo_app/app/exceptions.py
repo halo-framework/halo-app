@@ -55,6 +55,8 @@ class EngineException(AbsAppException):
 class MissingDtoAssemblerException(AbsAppException):
     pass
 
+class MissingCmdAssemblerException(AbsAppException):
+    pass
 
 class ConvertDomainExceptionHandler(AbsExceptionHandler):
     message_service = None

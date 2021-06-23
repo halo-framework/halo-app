@@ -17,18 +17,17 @@ settings = settingsx()
 @dataclass
 class AbsHaloCommand(AbsHaloMessage,abc.ABC):
     name = None
-    vars = None
 
     @abc.abstractmethod
-    def __init__(self):
+    def __init__(self,name:str):
         super(AbsHaloCommand,self).__init__()
-
+        self.name = name
 
 class HaloCommand(AbsHaloCommand):
+    vars = None
 
     def __init__(self, name:str,vars:Dict):
-        super(HaloCommand,self).__init__()
-        self.name = name
+        super(HaloCommand,self).__init__(name)
         self.vars = vars
 
 

@@ -11,18 +11,19 @@ class AbsHaloDtoMapper(AbsBaseClass,abc.ABC):
         self.mapper = ObjectMapper()
 
     @abc.abstractmethod
-    def map_to_dto(self,object,dto:AbsHaloDto):
+    def map_to_dto(self,object,dto):
         pass
 
     @abc.abstractmethod
-    def map_from_dto(self,dto:AbsHaloDto,object):
+    def map_from_dto(self,dto,object):
         pass
 
 class DtoMapper(AbsHaloDtoMapper):
+
     def __init__(self):
         super(DtoMapper, self).__init__()
 
-    def map_from_dto(self,dto:AbsHaloDto,object_class_type):
+    def map_from_dto(self,dto,object_class_type):
         self.mapper.create_map(dto.__class__, object_class_type)
         object = self.mapper.map(dto, object_class_type)
         return object

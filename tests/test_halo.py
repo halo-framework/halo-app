@@ -652,8 +652,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
-                response = self.boundary.execute(halo_request)
-                response = SysUtil.process_response_for_client(response)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
                 eq_(response.success,True)
                 eq_(response.code, HTTPStatus.ACCEPTED)
             except Exception as e:
