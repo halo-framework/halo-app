@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import sys
 import os
 import logging
 from http import HTTPStatus
@@ -12,6 +12,7 @@ from halo_app.const import LOC, OPType
 from halo_app.app.context import HaloContext, InitCtxFactory
 from halo_app.app.request import HaloEventRequest, HaloCommandRequest, AbsHaloRequest, HaloQueryRequest
 from halo_app.app.query import HaloQuery
+from .app.cmd_assembler import CmdAssemblerFactory
 from .app.exceptions import FailException
 from .app.notification import ValidError
 from .entrypoints.client_type import ClientType
@@ -54,7 +55,9 @@ class SysUtil(AbsBaseClass):
     @staticmethod
     def create_command_request(halo_context: HaloContext, method_id: str, vars: Dict,
                                security=None, roles=None) -> AbsHaloRequest:
-        halo_command = HaloCommand(method_id, vars)
+        #halo_command = HaloCommand(method_id, vars)
+        cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(method_id)
+        halo_command = cmd_assembler.write_cmd_for_method(method_id,vars)
         return HaloCommandRequest(halo_context,halo_command, security, roles)
 
     @staticmethod

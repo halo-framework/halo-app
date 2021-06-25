@@ -3,5 +3,6 @@
   "tests.test_halo.ItemDto": "tests.test_halo.ItemAssembler",
   "tests.test_halo.Part": "tests.test_halo.PartAssembler",
   "tests.test_halo.PartDto": "tests.test_halo.PartAssembler",
-  "z17": "tests.test_halo.ItemAssembler"
+  "z17": "tests.test_halo.ItemAssembler",
+  "z18": "tests.test_halo.ItemAssembler"
 }

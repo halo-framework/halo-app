@@ -9,6 +9,8 @@ from flask import Flask, request
 from nose.tools import eq_
 from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
+from halo_app.app.cmd_assembler import AbsCmdAssembler
+from halo_app.app.command import AbsHaloCommand
 from halo_app.app.dto_assembler import DtoAssemblerFactory, AbsDtoAssembler
 from halo_app.app.dto_mapper import AbsHaloDtoMapper
 from halo_app.app.handlers import AbsCommandHandler, AbsEventHandler, AbsQueryHandler
@@ -33,11 +35,11 @@ from halo_app.infra.sql_repository import SqlAlchemyRepository
 from halo_app.infra.mail import AbsMailService
 from halo_app.logs import log_json
 from halo_app import saga
+from halo_app.reflect import Reflect
 from halo_app.const import HTTPChoice, OPType
 from halo_app.entrypoints.client_type import ClientType
 from .unit.fake import FakeBus, FakePublisher
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
-from halo_app.app.bus import Bus
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.infra.apis import load_api_config
 from halo_app.models import AbsDbMixin
@@ -388,9 +390,28 @@ class ItemAssembler(AbsDtoAssembler):
     def write_dto_for_method(self, method_id: str,data,flag:str=None) -> AbsHaloDto:
         if method_id == "z17" and flag:
             return ItemDto(data["id"],data["data"])
-        dto_mapper = DtoMapper()
-        dto = dto_mapper.map_to_dto(data,ItemDto.__class__)
-        return dto
+        dto = ItemDto(method_id)
+        return ItemDto(data["id"],data["data"])
+
+class TestCmdAssembler(AbsCmdAssembler):
+    def get_command_type(self,method_id:str)-> str:
+        return "tests.test_halo.TestCmd"
+
+    def write_cmd_for_method(self, method_id: str, data: Dict, flag: str = None) -> AbsHaloCommand:
+        command_type = self.get_command_type(method_id)
+        cmd_instance = Reflect.instantiate(command_type,AbsHaloCommand,method_id)
+        cmd_instance.date = data["date"]
+        cmd_instance.date = data["address"]
+        return cmd_instance
+
+class TestCmd(AbsHaloCommand):
+    date = None
+    address = None
+
+    def __init__(self,name:str):
+        super(TestCmd,self).__init__(name)
+
+
 
 class A17(A0):
 
@@ -432,6 +453,19 @@ class A17(A0):
                     return Result.ok(payload)
 
                 return Result.fail("code","msg","failx")
+
+class A18(A0):
+
+    def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
+        with uow:
+            self.repository = uow(ItemRepository)
+            dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
+            dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
+            uow.commit()
+            payload = dto
+            return Result.ok(payload)
+
+
 
 class TestHaloEvent(AbsHaloEvent):
     xid:str = None
@@ -533,6 +567,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z15"] = A15a.run_command_class
         bootstrap.COMMAND_HANDLERS["z16"] = A15b.run_command_class
         bootstrap.COMMAND_HANDLERS["z17"] = A17.run_command_class
+        bootstrap.COMMAND_HANDLERS["z18"] = A18.run_command_class
         bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
         bootstrap.QUERY_HANDLERS["q1"] = A10.run_query_class
         bootstrap.QUERY_HANDLERS["q2"] = A11.run_query_class
@@ -1748,8 +1783,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
-                response = self.boundary.execute(halo_request)
-                response = SysUtil.process_response_for_client(response)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
                 if response.error:
                     print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
@@ -1763,9 +1798,27 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z17", request.args)
-                response = self.boundary.execute(halo_request)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,False)
                 eq_(response.error.message, "msg")
+            except Exception as e:
+                print(str(e))
+                eq_(e.__class__.__name__, "NoApiClassException")
+
+    def test_67_run_handle_with_cmd_assembler_err(self):
+        with app.test_request_context(method='GET', path='/?id=5&date=1&address=2'):
+            try:
+                halo_context = client_util.get_halo_context(request.headers,request)
+                halo_request = SysUtil.create_command_request(halo_context, "z18", request.args)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                eq_(response.success,True)
+                eq_(response.payload.data, "789")
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")

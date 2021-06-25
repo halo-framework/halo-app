@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import sys
 import importlib
 import logging
 from halo_app.classes import AbsBaseClass
@@ -57,3 +57,8 @@ class Reflect(AbsBaseClass):
         module_name, method_name = cls.__break_full_class_path(full_class_path)
         module = __import__(module_name, fromlist=[method_name])
         return getattr(module, method_name)
+
+    @classmethod
+    def str2Class(cls,path):
+        module_name, class_name = cls.__break_full_class_path(path)
+        return getattr(sys.modules[module_name], class_name)

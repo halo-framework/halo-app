@@ -382,14 +382,24 @@ class Config(object):
         print("no api config file")
 
     DTO_ASSEMBLERS = None
-    ASSEMBLER_SETTINGS = ENV_NAME + '_assembler_settings.json'
-    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', ASSEMBLER_SETTINGS)
+    DTO_ASSEMBLER_SETTINGS = ENV_NAME + '_dto_assembler_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', DTO_ASSEMBLER_SETTINGS)
     if os.path.exists(file_path):
         with open(file_path, 'r') as fi:
             map = json.load(fi)
             DTO_ASSEMBLERS = map
     else:
-        print("no assembler config files")
+        print("no DTO assembler config files")
+
+    CMD_ASSEMBLERS = None
+    CMD_ASSEMBLER_SETTINGS = ENV_NAME + '_cmd_assembler_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', CMD_ASSEMBLER_SETTINGS)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as fi:
+            map = json.load(fi)
+            CMD_ASSEMBLERS = map
+    else:
+        print("no CMD assembler config files")
 
     BUSINESS_EVENT_MAP = None
     HANDLER_MAP = {}

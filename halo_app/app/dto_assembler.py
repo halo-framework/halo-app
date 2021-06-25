@@ -19,10 +19,6 @@ class AbsDtoAssembler(AbsBaseClass, abc.ABC):
         pass
 
     @abc.abstractmethod
-    def write_entity(self,dto:AbsHaloDto)->AbsHaloEntity:
-        pass
-
-    @abc.abstractmethod
     def write_dto_for_method(self, method_id: str,data:Dict,flag:str=None) -> AbsHaloDto:
         pass
 
@@ -44,12 +40,3 @@ class DtoAssemblerFactory(AbsBaseClass):
             assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
         raise MissingDtoAssemblerException(entity_type)
-
-    @classmethod
-    def get_assembler_by_dto(cls,dto:AbsHaloDto)->AbsDtoAssembler:
-        dto_type = SysUtil.instance_full_name(dto)
-        if dto_type in settings.DTO_ASSEMBLERS:
-            dto_assembler_type = settings.DTO_ASSEMBLERS[dto_type]
-            assembler:AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
-            return assembler
-        raise MissingDtoAssemblerException(dto_type)
