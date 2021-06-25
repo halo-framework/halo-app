@@ -23,11 +23,11 @@ class AbsHaloCommand(AbsHaloMessage,abc.ABC):
         super(AbsHaloCommand,self).__init__()
         self.name = name
 
-class HaloCommand(AbsHaloCommand):
+class DictHaloCommand(AbsHaloCommand):
     vars = None
 
     def __init__(self, name:str,vars:Dict):
-        super(HaloCommand,self).__init__(name)
+        super(DictHaloCommand,self).__init__(name)
         self.vars = vars
 
 

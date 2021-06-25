@@ -390,8 +390,19 @@ class ItemAssembler(AbsDtoAssembler):
     def write_dto_for_method(self, method_id: str,data,flag:str=None) -> AbsHaloDto:
         if method_id == "z17" and flag:
             return ItemDto(data["id"],data["data"])
+        if method_id == "z17" and not flag:
+            return ItemDto(data.id,data.data)
         dto = ItemDto(method_id)
         return ItemDto(data["id"],data["data"])
+
+class BaseCmdAssembler(AbsCmdAssembler):
+    def get_command_type(self,method_id:str)-> str:
+        return "halo_app.app.command.DictHaloCommand"
+
+    def write_cmd_for_method(self, method_id: str, data: Dict, flag: str = None) -> AbsHaloCommand:
+        command_type = self.get_command_type(method_id)
+        cmd_instance = Reflect.instantiate(command_type,AbsHaloCommand,method_id,data)
+        return cmd_instance
 
 class TestCmdAssembler(AbsCmdAssembler):
     def get_command_type(self,method_id:str)-> str:
@@ -430,8 +441,7 @@ class A17(A0):
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
                     dto = ItemDto("2","456")
-                    dto_assembler = DtoAssemblerFactory.get_assembler_by_dto(dto)
-                    entity = dto_assembler.write_entity(dto)
+                    entity = Item("2", "123")
                     self.repository.add(entity)
                     uow.commit()
                     payload = dto
@@ -1801,7 +1811,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(halo_response)
                 if response.error:
-                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                    print(json.dumps(response.error,default=lambda o: o.__dict__, indent=4, sort_keys=True))
                 eq_(response.success,False)
                 eq_(response.error.message, "msg")
             except Exception as e:

@@ -3,7 +3,7 @@ import abc
 import logging
 # halo
 from halo_app.app.exchange import AbsHaloExchange
-from halo_app.app.command import HaloCommand
+from halo_app.app.command import AbsHaloCommand
 from halo_app.classes import AbsBaseClass
 from halo_app.app.event import AbsHaloEvent
 from halo_app.app.exceptions import MissingHaloContextException
@@ -43,7 +43,7 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
 class HaloCommandRequest(AbsHaloRequest):
     command = None
 
-    def __init__(self,halo_context:HaloContext, halo_command:HaloCommand, secure=False, method_roles=None):
+    def __init__(self,halo_context:HaloContext, halo_command:AbsHaloCommand, secure=False, method_roles=None):
         super(HaloCommandRequest,self).__init__(halo_context,halo_command.name,secure,method_roles)
         self.command = halo_command
 

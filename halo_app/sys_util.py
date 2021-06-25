@@ -6,7 +6,6 @@ from http import HTTPStatus
 from typing import List, Dict, Callable, Type, TYPE_CHECKING
 
 from halo_app.classes import AbsBaseClass
-from halo_app.app.command import HaloCommand
 from halo_app.app.event import AbsHaloEvent
 from halo_app.const import LOC, OPType
 from halo_app.app.context import HaloContext, InitCtxFactory

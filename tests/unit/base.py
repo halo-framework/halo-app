@@ -362,8 +362,7 @@ class A17(A0):
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
                     dto = ItemDto("2","456")
-                    dto_assembler = DtoAssemblerFactory.get_assembler_by_dto(dto)
-                    entity = dto_assembler.write_entity(dto)
+                    entity = Item("1", "123")
                     self.repository.add(entity)
                     uow.commit()
                     payload = dto
