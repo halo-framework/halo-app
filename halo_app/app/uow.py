@@ -1,11 +1,12 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 import abc
+from typing import Dict
 
-
+from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
 
-
+#update one aggregate per aggregate
 class AbsUnitOfWork(abc.ABC):
 
     items: AbsRepository = None

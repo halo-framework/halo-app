@@ -5,7 +5,6 @@ from typing import Set
 
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.entity import AbsHaloAggregateRoot
-from halo_app.domain.model import Item
 
 #Define one repository per aggregate
 class AbsRepository(AbsBaseClass):
@@ -33,7 +32,6 @@ class AbsRepository(AbsBaseClass):
     @abstractmethod
     def _get(self, aggregate_id) -> AbsHaloAggregateRoot:
         raise NotImplementedError
-
 
 
 
