@@ -36,7 +36,7 @@ class FakeRepository(AbsRepository):
 class FakeUnitOfWork(AbsUnitOfWork):
 
     def __init__(self):
-        self.items = FakeRepository([])
+        self.repository = FakeRepository([])
         self.committed = False
 
     def _commit(self):
@@ -47,7 +47,7 @@ class FakeUnitOfWork(AbsUnitOfWork):
 
 
     def __call__(self, repository_type):
-        return self.items
+        return self.repository
 
 
 class FakePublisher(AbsPublisher):

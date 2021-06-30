@@ -64,7 +64,7 @@ class TestCommand:
         if response.error:
             print(json.dumps(response.error, indent=4, sort_keys=True))
         assert response.success is True
-        assert bus.uow.items.get("1") is not None
+        assert bus.uow.repository.get("1") is not None
         assert bus.uow.committed
 
 
@@ -77,7 +77,7 @@ class TestCommand:
         response = SysUtil.process_response_for_client(halo_response)
         if response.error:
             print(json.dumps(response.error, indent=4, sort_keys=True))
-        item = bus.uow.items.get("1")
+        item = bus.uow.repository.get("1")
         bs = [item]
         assert '1' in [b.id for b in bs]
 

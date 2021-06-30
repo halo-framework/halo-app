@@ -155,7 +155,7 @@ class Bus(IBus):
         # The command dispatcher expects just one handler per command.
         handler = self.command_handlers[command.method_id]
         ret = handler(command)
-        if self.uow.items:
+        if self.uow.repository:
             new_events = self.uow.collect_new_events()
             self.queue.extend(new_events)
         return ret

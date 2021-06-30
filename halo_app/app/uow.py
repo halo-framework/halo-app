@@ -2,14 +2,13 @@
 from __future__ import annotations
 import abc
 from typing import Dict
-
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
 
 #update one aggregate per aggregate
 class AbsUnitOfWork(abc.ABC):
 
-    items: AbsRepository = None
+    repository:AbsRepository = None
 
     def __enter__(self) -> AbsUnitOfWork:
         return self
@@ -29,8 +28,7 @@ class AbsUnitOfWork(abc.ABC):
         raise NotImplementedError
 
     def collect_new_events(self):
-        for item in self.items.seen:
+        for item in self.repository.seen:
             while item.events:
                 yield item.events.pop(0)
-
 

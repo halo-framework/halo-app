@@ -22,7 +22,7 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-BOUNDARY = None
+BUS = None
 
 class SysUtil(AbsBaseClass):
 
@@ -71,12 +71,11 @@ class SysUtil(AbsBaseClass):
 
     @staticmethod
     def get_bus():
-        global BOUNDARY
-        if BOUNDARY:
-            return BOUNDARY
+        global BUS
+        if BUS:
+            return BUS
         from halo_app import bootstrap
         import importlib
-        # bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
         for method_id in settings.HANDLER_MAP:
             clazz_type = settings.HANDLER_MAP[method_id]
             clazz = clazz_type["class"]
@@ -93,8 +92,8 @@ class SysUtil(AbsBaseClass):
             except Exception as e:
                 logger.error("config for handler missing: "+str(clazz) +" - "+str(e))
                 raise e
-        BOUNDARY = bootstrap.bootstrap()
-        return BOUNDARY
+        BUS = bootstrap.bootstrap()
+        return BUS
 
     @staticmethod
     def process_api_ok1(halo_response, method):

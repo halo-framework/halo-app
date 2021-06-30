@@ -140,7 +140,6 @@ class ItemRepository(SqlAlchemyRepository):
 
 
 class A0(AbsCommandHandler):
-    repository = None
     domain_service = None
     infra_service = None
 
@@ -165,10 +164,9 @@ class A0(AbsCommandHandler):
             if halo_request.command.vars['id'] == '7':
                 return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
-        with uow:
-            self.repository = uow(ItemRepository)
+        with uow(ItemRepository):
             try:
-                item = self.repository.get(halo_request.command.vars['id'])
+                item = uow.repository.get(halo_request.command.vars['id'])
             except Exception:
                 item = Item("1","test")
                 self.repository.add(item)
@@ -428,7 +426,7 @@ class A17(A0):
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            self.repository = uow(ItemRepository)
+            self.repository = uow.repository
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
                     entity = Item("1","123")
@@ -468,7 +466,7 @@ class A18(A0):
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            self.repository = uow(ItemRepository)
+            self.repository = uow.repository
             dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
             dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
             uow.commit()
@@ -653,7 +651,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_context = client_util.get_halo_context(request.headers,request)
                 halo_request = SysUtil.create_command_request(halo_context, "z0", request.args)
-                response = self.boundary.execute(halo_request)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
                 eq_(response.payload['1'], {'a': 'b'})
             except Exception as e:

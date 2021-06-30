@@ -27,6 +27,8 @@ class AbsHaloEntity(AbsHaloObject):
         else:
             self.id = id
 
+# A properly designed aggregate is one that can be modified in any way required by the business with its invariants completely consistent within a single transaction.
+# And a properly designed bounded context modifies only one aggregate instance per transaction in all cases.
 class AbsHaloAggregateRoot (AbsHaloEntity):
     version:int = 0
     events = []
