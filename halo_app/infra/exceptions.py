@@ -60,3 +60,6 @@ class MissingClassConfigException(AbsInfraException):
 
 class IllegalMethodException(AbsInfraException):
     pass
+
+class UnitOfWorkConfigException(AbsInfraException):
+    pass

@@ -13,6 +13,9 @@ class AbsUnitOfWork(abc.ABC):
     def __enter__(self) -> AbsUnitOfWork:
         return self
 
+    def __call__(self) -> AbsUnitOfWork:
+        return self
+
     def __exit__(self, *args):
         self.rollback()
 

@@ -426,11 +426,10 @@ class A17(A0):
 
     def handle(self,halo_request:HaloCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            self.repository = uow.repository
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
                     entity = Item("1","123")
-                    self.repository.add(entity)
+                    uow.repository.add(entity)
                     self.infra_service.send(entity)
                     uow.commit()
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_entity(entity)
@@ -440,7 +439,7 @@ class A17(A0):
                 if halo_request.command.vars['id'] == '2':
                     dto = ItemDto("2","456")
                     entity = Item("2", "123")
-                    self.repository.add(entity)
+                    uow.repository.add(entity)
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
