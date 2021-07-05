@@ -23,28 +23,16 @@ class SqlAlchemyUnitOfWorkManager(AbsUnitOfWorkManager):
             ))
             self.session_factory = DEFAULT_SESSION_FACTORY
 
-    def start(self,method_id) -> AbsUnitOfWork:
+    def start(self,method_id=None) -> AbsUnitOfWork:
+        #if method_id in list:
         return SqlAlchemyUnitOfWork(self.session_factory())
 
 class SqlAlchemyUnitOfWork(AbsUnitOfWork):
 
     def __init__(self, session):
         self.session = session
-        #self.default_repository_type = default_repository_type
-
-    def __call__(self, repository_type):
-        self.repository = repository_type(self.session)
-        return super().__call__()
 
     def __enter__(self):
-        if self.default_repository_type:
-            self.session = self.session_factory()
-            self.repository = self.default_repository_type(self.session)
-            return super().__enter__()
-        raise UnitOfWorkConfigException("no default repository")
-
-    def __enter__1(self):
-        self.session = self.session_factory()
         self.repository = SqlAlchemyRepository(self.session)
         return super().__enter__()
 
@@ -54,7 +42,6 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
 
     def _commit(self):
         self.session.commit()
-        self.repository = None
 
     def rollback(self):
         self.session.rollback()

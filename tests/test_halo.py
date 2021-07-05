@@ -164,12 +164,12 @@ class A0(AbsCommandHandler):
             if halo_request.command.vars['id'] == '7':
                 return Result.fail("code","msg","fail7",AbsDomainException("dom exc"))
 
-        with uow(ItemRepository):
+        with uow:
             try:
                 item = uow.repository.get(halo_request.command.vars['id'])
             except Exception:
-                item = Item("1","test")
-                self.repository.add(item)
+                item = Item(halo_request.command.vars['id'],"test")
+                uow.repository.add(item)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
@@ -662,6 +662,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_1a_run_query(self):
+        os.environ['DEBUG_LOG'] = 'true'
         #app.config['UOW_CLASS'] = "halo_app.infra.fake.FakeUnitOfWork"
         #app.config['PUBLISHER_CLASS'] = "halo_app.infra.fake.FakePublisher"
         with app.test_request_context(method='GET', path='/?id=1&qty=2'):
@@ -873,7 +874,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_5_cli_handle(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "13"})
         response = self.boundary.execute(halo_request)
         response = SysUtil.process_response_for_client(response)
         if response.error:
@@ -887,7 +888,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         client_type_ins = Util.get_client_type()
         client_type = client_type_ins.cli
         halo_context = client_util.get_halo_context({},client_type=client_type)
-        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "14"})
         response = self.boundary.execute(halo_request)
         response = SysUtil.process_response_for_client(response)
         if response.error:
@@ -896,19 +897,19 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_6_cli_handle_with_event(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "1"})
+        halo_request = SysUtil.create_command_request(halo_context, "z0", {"id": "10"})
         response = self.boundary.execute(halo_request)
         eq_(response.success,True)
 
     def test_7_cli_api_from_config(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_request = SysUtil.create_command_request(halo_context, "z1", {"id": "1"})
+        halo_request = SysUtil.create_command_request(halo_context, "z1", {"id": "11"})
         response = self.boundary.execute(halo_request)
         eq_(response.success,True)
 
     def test_7a_cli_api_from_method(self):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_request = SysUtil.create_command_request(halo_context, "z1a", {"id": "1"})
+        halo_request = SysUtil.create_command_request(halo_context, "z1a", {"id": "12"})
         response = self.boundary.execute(halo_request)
         eq_(response.success,True)
 
@@ -944,7 +945,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
         halo_event = TestHaloEvent( "z9","12")
         halo_request = SysUtil.create_event_request(halo_context,halo_event)
-        fake_boundary = FakeBus(self.boundary.uow,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
+        fake_boundary = FakeBus(self.boundary.uowm,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
         fake_boundary.fake_process(halo_request)
 
     def test_10a_event(self):
@@ -952,7 +953,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_event = TestHaloEvent( "z9", "12")
             halo_request = SysUtil.create_event_request(halo_context,halo_event)
-            fake_boundary = FakeBus(self.boundary.uow,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
+            fake_boundary = FakeBus(self.boundary.uowm,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
                                         self.boundary.query_handlers)
             fake_boundary.fake_process(halo_request)
 

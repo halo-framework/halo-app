@@ -231,9 +231,9 @@ class AbsQueryHandler(AbsBaseHandler):
         return ret
 
     @classmethod
-    def run_query_class(cls,halo_request:HaloQueryRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
+    def run_query_class(cls,halo_request:HaloQueryRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
         handler = cls()
-        return handler.__run_query(halo_request,uow)
+        return handler.__run_query(halo_request,uowm.start(halo_request.method_id))
 
 class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
@@ -263,15 +263,16 @@ class AbsEventHandler(AbsBaseHandler):
     def handle(self,halo_event_request:HaloEventRequest,uow:AbsUnitOfWork)->Result:
         raise HaloMethodNotImplementedException("method handle in event")
 
-    def _run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
+    def __run_event(self, halo_request:HaloEventRequest,uow:AbsUnitOfWork):
         self.uow = uow
         self.set_business_event(halo_request, BusinessEventCategory.EMPTY)
-        ret:AbsHaloResponse = self.do_operation(halo_request)
+        self.do_operation(halo_request)
+        halo_request.uow = uow
 
     @classmethod
     def run_event_class(cls,halo_request:HaloEventRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         handler = cls()
-        return handler._run_event(halo_request,uow)
+        return handler.__run_event(halo_request,uow)
 
 class AbsCommandHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
@@ -338,12 +339,13 @@ class AbsCommandHandler(AbsBaseHandler):
         self.uow = uow
         self.set_business_event(halo_request, BusinessEventCategory.EMPTY)
         ret:AbsHaloResponse = self.do_operation(halo_request)
+        halo_request.uow = uow
         return ret
 
     @classmethod
     def run_command_class(cls,halo_request:HaloCommandRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
         handler = cls()
-        return handler.__run_command(halo_request,uowm.start())
+        return handler.__run_command(halo_request,uowm.start(halo_request.method_id))
 
 
 

@@ -59,7 +59,6 @@ class Bus(IBus):
         try:
             if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
                 raise HaloRequestException(f'{halo_request} was not a Query or Command request')
-            halo_request.uow = self.uowm.start()
             ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,

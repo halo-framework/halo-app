@@ -9,7 +9,7 @@ from halo_app.domain.repository import AbsRepository
 class AbsUnitOfWorkManager(abc.ABC):
 
     @abc.abstractmethod
-    def start(self) -> AbsUnitOfWork:
+    def start(self,method_id=None) -> AbsUnitOfWork:
         pass
 
 #update one aggregate per aggregate
@@ -18,9 +18,6 @@ class AbsUnitOfWork(abc.ABC):
     repository:AbsRepository = None
 
     def __enter__(self) -> AbsUnitOfWork:
-        return self
-
-    def __call__(self) -> AbsUnitOfWork:
         return self
 
     def __exit__(self, *args):
