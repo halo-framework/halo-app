@@ -1108,7 +1108,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
+            eq_(response.payload, {'1': {}})
 
     def test_20_event_filter(self):
         app.config['PROVIDER'] = "AWS"
@@ -1117,7 +1117,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             response = self.boundary.execute(halo_request)
-            eq_(response.payload, [{'id': 1, 'name': 'Pankaj', 'salary': '10000'}, {'name': 'David', 'salary': '5000', 'id': 2}])
+            eq_(response.payload, {'1': {}})
 
     def test_21_event_filter(self):
         app.config['PROVIDER'] = "AWS"

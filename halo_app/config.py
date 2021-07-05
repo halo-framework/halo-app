@@ -401,6 +401,12 @@ class Config(object):
     else:
         print("no CMD assembler config files")
 
+    file_dir = os.path.dirname(__file__)
+    file_path = os.path.join(BASE_DIR,'..', 'env', 'loc_settings.json')
+    with open(file_path, 'r') as fi:
+        LOC_TABLE = json.load(fi)
+        print("loc_settings:" + str(LOC_TABLE))
+
     BUSINESS_EVENT_MAP = None
     HANDLER_MAP = {}
     EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
