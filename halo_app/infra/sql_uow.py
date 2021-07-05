@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
-from halo_app.app.uow import AbsUnitOfWork
+from halo_app.app.uow import AbsUnitOfWork, AbsUnitOfWorkManager
 from halo_app.infra.exceptions import UnitOfWorkConfigException
 from halo_app.infra.sql_repository import SqlAlchemyRepository
 from halo_app.settingsx import settingsx
@@ -11,9 +11,9 @@ from halo_app.settingsx import settingsx
 settings = settingsx()
 
 
-class SqlAlchemyUnitOfWork(AbsUnitOfWork):
+class SqlAlchemyUnitOfWorkManager(AbsUnitOfWorkManager):
 
-    def __init__(self, session_factory=None,default_repository_type=None):
+    def __init__(self, session_factory=None):
         if session_factory:
             self.session_factory = session_factory
         else:
@@ -22,10 +22,17 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
                 isolation_level=settings.ISOLATION_LEVEL
             ))
             self.session_factory = DEFAULT_SESSION_FACTORY
-        self.default_repository_type = default_repository_type
+
+    def start(self,method_id) -> AbsUnitOfWork:
+        return SqlAlchemyUnitOfWork(self.session_factory())
+
+class SqlAlchemyUnitOfWork(AbsUnitOfWork):
+
+    def __init__(self, session):
+        self.session = session
+        #self.default_repository_type = default_repository_type
 
     def __call__(self, repository_type):
-        self.session = self.session_factory()
         self.repository = repository_type(self.session)
         return super().__call__()
 

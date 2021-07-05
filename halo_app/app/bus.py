@@ -39,9 +39,9 @@ class Bus(IBus):
         Only admin users are able to access this view.
         """
 
-    def __init__(self, uow,publisher,event_handlers,command_handlers,query_handlers):
+    def __init__(self, uowm,publisher,event_handlers,command_handlers,query_handlers):
         super(Bus, self).__init__()
-        self.uow = uow
+        self.uowm = uowm
         self.publisher = publisher
         self.event_handlers = event_handlers
         self.command_handlers = command_handlers
@@ -59,6 +59,7 @@ class Bus(IBus):
         try:
             if isinstance(halo_request, HaloEventRequest) or issubclass(halo_request.__class__, HaloEventRequest):
                 raise HaloRequestException(f'{halo_request} was not a Query or Command request')
+            halo_request.uow = self.uowm.start()
             ret = self.__process(halo_request)
             total = datetime.datetime.now() - now
             logger.info(LOGChoice.performance_data.value, extra=log_json(halo_request.context,
@@ -119,7 +120,7 @@ class Bus(IBus):
                 #  configure boundray to retry operations up to three times, with an exponentially increasing wait between attempts
                 logger.debug('handling event %s with handler %s', request.event, handler)
                 handler(request)
-                new_events = self.uow.collect_new_events()
+                new_events = request.uow.collect_new_events()
                 new_requests = Util.create_requests(new_events)
                 self.queue.extend(new_requests)
             except Exception as e:
@@ -136,7 +137,7 @@ class Bus(IBus):
                 #  configure boundray to retry operations up to three times, with an exponentially increasing wait between attempts
                 logger.debug('handling event %s with handler %s', event, handler)
                 handler.run_event(event)
-                new_events = self.uow.collect_new_events()
+                new_events = event.uow.collect_new_events()
                 new_requests = Util.create_requests(new_events)
                 self.queue.extend(new_requests)
             except Exception as e:
@@ -155,8 +156,8 @@ class Bus(IBus):
         # The command dispatcher expects just one handler per command.
         handler = self.command_handlers[command.method_id]
         ret = handler(command)
-        if self.uow.repository:
-            new_events = self.uow.collect_new_events()
+        if command.uow.repository:
+            new_events = command.uow.collect_new_events()
             self.queue.extend(new_events)
         return ret
 

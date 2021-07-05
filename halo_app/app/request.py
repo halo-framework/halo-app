@@ -22,6 +22,7 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
     method_id = None
     context = None
     security = None
+    uow = None
 
     @abc.abstractmethod
     def __init__(self,halo_context:HaloContext, method_id:str,vars,secure=False,method_roles=None):

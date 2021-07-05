@@ -26,7 +26,7 @@ from halo_app.domain.model import Item
 from halo_app.app.dto import AbsHaloDto
 from halo_app.entrypoints import client_util
 from halo_app.infra.impl.redis_event_publisher import Publisher
-from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
+from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork, SqlAlchemyUnitOfWorkManager
 from halo_app.app.query import HaloQuery
 from halo_app.domain.service import AbsDomainService
 from halo_app.infra.exceptions import ApiException, AbsInfraException
@@ -537,7 +537,7 @@ def sqlite_boundary(sqlite_session_factory):
         return boundary
     boundary = bootstrap.bootstrap(
         start_orm=True,
-        uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
+        uowm=SqlAlchemyUnitOfWorkManager(session_factory=sqlite_session_factory),
         publish=FakePublisher()
     )
     return boundary
@@ -646,6 +646,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_1_run_handle(self):
+        os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context(method='GET', path='/?id=1'):
             try:
                 halo_context = client_util.get_halo_context(request.headers,request)

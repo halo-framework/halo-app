@@ -5,6 +5,13 @@ from typing import Dict
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
 
+
+class AbsUnitOfWorkManager(abc.ABC):
+
+    @abc.abstractmethod
+    def start(self) -> AbsUnitOfWork:
+        pass
+
 #update one aggregate per aggregate
 class AbsUnitOfWork(abc.ABC):
 

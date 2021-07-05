@@ -14,7 +14,7 @@ from jsonpath_ng import parse
 from .exceptions import HaloMethodNotImplementedException, BusinessEventMissingSeqException, \
     BusinessEventNotImplementedException, AppValidationException, ConvertDomainExceptionHandler
 from .result import Result
-from .uow import AbsUnitOfWork
+from .uow import AbsUnitOfWork, AbsUnitOfWorkManager
 from halo_app.exceptions import AbsHaloException
 from ..domain.exceptions import AbsDomainException
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
@@ -341,9 +341,9 @@ class AbsCommandHandler(AbsBaseHandler):
         return ret
 
     @classmethod
-    def run_command_class(cls,halo_request:HaloCommandRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
+    def run_command_class(cls,halo_request:HaloCommandRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
         handler = cls()
-        return handler.__run_command(halo_request,uow)
+        return handler.__run_command(halo_request,uowm.start())
 
 
 

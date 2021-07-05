@@ -2,7 +2,7 @@ import inspect
 from typing import Callable
 
 from halo_app.classes import AbsBaseClass
-from halo_app.app.uow import AbsUnitOfWork
+from halo_app.app.uow import AbsUnitOfWorkManager
 from halo_app.app.bus import Bus
 from halo_app.infra.event_publisher import AbsPublisher
 from halo_app.reflect import Reflect
@@ -12,7 +12,7 @@ settings = settingsx()
 
 def bootstrap(
     start_orm: bool = settings.START_ORM,#True,
-    uow: AbsUnitOfWork = Reflect.instantiate(settings.UOW_CLASS,AbsUnitOfWork),#SqlAlchemyUnitOfWork(),
+    uowm: AbsUnitOfWorkManager = Reflect.instantiate(settings.UOWM_CLASS,AbsUnitOfWorkManager),#SqlAlchemyUnitOfWork(),
     publish: Callable = Reflect.instantiate(settings.PUBLISHER_CLASS,AbsPublisher),#Publisher(),
 ) -> Bus:
 
@@ -23,7 +23,7 @@ def bootstrap(
         start_mappers = Reflect.import_method_from(settings.ORM_METHOD)
         start_mappers()
 
-    dependencies = {'uow': uow, 'publish': publish}
+    dependencies = {'uowm': uowm, 'publish': publish}
     for item in settings.DEPENDENCIES:
         clazz = settings.DEPENDENCIES[item]
         dependencies[item] = Reflect.instantiate(clazz)
@@ -45,8 +45,8 @@ def bootstrap(
     }
 
     return Bus(
-        uow=uow,
-        publisher = publish,
+        uowm=uowm,
+        publisher=publish,
         event_handlers=injected_event_handlers,
         command_handlers=injected_command_handlers,
         query_handlers=injected_query_handlers,

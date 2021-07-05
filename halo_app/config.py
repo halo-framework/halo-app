@@ -357,7 +357,7 @@ class Config(object):
     ISOLATION_LEVEL = env.str('ISOLATION_LEVEL',default="REPEATABLE READ")
 
     START_ORM = env.bool('START_ORM',default=True)
-    UOW_CLASS = env.str('UOW_CLASS',default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
+    UOWM_CLASS = env.str('UOWM_CLASS',default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWorkManager")
     PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.impl.redis_event_publisher.Publisher")
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
