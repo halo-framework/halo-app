@@ -64,11 +64,6 @@ class AwsApi(AbsRestApi):
 class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
 
-class DbTest(AbsDbMixin):
-    pass
-class DbMixin(AbsDbMixin):
-    pass
-
 
 class Sec(HaloSecurity):
     def get_secret(self):

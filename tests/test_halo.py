@@ -42,7 +42,6 @@ from .unit.fake import FakeBus, FakePublisher
 from halo_app.infra.apis import AbsRestApi, AbsSoapApi, SoapResponse, ApiMngr  # CnnApi,GoogleApi,TstApi
 from halo_app.app.request import HaloContext, HaloCommandRequest, HaloEventRequest, HaloQueryRequest
 from halo_app.infra.apis import load_api_config
-from halo_app.models import AbsDbMixin
 from halo_app.ssm import set_app_param_config,get_app_param_config,set_host_param_config
 from halo_app.app.globals import load_global_data
 from halo_app.security import HaloSecurity
@@ -115,11 +114,6 @@ class AwsApi(AbsRestApi):
 
 class PrimoServiceApi(AbsRestApi):
     name='PrimoService-dev-hello'
-
-class DbTest(AbsDbMixin):
-    pass
-class DbMixin(AbsDbMixin):
-    pass
 
 
 class Sec(HaloSecurity):
@@ -312,6 +306,7 @@ class A4(A2):
 
 class A5(AbsCommandHandler):
     secure = True
+    method_roles = ['tst']
 
 class A6(A5):
     pass
@@ -428,7 +423,7 @@ class A17(A0):
         with uow:
             if 'id' in halo_request.command.vars:
                 if halo_request.command.vars['id'] == '1':
-                    entity = Item("1","123")
+                    entity = Item("21","123")
                     uow.repository.add(entity)
                     self.infra_service.send(entity)
                     uow.commit()
@@ -437,8 +432,8 @@ class A17(A0):
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '2':
-                    dto = ItemDto("2","456")
-                    entity = Item("2", "123")
+                    dto = ItemDto("22","123")
+                    entity = Item("22", "123")
                     uow.repository.add(entity)
                     uow.commit()
                     payload = dto
@@ -446,7 +441,6 @@ class A17(A0):
                 if halo_request.command.vars['id'] == '3':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
                     dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
-                    uow.commit()
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '4':
@@ -455,7 +449,6 @@ class A17(A0):
                         id = "1"
                         data = "789"
                     dto = dto_assembler.write_dto_for_method(halo_request.method_id,d())
-                    uow.commit()
                     payload = dto
                     return Result.ok(payload)
 
@@ -567,7 +560,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z2"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
-        # bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+        bootstrap.COMMAND_HANDLERS["z7"] = A5.run_command_class
+        bootstrap.COMMAND_HANDLERS["z71"] = A6.run_command_class
         bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
         bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
         bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
@@ -1339,6 +1333,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
@@ -1350,6 +1346,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 response = self.boundary.execute(halo_request)
                 response = SysUtil.process_response_for_client(response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,False)
             except Exception as e:
                 eq_(e.__class__.__name__, "ApiException")
@@ -1550,21 +1548,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             "C:\\dev\\projects\\halo\\halo_app\\halo_app\\env\\config\\flask_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
 
-    def test_50_db(self):
-        app.config['DBACCESS_CLASS'] = 'tests.test_halo.DbMixin'
-        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            halo_context = client_util.get_halo_context(request.headers,request)
-            db = DbTest(halo_context,True)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", {})
-            db.get_dbaccess(halo_request,True)
 
-    def test_51_db(self):
-        app.config['DBACCESS_CLASS'] = 'tests.test_halo.DbMixin'
-        with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
-            halo_context = client_util.get_halo_context(request.headers,request)
-            db = DbTest(halo_context,True)
-            req = AbsHaloRequest(halo_context, "z1", {})
-            db.get_dbaccess(req,False)
 
 
     def test_52_security_need_token(self):
@@ -1675,9 +1659,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z7", request.args)
             try:
-                self.a5.method_roles = ['tst']
                 response = self.boundary.execute(halo_request)
                 eq_(1,2)
             except Exception as e:
@@ -1694,7 +1677,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z71", request.args)
             try:
                 self.a6.method_roles = ['tst']
                 response = self.boundary.execute(halo_request)
@@ -1770,7 +1753,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 if response.error:
                     print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
-                eq_(response.payload.data, "456")
+                eq_(response.payload.data, "123")
             except Exception as e:
                 print(str(e))
                 eq_(e.__class__.__name__, "NoApiClassException")
