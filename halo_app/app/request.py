@@ -25,7 +25,7 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
     uow = None
 
     @abc.abstractmethod
-    def __init__(self,halo_context:HaloContext, method_id:str,vars,secure=False,method_roles=None):
+    def __init__(self,halo_context:HaloContext, method_id:str,security=False,method_roles=None):
         self.method_id = method_id
         self.context = halo_context
         for i in settings.HALO_CONTEXT_LIST:
@@ -33,11 +33,11 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
                 raise MissingHaloContextException(str(i))
             if i not in self.context.keys():
                 raise MissingHaloContextException(str(i))
-        if settings.SECURITY_FLAG or secure:
+        if settings.SECURITY_FLAG or security:
             if settings.HALO_SECURITY_CLASS:
                 self.security = Reflect.instantiate(settings.HALO_SECURITY_CLASS, HaloSecurity)
             else:
-                self.security = HaloSecurity()
+                self.security = HaloSecurity(halo_context.items)
             self.security.validate_method(method_roles)
 
 

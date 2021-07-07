@@ -18,11 +18,11 @@ class HaloSecurity(AbsBaseClass):
     current_user = None
     user_roles = []
 
-    def __init__(self, request):
+    def __init__(self, headers):
         token = None
 
-        if HaloContext.items[HaloContext.ACCESS] in request.headers:
-            token = request.headers[HaloContext.items[HaloContext.ACCESS]]
+        if HaloContext.items[HaloContext.ACCESS] in headers:
+            token = headers[HaloContext.items[HaloContext.ACCESS]]
 
         if not token:
             raise MissingSecurityTokenException('a valid token is missing')

@@ -1554,12 +1554,13 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_52_security_need_token(self):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/'):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
+                halo_request = SysUtil.create_command_request(halo_context, "z4", request.args, security=True)
                 response = self.boundary.execute(halo_request)
+                eq_(response.success,False)
                 eq_(response.errors['error']["error_code"], 10108)
             except Exception as e:
-                eq_(1, 2)
+                eq_(e.__class__.__name__, "MissingSecurityTokenException")
 
     def test_53_security_bad_token(self):
         app.config['SESSION_MINUTES'] = 30
@@ -1569,12 +1570,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
+                halo_request = SysUtil.create_command_request(halo_context, "z4", request.args, security=True)
                 response = self.boundary.execute(halo_request)
-                eq_(1,2)
-            except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 10109)
+            except Exception as e:
+                eq_(e.__class__.__name__,"MissingSecurityTokenException")
 
     def test_54_security_good_token(self):
         app.config['SESSION_MINUTES'] = 30
@@ -1585,10 +1586,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
+                halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
                 response = self.boundary.execute(halo_request)
-                eq_(1,2)
+                eq_(response.success,True)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
 

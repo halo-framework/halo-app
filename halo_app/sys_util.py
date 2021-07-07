@@ -53,7 +53,7 @@ class SysUtil(AbsBaseClass):
 
     @staticmethod
     def create_command_request(halo_context: HaloContext, method_id: str, vars: Dict,
-                               security=None, roles=None) -> AbsHaloRequest:
+                               security=False, roles=None) -> AbsHaloRequest:
         #halo_command = HaloCommand(method_id, vars)
         cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(method_id)
         halo_command = cmd_assembler.write_cmd_for_method(method_id,vars)
