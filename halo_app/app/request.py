@@ -8,7 +8,7 @@ from halo_app.classes import AbsBaseClass
 from halo_app.app.event import AbsHaloEvent
 from halo_app.app.exceptions import MissingHaloContextException
 from halo_app.reflect import Reflect
-from halo_app.security import HaloSecurity
+from halo_app.security import HaloSecurity, SecurityFactory
 from halo_app.app.context import HaloContext
 from halo_app.settingsx import settingsx
 from halo_app.app.query import HaloQuery
@@ -23,6 +23,7 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
     context = None
     security = None
     uow = None
+    method_roles = None
 
     @abc.abstractmethod
     def __init__(self,halo_context:HaloContext, method_id:str,security=False,method_roles=None):
@@ -34,11 +35,13 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
             if i not in self.context.keys():
                 raise MissingHaloContextException(str(i))
         if settings.SECURITY_FLAG or security:
-            if settings.HALO_SECURITY_CLASS:
-                self.security = Reflect.instantiate(settings.HALO_SECURITY_CLASS, HaloSecurity)
+            if method_roles:
+                self.method_roles = method_roles
             else:
-                self.security = HaloSecurity(halo_context.items)
-            self.security.validate_method(method_roles)
+                if method_id in settings.METHOD_ROLES:
+                    self.method_roles = settings.METHOD_ROLES[method_id]
+            self.security = SecurityFactory.get_security(halo_context)
+            #self.security.validate_method(method_roles)
 
 
 class HaloCommandRequest(AbsHaloRequest):

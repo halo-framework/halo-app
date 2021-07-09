@@ -1573,9 +1573,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 halo_request = SysUtil.create_command_request(halo_context, "z4", request.args, security=True)
                 response = self.boundary.execute(halo_request)
-                eq_(e.data['errors']['error']["error_code"], 10109)
             except Exception as e:
-                eq_(e.__class__.__name__,"MissingSecurityTokenException")
+                eq_(e.__class__.__name__,"BadSecurityTokenException")
 
     def test_54_security_good_token(self):
         app.config['SESSION_MINUTES'] = 30
@@ -1587,7 +1586,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/',headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
             try:
-                halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+                halo_request = SysUtil.create_command_request(halo_context, "z1", request.args, security=True)
                 response = self.boundary.execute(halo_request)
                 eq_(response.success,True)
             except Exception as e:
@@ -1595,6 +1594,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_55_security_good_token_no_role_needed(self):
         app.config['SESSION_MINUTES'] = 30
+        app.config['METHOD_ROLES'] = {"z1":[]}
         secret = '12345'
         app.config['SECRET_KEY'] = secret
         app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
@@ -1603,16 +1603,16 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args,security=True)
             try:
-                self.a4.method_roles = []
                 response = self.boundary.execute(halo_request)
-                eq_(1,2)
+                eq_(response.success,True)
             except Exception as e:
                 eq_(e.data['errors']['error']["error_code"], 500)
 
-    def test_56_security_good_token_role_needed_missing(self):
+    def test_56_security_good_token_role_needed_but_missing(self):
         app.config['SESSION_MINUTES'] = 30
+        app.config['METHOD_ROLES'] = {"z1": ['tst1']}
         secret = '12345'
         app.config['SECRET_KEY'] = secret
         app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
@@ -1621,19 +1621,19 @@ class TestUserDetailTestCase(unittest.TestCase):
         headers = {'HTTP_HOST': '127.0.0.2', 'x-halo-access-token': hdr['token']}
         with app.test_request_context(method='GET', path='/xst2/2/tst1/1/tst/0/', headers=headers):
             halo_context = client_util.get_halo_context(request.headers,request)
-            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
+            halo_request = SysUtil.create_command_request(halo_context, "z1", request.args, security=True)
             try:
-                self.a4.method_roles = ['tst1']
                 response = self.boundary.execute(halo_request)
-                eq_(1,2)
+                eq_(response.error[0].name,'missing_roles')
             except Exception as e:
-                eq_(e.data['errors']['error']["error_code"], 500)
+                eq_(1, 2)
 
     def test_57_security_good_token_role_needed_exist(self):
-        app.config['PROVIDER'] = "AWS"
         app.config['SESSION_MINUTES'] = 30
+        app.config['METHOD_ROLES'] = {"z1": ['tst']}
         secret = '12345'
         app.config['SECRET_KEY'] = secret
+        app.config['SECRET_FLAG'] = True
         app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
@@ -1642,9 +1642,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
-                self.a4.method_roles = ['tst']
                 response = self.boundary.execute(halo_request)
-                eq_(response.code,200)
+                eq_(response.success,True)
             except Exception as e:
                 print(str(e))
                 eq_(1,2)

@@ -6,6 +6,7 @@ import datetime
 from halo_app.classes import AbsBaseClass
 from halo_app.exceptions import MissingRoleException,MissingSecurityTokenException,BadSecurityTokenException
 from halo_app.app.context import HaloContext
+from .reflect import Reflect
 from .settingsx import settingsx
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,9 @@ class HaloSecurity(AbsBaseClass):
 
         if HaloContext.items[HaloContext.ACCESS] in headers:
             token = headers[HaloContext.items[HaloContext.ACCESS]]
+        else:
+            if HaloContext.ACCESS in headers:
+                token = headers[HaloContext.ACCESS]
 
         if not token:
             raise MissingSecurityTokenException('a valid token is missing')
@@ -67,3 +71,14 @@ class HaloSecurity(AbsBaseClass):
             {'public_id': public_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=minutes)},
             secret)
         return {'token': token.decode('UTF-8')}
+
+
+class SecurityFactory(AbsBaseClass):
+
+    @classmethod
+    def get_security(cls,halo_context) -> HaloSecurity:
+        if settings.HALO_SECURITY_CLASS:
+            return Reflect.instantiate(settings.HALO_SECURITY_CLASS, HaloSecurity, halo_context.table)
+        else:
+            return HaloSecurity(halo_context.table)
+            #raise MissingSecurityClassException(method_id)

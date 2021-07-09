@@ -15,7 +15,7 @@ from .exceptions import HaloMethodNotImplementedException, BusinessEventMissingS
     BusinessEventNotImplementedException, AppValidationException, ConvertDomainExceptionHandler
 from .result import Result
 from .uow import AbsUnitOfWork, AbsUnitOfWorkManager
-from halo_app.exceptions import AbsHaloException
+from halo_app.exceptions import AbsHaloException, MissingRoleException
 from ..domain.exceptions import AbsDomainException
 from ..const import HTTPChoice, ASYNC, BusinessEventCategory
 from ..entrypoints.client_type import ClientType
@@ -57,15 +57,23 @@ class AbsBaseHandler(AbsBaseClass):
     def __init__(self,method_id=None):
         pass
 
-    def validate_req(self, halo_request):
-        logger.debug("in validate_req ")
-        if halo_request:
-            return Notification()
+    def validate_perm(self, halo_request)->Notification:
+        notification = Notification()
+        if halo_request.security:
+            try:
+                halo_request.security.validate_method(halo_request.method_roles)
+            except MissingRoleException as e:
+                notification.addError("missing_roles",e.message,e)
+        return notification
 
-    def validate_pre(self, halo_request):
+
+    def validate_req(self, halo_request)->Notification:
+        logger.debug("in validate_req ")
+        return Notification()
+
+    def validate_pre(self, halo_request)->Notification:
         logger.debug("in validate_pre ")
-        if halo_request:
-            return Notification()
+        return Notification()
 
     def create_resp_payload(self, halo_request, dict_back_json):
         logger.debug("in create_resp_payload " + str(dict_back_json))
@@ -191,6 +199,10 @@ class AbsQueryHandler(AbsBaseHandler):
 
     @abstractmethod
     def do_operation(self, halo_request: AbsHaloRequest) -> AbsHaloResponse:
+        # 0. validate permissions
+        notification: Notification = self.validate_perm(halo_request)
+        if notification.hasErrors():
+            return Util.create_notification_response(halo_request, notification)
         # 1. validate input params
         notification: Notification = self.validate_req(halo_request)
         if notification.hasErrors():
@@ -287,6 +299,10 @@ class AbsCommandHandler(AbsBaseHandler):
 
     @abstractmethod
     def do_operation(self, halo_request:AbsHaloRequest)->AbsHaloResponse:
+        # 0. validate permissions
+        notification: Notification = self.validate_perm(halo_request)
+        if notification.hasErrors():
+            return Util.create_notification_response(halo_request, notification)
         # 1. validate input params
         notification: Notification = self.validate_req(halo_request)
         if notification.hasErrors():

@@ -445,6 +445,15 @@ class Config(object):
     except FileNotFoundError as e:
         raise e
 
+    METHOD_ROLES = {}
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', 'method_roles.json')
+    try:
+        with open(file_path, 'r') as fi:
+            METHOD_ROLES = json.load(fi)
+            print("METHOD_ROLES:" + str(METHOD_ROLES))
+    except FileNotFoundError as e:
+        print("no method roles config files")
+
     if not SQLALCHEMY_DATABASE_URI:
         db_host = os.environ.get('DB_HOST', 'localhost')
         db_port = env.int('DB_PORT',default=1234)
