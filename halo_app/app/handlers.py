@@ -282,9 +282,9 @@ class AbsEventHandler(AbsBaseHandler):
         halo_request.uow = uow
 
     @classmethod
-    def run_event_class(cls,halo_request:HaloEventRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
+    def run_event_class(cls,halo_request:HaloEventRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
         handler = cls()
-        return handler.__run_event(halo_request,uow)
+        return handler.__run_event(halo_request,uowm.start(halo_request.method_id))
 
 class AbsCommandHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
