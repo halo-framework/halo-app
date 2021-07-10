@@ -298,7 +298,7 @@ class ProcessingEngine(AbsBaseClass):
             ret = sagax.execute(halo_request.context, payloads, apis)
             return Result.ok(ret)
         except SagaRollBack as e:
-            raise ApiException(e.message,e,e.detail ,e.data,status_code=500)
+            raise ApiException(e.message,e,e.detail ,e.data)
 
 
 

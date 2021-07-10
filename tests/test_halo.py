@@ -1305,13 +1305,17 @@ class TestUserDetailTestCase(unittest.TestCase):
         ret = BaseUtil.get_correlation_from_event(event)
         eq_(ret[HaloContext.items[HaloContext.DEBUG_LOG]], 'true')
 
-    def test_33_trans_json(self):
+    def test_33_saga_fail(self):
+        os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context(method='GET', path="/tst"):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z5", request.args)
             try:
-                response = self.boundary.execute(halo_request)
-                eq_(response.payload['1'], {})
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                eq_(response.error['error']['code'], 1000)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
@@ -1326,7 +1330,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             sagax = saga.load_saga("test saga",halo_request, jsonx, app.config['SAGA_SCHEMA'])
             eq_(len(sagax.actions), 6)
 
-    def test_35_run_saga_error(self):
+    def test_35_run_saga(self):
         with app.test_request_context(method='POST', path="/tst?sub_func=tst"):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
@@ -1335,7 +1339,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 response = SysUtil.process_response_for_client(halo_response)
                 if response.error:
                     print(json.dumps(response.error, indent=4, sort_keys=True))
-                eq_(response.success,False)
+                eq_(response.success,True)
             except Exception as e:
                 eq_(e.__class__.__name__, "InternalServerError")
 
