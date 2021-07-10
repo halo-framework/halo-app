@@ -40,7 +40,7 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
             else:
                 if method_id in settings.METHOD_ROLES:
                     self.method_roles = settings.METHOD_ROLES[method_id]
-            self.security = SecurityFactory.get_security(halo_context)
+            self.security = SecurityFactory.get_security(halo_context,method_id)
             #self.security.validate_method(method_roles)
 
 

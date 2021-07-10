@@ -76,7 +76,7 @@ class HaloSecurity(AbsBaseClass):
 class SecurityFactory(AbsBaseClass):
 
     @classmethod
-    def get_security(cls,halo_context) -> HaloSecurity:
+    def get_security(cls,halo_context,method_id=None) -> HaloSecurity:
         if settings.HALO_SECURITY_CLASS:
             return Reflect.instantiate(settings.HALO_SECURITY_CLASS, HaloSecurity, halo_context.table)
         else:

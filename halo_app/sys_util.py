@@ -169,7 +169,7 @@ class SysUtil(AbsBaseClass):
                                 halo_response.code = HTTPStatus.BAD_REQUEST
                                 halo_response.error = Util.json_notification_response(halo_response.request.context,halo_response.error)
                                 halo_response.error["status_code"]=halo_response.code
-                                halo_response.error["path"] = halo_response.request
+                                halo_response.error["path"] = halo_response.request.context.get(HaloContext.path)
                             else:
                                 if isinstance(halo_response.error, Error):
                                     halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
