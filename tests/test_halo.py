@@ -1331,8 +1331,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z4", request.args)
             try:
-                response = self.boundary.execute(halo_request)
-                response = SysUtil.process_response_for_client(response)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
                 if response.error:
                     print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,False)
@@ -1686,17 +1686,22 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z71", request.args)
             try:
-                response = self.boundary.execute(halo_request)
-                eq_(1,2)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                eq_(response.success, False)
             except Exception as e:
                 eq_(e.__class__, 'halo_aws.providers.cloud.aws.exceptions.ProviderException')
 
     def test_60_aws_invoke_sync_success(self):
         app.config['PROVIDER'] = "AWS"
+        app.config['METHOD_ROLES'] = {"z7": ['tst']}
         app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
+        app.config['SECURITY_FLAG'] = True
         app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
@@ -1705,8 +1710,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
-                self.a5.method_roles = ['tst']
-                response = self.boundary.execute(halo_request)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                eq_(response.success, True)
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))
@@ -1714,11 +1722,13 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_61_aws_invoke_sync_success(self):
         app.config['PROVIDER'] = "AWS"
+        app.config['METHOD_ROLES'] = {"z7": ['tst']}
         app.config['DEBUG'] = True
         app.config['HALO_CONTEXT_LIST'] = ["CORRELATION"]
         app.config['SESSION_MINUTES'] = 30
         secret = '12345'
         app.config['SECRET_KEY'] = secret
+        app.config['SECURITY_FLAG'] = True
         app.config['HALO_SECURITY_CLASS'] = 'tests.test_halo.Sec'
         public_id = '12345'
         hdr = HaloSecurity.user_token(None, public_id, 30, secret)
@@ -1727,8 +1737,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             halo_context = client_util.get_halo_context(request.headers,request)
             halo_request = SysUtil.create_command_request(halo_context, "z1", request.args)
             try:
-                self.a6.method_roles = ['tst']
-                response = self.boundary.execute(halo_request)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                eq_(response.success, True)
                 eq_(response.code, 201)
             except Exception as e:
                 print(str(e))

@@ -13,6 +13,7 @@
   "z5": "tests.test_halo.BaseCmdAssembler",
   "z6": "tests.test_halo.BaseCmdAssembler",
   "z7": "tests.test_halo.BaseCmdAssembler",
+  "z71": "tests.test_halo.BaseCmdAssembler",
   "z8": "tests.test_halo.BaseCmdAssembler",
   "z10": "tests.test_halo.BaseCmdAssembler",
   "z15": "tests.test_halo.BaseCmdAssembler",
