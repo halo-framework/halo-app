@@ -1,4 +1,15 @@
 {
   "z0": "tests.test_halo.ItemUow",
-  "z18": "tests.test_halo.ItemUow"
+  "z1": "tests.test_halo.ItemUow",
+  "z1a": "tests.test_halo.ItemUow",
+  "z1b": "tests.test_halo.ItemUow",
+  "z1c": "tests.test_halo.ItemUow",
+  "z3": "tests.test_halo.ItemUow",
+  "z4": "tests.test_halo.ItemUow",
+  "z8": "tests.test_halo.ItemUow",
+  "z15": "tests.test_halo.ItemUow",
+  "z16": "tests.test_halo.ItemUow",
+  "z17": "tests.test_halo.ItemUow",
+  "z18": "tests.test_halo.ItemUow",
+  "q1": "tests.test_halo.ExItemUow"
 }

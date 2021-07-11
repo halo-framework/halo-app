@@ -30,7 +30,6 @@ class SqlAlchemyUnitOfWorkManager(AbsUnitOfWorkManager):
         if method_id in settings.UOW_MAPPING:
             uow_type = settings.UOW_MAPPING[method_id]
             return Reflect.instantiate(uow_type, SqlAlchemyUnitOfWork,self.session_factory())
-            #return SqlAlchemyUnitOfWork(self.session_factory(),uow_type)
         raise MissingUowException(method_id)
 
 
@@ -40,7 +39,7 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
         self.session = session
 
     def __enter__(self):
-        self.repository = self.init_repository()#SqlAlchemyRepository(self.session)
+        self.repository = self.init_repository()
         return super().__enter__()
 
     def __exit__(self, *args):

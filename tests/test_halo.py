@@ -24,6 +24,7 @@ from halo_app.domain.entity import AbsHaloEntity
 from halo_app.domain.exceptions import AbsDomainException
 from halo_app.domain.model import Item
 from halo_app.app.dto import AbsHaloDto
+from halo_app.domain.repository import AbsRepository
 from halo_app.entrypoints import client_util
 from halo_app.infra.impl.redis_event_publisher import Publisher
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork, SqlAlchemyUnitOfWorkManager
@@ -130,9 +131,23 @@ class ItemRepository(SqlAlchemyRepository):
     def get_type(self) ->type:
         return Item
 
+class ExItemRepository(SqlAlchemyRepository):
+    def get_type(self) ->type:
+        return Item
+
 class ItemUow(SqlAlchemyUnitOfWork):
     def init_repository(self):
         return ItemRepository(self.session)
+
+class ExItemUow(ItemUow):
+
+    exRepository:AbsRepository = None
+
+    def __enter__(self):
+        self.exRepositoryrepository = ExItemRepository(self.session)
+        return super().__enter__()
+
+
 
 
 class A0(AbsCommandHandler):
@@ -666,7 +681,10 @@ class TestUserDetailTestCase(unittest.TestCase):
                 halo_context = client_util.get_halo_context(request.headers,http_request=request)
                 t = TestHaloQuery( "q1",  request.args)
                 halo_request = SysUtil.create_query_request(halo_context,t)
-                response = self.boundary.execute(halo_request)
+                halo_response = self.boundary.execute(halo_request)
+                response = SysUtil.process_response_for_client(halo_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 eq_(response.success,True)
                 eq_(response.payload, {})
             except Exception as e:
