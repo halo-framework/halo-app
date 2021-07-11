@@ -2,7 +2,7 @@ import abc
 from halo_app.domain.entity import AbsHaloAggregateRoot
 from halo_app.domain.repository import AbsRepository
 
-class SqlAlchemyRepository(AbsRepository):
+class SqlAlchemyRepository(AbsRepository,abc.ABC):
 
     def __init__(self, session):
         super().__init__()

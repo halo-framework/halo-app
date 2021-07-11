@@ -127,10 +127,12 @@ class Sec(HaloSecurity):
 #ApiMngr.set_api_list(API_LIST)
 
 class ItemRepository(SqlAlchemyRepository):
+    def get_type(self) ->type:
+        return Item
 
-    def __init__(self, session):
-        super(ItemRepository, self).__init__(session)
-        self.aggregate_type = Item
+class ItemUow(SqlAlchemyUnitOfWork):
+    def init_repository(self):
+        return ItemRepository(self.session)
 
 
 class A0(AbsCommandHandler):

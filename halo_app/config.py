@@ -354,8 +354,18 @@ class Config(object):
     with open(file_path) as f1:
         SAGA_SCHEMA = json.load(f1)
 
-    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL',default="REPEATABLE READ")
+    #uow setting
+    UOW_MAPPING = None
+    UOW_SETTINGS = ENV_NAME + '_uow_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', UOW_SETTINGS)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as fi:
+            UOW_MAPPING = json.load(fi)
+            print("api_config:" + str(UOW_MAPPING))
+    else:
+        print("no uow config file")
 
+    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL',default="REPEATABLE READ")
     START_ORM = env.bool('START_ORM',default=True)
     UOWM_CLASS = env.str('UOWM_CLASS',default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWorkManager")
     PUBLISHER_CLASS = env.str('PUBLISHER_CLASS',default="halo_app.infra.impl.redis_event_publisher.Publisher")

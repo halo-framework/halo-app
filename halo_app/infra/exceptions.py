@@ -63,3 +63,6 @@ class IllegalMethodException(AbsInfraException):
 
 class UnitOfWorkConfigException(AbsInfraException):
     pass
+
+class MissingUowException(AbsInfraException):
+    pass

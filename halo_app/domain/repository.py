@@ -1,18 +1,19 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
-from abc import abstractmethod
+from abc import ABC,abstractmethod
 from typing import Set
 
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.entity import AbsHaloAggregateRoot
 
 #Define one repository per aggregate
-class AbsRepository(AbsBaseClass):
+class AbsRepository(AbsBaseClass,ABC):
 
-    aggregate_type = None
+    aggregate_type:type = None
 
     def __init__(self):
         self.seen:set = set()
+        aggregate_type = self.get_type()
 
     def add(self, item: AbsHaloAggregateRoot):
         self._add(item)
@@ -24,7 +25,6 @@ class AbsRepository(AbsBaseClass):
             self.seen.add(item)
         return item
 
-
     @abstractmethod
     def _add(self, item: AbsHaloAggregateRoot):
         raise NotImplementedError
@@ -33,5 +33,6 @@ class AbsRepository(AbsBaseClass):
     def _get(self, aggregate_id) -> AbsHaloAggregateRoot:
         raise NotImplementedError
 
-
-
+    @abstractmethod
+    def get_type(self)->type:
+        raise NotImplementedError

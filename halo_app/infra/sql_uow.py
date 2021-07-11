@@ -1,11 +1,14 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
+import abc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from halo_app.app.uow import AbsUnitOfWork, AbsUnitOfWorkManager
-from halo_app.infra.exceptions import UnitOfWorkConfigException
+from halo_app.domain.repository import AbsRepository
+from halo_app.infra.exceptions import UnitOfWorkConfigException, MissingUowException
 from halo_app.infra.sql_repository import SqlAlchemyRepository
+from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 
 settings = settingsx()
@@ -24,8 +27,12 @@ class SqlAlchemyUnitOfWorkManager(AbsUnitOfWorkManager):
             self.session_factory = DEFAULT_SESSION_FACTORY
 
     def start(self,method_id=None) -> AbsUnitOfWork:
-        #if method_id in list:
-        return SqlAlchemyUnitOfWork(self.session_factory())
+        if method_id in settings.UOW_MAPPING:
+            uow_type = settings.UOW_MAPPING[method_id]
+            return Reflect.instantiate(uow_type, SqlAlchemyUnitOfWork,self.session_factory())
+            #return SqlAlchemyUnitOfWork(self.session_factory(),uow_type)
+        raise MissingUowException(method_id)
+
 
 class SqlAlchemyUnitOfWork(AbsUnitOfWork):
 
@@ -33,7 +40,7 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
         self.session = session
 
     def __enter__(self):
-        self.repository = SqlAlchemyRepository(self.session)
+        self.repository = self.init_repository()#SqlAlchemyRepository(self.session)
         return super().__enter__()
 
     def __exit__(self, *args):
@@ -45,5 +52,6 @@ class SqlAlchemyUnitOfWork(AbsUnitOfWork):
 
     def rollback(self):
         self.session.rollback()
+
 
 

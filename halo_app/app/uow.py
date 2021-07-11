@@ -39,3 +39,6 @@ class AbsUnitOfWork(abc.ABC):
             while item.events:
                 yield item.events.pop(0)
 
+    @abc.abstractmethod
+    def init_repository(self)->AbsRepository:
+        raise NotImplementedError
