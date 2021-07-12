@@ -315,3 +315,10 @@ class Util(AbsBaseClass):
         if Util.isDebugEnabled(halo_context):
             payload["context"] = json.dumps(halo_context.table)
         return payload
+
+    @staticmethod
+    def log_notification(halo_request, notification):
+        if notification:
+            if notification.hasErrors():
+                for e in notification.errors:
+                    logger.debug(halo_request.method_id+" notification: " + str(e.toJSON()))
