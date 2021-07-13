@@ -65,9 +65,9 @@ class SysUtil(AbsBaseClass):
         return HaloEventRequest(halo_context,halo_event, security, roles)
 
     @staticmethod
-    def create_query_request(halo_query: HaloQuery,
+    def create_query_request(halo_context:HaloContext,halo_query: HaloQuery,
                                security=None, roles=None) -> AbsHaloRequest:
-        return HaloQueryRequest(halo_query, security, roles)
+        return HaloQueryRequest(halo_context,halo_query, security, roles)
 
     @staticmethod
     def get_bus():
