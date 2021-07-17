@@ -321,4 +321,4 @@ class Util(AbsBaseClass):
         if notification:
             if notification.hasErrors():
                 for e in notification.errors:
-                    logger.debug(halo_request.method_id+" notification: " + str(e.toJSON()))
+                    logger.debug(halo_request.usecase_id + " notification: " + str(e.toJSON()))

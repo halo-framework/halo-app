@@ -20,30 +20,30 @@ def main():
 
 
 @main.command()
-@click.option("--in", "-i", "method_id", required=True,
+@click.option("--in", "-i", "usecase_id", required=True,
     help="use case id",
 )
 @click.option("--params", "-p",
     help="json with parameters")
-def command(method_id,params):
+def command(usecase_id,params):
     """Execute commands on service"""
     global c
-    click.echo(method_id)
-    response = c.run_command(method_id,params)
+    click.echo(usecase_id)
+    response = c.run_command(usecase_id,params)
 
     click.echo(response)
 
 @main.command()
-@click.option("--in", "-i", "method_id", required=True,
+@click.option("--in", "-i", "usecase_id", required=True,
     help="use case id",
 )
 @click.option("--params", "-p",
     help="json with parameters")
-def query(method_id,params):
+def query(usecase_id,params):
     """Execute queries on service"""
     global c
-    click.echo(method_id)
-    response = c.run_query(method_id, params)
+    click.echo(usecase_id)
+    response = c.run_query(usecase_id, params)
 
     click.echo(response)
 
@@ -53,15 +53,15 @@ class Cli(AbsBaseClass):
     def __init__(self):
         self.boundary = bootstrap.bootstrap()
 
-    def run_command(self,method_id,params):
+    def run_command(self,usecase_id,params):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        halo_request = SysUtil.create_command_request(halo_context, method_id, params)
+        halo_request = SysUtil.create_command_request(halo_context, usecase_id, params)
         response = self.boundary.execute(halo_request)
         return response.payload
 
-    def run_query(self,method_id,params):
+    def run_query(self,usecase_id,params):
         halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
-        t = AbsHaloQuery(halo_context,method_id, params)
+        t = AbsHaloQuery(halo_context,usecase_id, params)
         halo_request = SysUtil.create_query_request(t)
         response = self.boundary.execute(halo_request)
         return response.payload

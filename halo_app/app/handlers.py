@@ -49,13 +49,14 @@ logger = logging.getLogger(__name__)
 class AbsBaseHandler(AbsBaseClass):
     __metaclass__ = ABCMeta
 
+    usecase_id = None
     business_event = None
     secure = False
     method_roles = None
 
     @abstractmethod
-    def __init__(self,method_id=None):
-        pass
+    def __init__(self,usecase_id):
+        self.usecase_id = usecase_id
 
     def validate_perm(self, halo_request)->Notification:
         notification = Notification()
@@ -89,7 +90,7 @@ class AbsBaseHandler(AbsBaseClass):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise AbsHaloException("mapping Exception for " + halo_request.method_id, e)
+                    raise AbsHaloException("mapping Exception for " + halo_request.usecase_id, e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -120,18 +121,18 @@ class AbsBaseHandler(AbsBaseClass):
 
     def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
-        if settings.MAPPING and halo_request.method_id in settings.MAPPING:
-            mapping = settings.MAPPING[halo_request.method_id]
+        if settings.MAPPING and halo_request.usecase_id in settings.MAPPING:
+            mapping = settings.MAPPING[halo_request.usecase_id]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
-        raise AbsHaloException("no mapping for " + halo_request.method_id)
+        raise AbsHaloException("no mapping for " + halo_request.usecase_id)
 
     def load_resp_mapping(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
         if settings.MAPPING:
             for path in settings.MAPPING:
                 try:
-                    if re.match(path,halo_request.method_id):
+                    if re.match(path, halo_request.usecase_id):
                         mapping = settings.MAPPING[path]
                         logger.debug("in load_resp_mapping " + str(mapping))
                         return mapping
@@ -177,8 +178,8 @@ class AbsBaseHandler(AbsBaseClass):
                     for bq in bqs:
                         service_list = bqs[bq]
                         #@todo add schema to all event config files
-                        if service_list and halo_request.method_id in service_list.keys():
-                            service_map = service_list[halo_request.method_id]
+                        if service_list and halo_request.usecase_id in service_list.keys():
+                            service_map = service_list[halo_request.usecase_id]
                             if BusinessEventCategory.EMPTY.value in service_map:
                                 dict = service_map[BusinessEventCategory.EMPTY.value]
                                 self.business_event = BusinessEvent(self.service_operation,BusinessEventCategory.EMPTY)
@@ -244,8 +245,8 @@ class AbsQueryHandler(AbsBaseHandler):
 
     @classmethod
     def run_query_class(cls,halo_request:HaloQueryRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
-        handler = cls()
-        return handler.__run_query(halo_request,uowm.start(halo_request.method_id))
+        handler = cls(halo_request.usecase_id)
+        return handler.__run_query(halo_request, uowm.start(halo_request.usecase_id))
 
 class AbsEventHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
@@ -283,8 +284,8 @@ class AbsEventHandler(AbsBaseHandler):
 
     @classmethod
     def run_event_class(cls,halo_request:HaloEventRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
-        handler = cls()
-        return handler.__run_event(halo_request,uowm.start(halo_request.method_id))
+        handler = cls(halo_request.usecase_id)
+        return handler.__run_event(halo_request, uowm.start(halo_request.usecase_id))
 
 class AbsCommandHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
@@ -344,7 +345,7 @@ class AbsCommandHandler(AbsBaseHandler):
                     raise BusinessEventMissingSeqException(self.service_operation)
             else:
                 return processing_engine.do_operation_1(halo_request)
-        raise BusinessEventNotImplementedException("business_event for command method id:"+halo_request.method_id)
+        raise BusinessEventNotImplementedException("business_event for command method id:" + halo_request.usecase_id)
 
     def handle(self,halo_command_request:HaloCommandRequest,uow:AbsUnitOfWork)->Result:
         raise HaloMethodNotImplementedException("method handle in command")
@@ -360,8 +361,8 @@ class AbsCommandHandler(AbsBaseHandler):
 
     @classmethod
     def run_command_class(cls,halo_request:HaloCommandRequest,uowm:AbsUnitOfWorkManager)->AbsHaloResponse:
-        handler = cls()
-        return handler.__run_command(halo_request,uowm.start(halo_request.method_id))
+        handler = cls(halo_request.usecase_id)
+        return handler.__run_command(halo_request, uowm.start(halo_request.usecase_id))
 
 
 

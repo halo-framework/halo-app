@@ -14,22 +14,22 @@ settings = settingsx()
 class AbsCmdAssembler(AbsBaseClass, abc.ABC):
 
     @abc.abstractmethod
-    def get_command_type(self,method_id):
+    def get_command_type(self,usecase_id):
         pass
 
-    def write_cmd_for_method(self, method_id: str,data:Dict,flag:str=None) -> AbsHaloCommand:
+    def write_cmd_for_method(self, usecase_id: str,data:Dict,flag:str=None) -> AbsHaloCommand:
         mapper = DtoMapper()
-        command_class_type = self.get_command_type(method_id)
+        command_class_type = self.get_command_type(usecase_id)
         cmd = mapper.map_from_dto(data,command_class_type)
         return cmd
 
 class CmdAssemblerFactory(AbsBaseClass):
 
     @classmethod
-    def get_assembler_by_method_id(cls, method_id:str) -> AbsCmdAssembler:
-        if method_id in settings.CMD_ASSEMBLERS:
-            cmd_assembler_type = settings.CMD_ASSEMBLERS[method_id]
+    def get_assembler_by_method_id(cls, usecase_id:str) -> AbsCmdAssembler:
+        if usecase_id in settings.CMD_ASSEMBLERS:
+            cmd_assembler_type = settings.CMD_ASSEMBLERS[usecase_id]
             assembler: AbsCmdAssembler = Reflect.instantiate(cmd_assembler_type, AbsCmdAssembler)
             return assembler
-        raise MissingCmdAssemblerException(method_id)
+        raise MissingCmdAssemblerException(usecase_id)
 

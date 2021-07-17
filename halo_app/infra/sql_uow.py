@@ -26,11 +26,11 @@ class SqlAlchemyUnitOfWorkManager(AbsUnitOfWorkManager):
             ))
             self.session_factory = DEFAULT_SESSION_FACTORY
 
-    def start(self,method_id=None) -> AbsUnitOfWork:
-        if method_id in settings.UOW_MAPPING:
-            uow_type = settings.UOW_MAPPING[method_id]
+    def start(self,usecase_id=None) -> AbsUnitOfWork:
+        if usecase_id in settings.UOW_MAPPING:
+            uow_type = settings.UOW_MAPPING[usecase_id]
             return Reflect.instantiate(uow_type, SqlAlchemyUnitOfWork,self.session_factory())
-        raise MissingUowException(method_id)
+        raise MissingUowException(usecase_id)
 
 
 class SqlAlchemyUnitOfWork(AbsUnitOfWork):

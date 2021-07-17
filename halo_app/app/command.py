@@ -16,7 +16,7 @@ settings = settingsx()
 
 @dataclass
 class AbsHaloCommand(AbsHaloMessage,abc.ABC):
-    name = None
+    name = None # usecase id
 
     @abc.abstractmethod
     def __init__(self,name:str):

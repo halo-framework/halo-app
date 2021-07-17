@@ -19,15 +19,15 @@ settings = settingsx()
 
 class AbsHaloRequest(AbsHaloExchange,abc.ABC):
 
-    method_id = None
+    usecase_id = None
     context = None
     security = None
     uow = None
     method_roles = None
 
     @abc.abstractmethod
-    def __init__(self,halo_context:HaloContext, method_id:str,security=False,method_roles=None):
-        self.method_id = method_id
+    def __init__(self,halo_context:HaloContext, usecase_id:str,security=False,method_roles=None):
+        self.usecase_id = usecase_id
         self.context = halo_context
         for i in settings.HALO_CONTEXT_LIST:
             if i not in HaloContext.items:
@@ -38,9 +38,9 @@ class AbsHaloRequest(AbsHaloExchange,abc.ABC):
             if method_roles:
                 self.method_roles = method_roles
             else:
-                if method_id in settings.METHOD_ROLES:
-                    self.method_roles = settings.METHOD_ROLES[method_id]
-            self.security = SecurityFactory.get_security(halo_context,method_id)
+                if usecase_id in settings.METHOD_ROLES:
+                    self.method_roles = settings.METHOD_ROLES[usecase_id]
+            self.security = SecurityFactory.get_security(halo_context,usecase_id)
             #self.security.validate_method(method_roles)
 
 

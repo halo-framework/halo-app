@@ -154,8 +154,8 @@ class A0(AbsCommandHandler):
     domain_service = None
     infra_service = None
 
-    def __init__(self):
-        super(A0,self).__init__()
+    def __init__(self,usecase_id):
+        super(A0,self).__init__(usecase_id)
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
@@ -189,29 +189,29 @@ class A0(AbsCommandHandler):
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
-            if halo_request.method_id == "z1" or halo_request.method_id == "z1a" or halo_request.method_id == "z5":
+            if halo_request.usecase_id == "z1" or halo_request.usecase_id == "z1a" or halo_request.usecase_id == "z5":
                 return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.get.value)
                 #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return None
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.method_id == "z1":
+            if halo_request.usecase_id == "z1":
                 return {"tst_get":"good"}
-            if halo_request.method_id == "z1a":
+            if halo_request.usecase_id == "z1a":
                 return {"tst_delete":"good"}
         else:#in event
-            if halo_request.method_id == HTTPChoice.put.value:#method type
+            if halo_request.usecase_id == HTTPChoice.put.value:#method type
                 if seq == '1':
                     return {"tst_put":"good1"}
                 if seq == '2':
                     return {"tst_put":"good2"}
-            if halo_request.method_id == HTTPChoice.post.value:#method type
+            if halo_request.usecase_id == HTTPChoice.post.value:#method type
                 if seq == '1':
                     return {"tst_post":"good1"}
                 if seq == '2':
                     return {"tst_post":"good2"}
-            if halo_request.method_id == HTTPChoice.patch.value:#method type
+            if halo_request.usecase_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 class A1(A0):
     pass
@@ -250,12 +250,12 @@ class A2(A1):
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.method_id == "z1":#method type
+            if halo_request.usecase_id == "z1":#method type
                 return {"tst_get_deposit":"good"}
             else:
                 return {"tst_delete_deposit":"good"}
         else:#in event
-            if halo_request.method_id == "z1":#method type
+            if halo_request.usecase_id == "z1":#method type
                 if seq == '1':
                     return {"tst_put_deposit":"good1"}
                 if seq == '2':
@@ -314,7 +314,7 @@ class A2(A1):
 
     def create_response(self,halo_request, payload, headers):
         code = 200
-        if halo_request.method_id == "z4" or halo_request.method_id == "z5" or halo_request.method_id == "z6":
+        if halo_request.usecase_id == "z4" or halo_request.usecase_id == "z5" or halo_request.usecase_id == "z6":
             code = 500
         return HaloCommandResponse(halo_request, payload, code, headers)
 
@@ -397,30 +397,30 @@ class ItemAssembler(AbsDtoAssembler):
         entity = Item(dto.id,dto.data)
         return entity
 
-    def write_dto_for_method(self, method_id: str,data,flag:str=None) -> AbsHaloDto:
-        if method_id == "z17" and flag:
+    def write_dto_for_method(self, usecase_id: str,data,flag:str=None) -> AbsHaloDto:
+        if usecase_id == "z17" and flag:
             return ItemDto(data["id"],data["data"])
-        if method_id == "z17" and not flag:
+        if usecase_id == "z17" and not flag:
             return ItemDto(data.id,data.data)
-        dto = ItemDto(method_id)
+        dto = ItemDto(usecase_id)
         return ItemDto(data["id"],data["data"])
 
 class BaseCmdAssembler(AbsCmdAssembler):
-    def get_command_type(self,method_id:str)-> str:
+    def get_command_type(self,usecase_id:str)-> str:
         return "halo_app.app.command.DictHaloCommand"
 
-    def write_cmd_for_method(self, method_id: str, data: Dict, flag: str = None) -> AbsHaloCommand:
-        command_type = self.get_command_type(method_id)
-        cmd_instance = Reflect.instantiate(command_type,AbsHaloCommand,method_id,data)
+    def write_cmd_for_method(self, usecase_id: str, data: Dict, flag: str = None) -> AbsHaloCommand:
+        command_type = self.get_command_type(usecase_id)
+        cmd_instance = Reflect.instantiate(command_type,AbsHaloCommand,usecase_id,data)
         return cmd_instance
 
 class TestCmdAssembler(AbsCmdAssembler):
-    def get_command_type(self,method_id:str)-> str:
+    def get_command_type(self,usecase_id:str)-> str:
         return "tests.test_halo.TestCmd"
 
-    def write_cmd_for_method(self, method_id: str, data: Dict, flag: str = None) -> AbsHaloCommand:
-        command_type = self.get_command_type(method_id)
-        cmd_instance = Reflect.instantiate(command_type,AbsHaloCommand,method_id)
+    def write_cmd_for_method(self, usecase_id: str, data: Dict, flag: str = None) -> AbsHaloCommand:
+        command_type = self.get_command_type(usecase_id)
+        cmd_instance = Reflect.instantiate(command_type,AbsHaloCommand,usecase_id)
         cmd_instance.date = data["date"]
         cmd_instance.date = data["address"]
         return cmd_instance
@@ -457,7 +457,7 @@ class A17(A0):
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '3':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
+                    dto = dto_assembler.write_dto_for_method(halo_request.usecase_id, {"id": "1", "data": "789"}, "x")
                     payload = dto
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '4':
@@ -465,7 +465,7 @@ class A17(A0):
                     class d:
                         id = "1"
                         data = "789"
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,d())
+                    dto = dto_assembler.write_dto_for_method(halo_request.usecase_id, d())
                     payload = dto
                     return Result.ok(payload)
 
@@ -477,7 +477,7 @@ class A18(A0):
         with uow:
             self.repository = uow.repository
             dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-            dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
+            dto = dto_assembler.write_dto_for_method(halo_request.usecase_id, {"id": "1", "data": "789"}, "x")
             uow.commit()
             payload = dto
             return Result.ok(payload)
@@ -724,7 +724,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1d_run_handle_async(self):
         event_consumer = FakeConsumer()
         try:
-            event_consumer.handle_command({'data':'{"method_id":"z0","id":"1"}'})
+            event_consumer.handle_command({'data':'{"usecase_id":"z0","id":"1"}'})
         except Exception as e:
             print(str(e))
             eq_(e.__class__.__name__, "NoApiClassException")

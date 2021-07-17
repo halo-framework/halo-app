@@ -76,9 +76,9 @@ class HaloSecurity(AbsBaseClass):
 class SecurityFactory(AbsBaseClass):
 
     @classmethod
-    def get_security(cls,halo_context,method_id=None) -> HaloSecurity:
+    def get_security(cls,halo_context,usecase_id=None) -> HaloSecurity:
         if settings.HALO_SECURITY_CLASS:
             return Reflect.instantiate(settings.HALO_SECURITY_CLASS, HaloSecurity, halo_context.table)
         else:
             return HaloSecurity(halo_context.table)
-            #raise MissingSecurityClassException(method_id)
+            #raise MissingSecurityClassException(usecase_id)

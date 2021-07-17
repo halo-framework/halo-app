@@ -126,29 +126,29 @@ class A0(AbsCommandHandler):
 
     def set_back_api(self,halo_request, foi=None):
         if not foi:#not in seq
-            if halo_request.method_id == "z1" or halo_request.method_id == "z1a" or halo_request.method_id == "z5":
+            if halo_request.usecase_id == "z1" or halo_request.usecase_id == "z1a" or halo_request.usecase_id == "z5":
                 return ApiMngr.get_api_instance("Cnn",halo_request.context,HTTPChoice.get.value)
                 #return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return None
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.method_id == "z1":
+            if halo_request.usecase_id == "z1":
                 return {"tst_get":"good"}
-            if halo_request.method_id == "z1a":
+            if halo_request.usecase_id == "z1a":
                 return {"tst_delete":"good"}
         else:#in event
-            if halo_request.method_id == HTTPChoice.put.value:#method type
+            if halo_request.usecase_id == HTTPChoice.put.value:#method type
                 if seq == '1':
                     return {"tst_put":"good1"}
                 if seq == '2':
                     return {"tst_put":"good2"}
-            if halo_request.method_id == HTTPChoice.post.value:#method type
+            if halo_request.usecase_id == HTTPChoice.post.value:#method type
                 if seq == '1':
                     return {"tst_post":"good1"}
                 if seq == '2':
                     return {"tst_post":"good2"}
-            if halo_request.method_id == HTTPChoice.patch.value:#method type
+            if halo_request.usecase_id == HTTPChoice.patch.value:#method type
                 return {"tst_patch":"good"}
 class A1(A0):
     pass
@@ -187,12 +187,12 @@ class A2(A1):
 
     def extract_json(self,halo_request,api, back_response, seq=None):
         if seq == None:#no event
-            if halo_request.method_id == "z1":#method type
+            if halo_request.usecase_id == "z1":#method type
                 return {"tst_get_deposit":"good"}
             else:
                 return {"tst_delete_deposit":"good"}
         else:#in event
-            if halo_request.method_id == "z1":#method type
+            if halo_request.usecase_id == "z1":#method type
                 if seq == '1':
                     return {"tst_put_deposit":"good1"}
                 if seq == '2':
@@ -251,7 +251,7 @@ class A2(A1):
 
     def create_response(self,halo_request, payload, headers):
         code = 200
-        if halo_request.method_id == "z4" or halo_request.method_id == "z5" or halo_request.method_id == "z6":
+        if halo_request.usecase_id == "z4" or halo_request.usecase_id == "z5" or halo_request.usecase_id == "z6":
             code = 500
         return HaloCommandResponse(halo_request, payload, code, headers)
 
@@ -333,8 +333,8 @@ class ItemAssembler(AbsDtoAssembler):
         entity = Item(dto.id,dto.data)
         return entity
 
-    def write_dto_for_method(self, method_id: str,data,flag:str=None) -> AbsHaloDto:
-        if method_id == "z17" and flag:
+    def write_dto_for_method(self, usecase_id: str,data,flag:str=None) -> AbsHaloDto:
+        if usecase_id == "z17" and flag:
             return ItemDto(data["id"],data["data"])
         dto_mapper = DtoMapper()
         dto = dto_mapper.map_to_dto(data,ItemDto.__class__)
@@ -364,7 +364,7 @@ class A17(A0):
                     return Result.ok(payload)
                 if halo_request.command.vars['id'] == '3':
                     dto_assembler = DtoAssemblerFactory.get_assembler_by_request(halo_request)
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,{"id":"1","data":"789"},"x")
+                    dto = dto_assembler.write_dto_for_method(halo_request.usecase_id, {"id": "1", "data": "789"}, "x")
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)
@@ -373,7 +373,7 @@ class A17(A0):
                     class d:
                         id = "1"
                         data = "789"
-                    dto = dto_assembler.write_dto_for_method(halo_request.method_id,d())
+                    dto = dto_assembler.write_dto_for_method(halo_request.usecase_id, d())
                     uow.commit()
                     payload = dto
                     return Result.ok(payload)

@@ -68,7 +68,7 @@ class RequestFilter(AbsFilter):
         try:
             #catching all requests to api and logging them for analytics
             event = FilterEvent({})
-            event.name = halo_request.method_id
+            event.name = halo_request.usecase_id
             event.time = datetime.datetime.now()
             #event.method = halo_request.context.get(HaloContext.method)
             event.remote_addr = halo_request.context.get(HaloContext.remote_addr)

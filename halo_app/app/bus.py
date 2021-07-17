@@ -150,10 +150,10 @@ class Bus(IBus):
 
     def __process_sync_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
-        if command.method_id not in self.command_handlers:
-            raise CommandNotMappedException("command method_id " + command.method_id)
+        if command.usecase_id not in self.command_handlers:
+            raise CommandNotMappedException("command request usecase_id " + command.usecase_id)
         # The command dispatcher expects just one handler per command.
-        handler = self.command_handlers[command.method_id]
+        handler = self.command_handlers[command.usecase_id]
         ret = handler(command)
         if command.uow.repository:
             new_events = command.uow.collect_new_events()
@@ -163,17 +163,17 @@ class Bus(IBus):
 
     def __process_async_command(self, command: HaloCommandRequest)->AbsHaloResponse:
         logger.debug('handling command %s', command)
-        if command.method_id not in self.command_handlers:
-            raise CommandNotMappedException("command method_id " + command.method_id)
+        if command.usecase_id not in self.command_handlers:
+            raise CommandNotMappedException("command resquest usecase_id " + command.usecase_id)
         self.publisher.send(settings.HANDLER_TARGET, command.command)
         return Util.create_response(command,True)
 
     def __process_query(self, query: HaloQueryRequest)->AbsHaloResponse:
         logger.debug('handling query %s', query)
-        if query.method_id not in self.query_handlers:
-            raise QueryNotMappedException("query method_id " + query.method_id)
+        if query.usecase_id not in self.query_handlers:
+            raise QueryNotMappedException("query request usecase_id " + query.usecase_id)
         # The query dispatcher expects just one handler per command.
-        handler = self.query_handlers[query.method_id]
+        handler = self.query_handlers[query.usecase_id]
         ret = handler(query)
         return ret
 

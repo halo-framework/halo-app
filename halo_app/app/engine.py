@@ -116,7 +116,7 @@ class ProcessingEngine(AbsBaseClass):
                     return ret
                 except Exception as e:
                     logger.debug(str(e))
-                    raise AbsHaloException("mapping error for " + halo_request.method_id, e)
+                    raise AbsHaloException("mapping error for " + halo_request.usecase_id, e)
             ret = self.create_resp_json(halo_request, dict_back_json)
             return ret
         return {}
@@ -147,18 +147,18 @@ class ProcessingEngine(AbsBaseClass):
 
     def load_resp_mapping1(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
-        if settings.MAPPING and halo_request.method_id in settings.MAPPING:
-            mapping = settings.MAPPING[halo_request.method_id]
+        if settings.MAPPING and halo_request.usecase_id in settings.MAPPING:
+            mapping = settings.MAPPING[halo_request.usecase_id]
             logger.debug("in load_resp_mapping " + str(mapping))
             return mapping
-        raise AbsHaloException("no mapping for " + halo_request.method_id)
+        raise AbsHaloException("no mapping for " + halo_request.usecase_id)
 
     def load_resp_mapping(self, halo_request):
         logger.debug("in load_resp_mapping " + str(halo_request))
         if settings.MAPPING:
             for path in settings.MAPPING:
                 try:
-                    if re.match(path,halo_request.method_id):
+                    if re.match(path, halo_request.usecase_id):
                         mapping = settings.MAPPING[path]
                         logger.debug("in load_resp_mapping " + str(mapping))
                         return mapping

@@ -89,7 +89,7 @@ class TestCommand:
         halo_request = SysUtil.create_command_request(halo_context, "zk0", {'id': '0'})
         halo_response = bus.execute(halo_request)
         assert halo_response.error.message == "exception thrown!"
-        assert halo_response.error.cause.message == "command method_id zk0"
+        assert halo_response.error.cause.message == "command usecase_id zk0"
         #with pytest.raises(CommandNotMappedException, match="Invalid"):
         #    halo_response = bus.execute(halo_request)
 
@@ -100,7 +100,7 @@ class TestCommand:
         halo_request = SysUtil.create_command_request(halo_context, "zk0", {'id': '0'})
         halo_response = bus.execute(halo_request)
         assert halo_response.error.message == "exception thrown!"
-        assert halo_response.error.cause.message == "command method_id zk0"
+        assert halo_response.error.cause.message == "command usecase_id zk0"
         #with pytest.raises(CommandNotMappedException, match="Invalid"):
         #    halo_response = bus.execute(halo_request)
 

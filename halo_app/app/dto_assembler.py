@@ -19,18 +19,18 @@ class AbsDtoAssembler(AbsBaseClass, abc.ABC):
         pass
 
     @abc.abstractmethod
-    def write_dto_for_method(self, method_id: str,data:Dict,flag:str=None) -> AbsHaloDto:
+    def write_dto_for_method(self, usecase_id: str,data:Dict,flag:str=None) -> AbsHaloDto:
         pass
 
 class DtoAssemblerFactory(AbsBaseClass):
 
     @classmethod
     def get_assembler_by_request(cls, request: AbsHaloRequest) -> AbsDtoAssembler:
-        if request.method_id in settings.DTO_ASSEMBLERS:
-            dto_assembler_type = settings.DTO_ASSEMBLERS[request.method_id]
+        if request.usecase_id in settings.DTO_ASSEMBLERS:
+            dto_assembler_type = settings.DTO_ASSEMBLERS[request.usecase_id]
             assembler: AbsDtoAssembler = Reflect.instantiate(dto_assembler_type, AbsDtoAssembler)
             return assembler
-        raise MissingDtoAssemblerException(request.method_id)
+        raise MissingDtoAssemblerException(request.usecase_id)
 
     @classmethod
     def get_assembler_by_entity(cls,entity:AbsHaloEntity)->AbsDtoAssembler:

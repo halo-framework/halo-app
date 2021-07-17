@@ -52,11 +52,11 @@ class SysUtil(AbsBaseClass):
             return module + '.' + o.__class__.__name__
 
     @staticmethod
-    def create_command_request(halo_context: HaloContext, method_id: str, vars: Dict,
+    def create_command_request(halo_context: HaloContext, usecase_id: str, vars: Dict,
                                security=False, roles=None) -> AbsHaloRequest:
         #halo_command = HaloCommand(method_id, vars)
-        cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(method_id)
-        halo_command = cmd_assembler.write_cmd_for_method(method_id,vars)
+        cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(usecase_id)
+        halo_command = cmd_assembler.write_cmd_for_method(usecase_id,vars)
         return HaloCommandRequest(halo_context,halo_command, security, roles)
 
     @staticmethod
@@ -76,19 +76,19 @@ class SysUtil(AbsBaseClass):
             return BUS
         from halo_app import bootstrap
         import importlib
-        for method_id in settings.HANDLER_MAP:
-            clazz_type = settings.HANDLER_MAP[method_id]
+        for usecase_id in settings.HANDLER_MAP:
+            clazz_type = settings.HANDLER_MAP[usecase_id]
             clazz = clazz_type["class"]
             type = clazz_type["type"]
             try:
                 module_name, class_name = clazz.rsplit(".", 1)
                 x = getattr(importlib.import_module(module_name), class_name)
                 if type == OPType.COMMAND.value:  # command
-                    bootstrap.COMMAND_HANDLERS[method_id] = x.run_command_class
+                    bootstrap.COMMAND_HANDLERS[usecase_id] = x.run_command_class
                 if type == OPType.QUERY.value:  # query
-                    bootstrap.QUERY_HANDLERS[method_id] = x.run_query_class
+                    bootstrap.QUERY_HANDLERS[usecase_id] = x.run_query_class
                 if type == OPType.EVENT.value:  # event
-                    bootstrap.EVENT_HANDLERS[method_id] = x.run_event_class
+                    bootstrap.EVENT_HANDLERS[usecase_id] = x.run_event_class
             except Exception as e:
                 logger.error("config for handler missing: "+str(clazz) +" - "+str(e))
                 raise e
@@ -120,7 +120,7 @@ class SysUtil(AbsBaseClass):
                                 halo_response.code = HTTPStatus.ACCEPTED
                             if method == 'DELETE':
                                 halo_response.code = success
-                            logger.info('process_service_operation : ' + halo_response.request.method_id,
+                            logger.info('process_service_operation : ' + halo_response.request.usecase_id,
                                         extra=log_json(halo_response.request.context, {"return": "success"}))
                             return halo_response
                 else:
@@ -158,7 +158,7 @@ class SysUtil(AbsBaseClass):
                                     halo_response.code = HTTPStatus.ACCEPTED
                                 if method == 'DELETE':
                                     halo_response.code = success
-                                logger.info('process_service_operation : ' + halo_response.request.method_id,
+                                logger.info('process_service_operation : ' + halo_response.request.usecase_id,
                                             extra=log_json(halo_response.request.context, {"return": "success"}))
                                 return halo_response
                     else:
@@ -179,7 +179,7 @@ class SysUtil(AbsBaseClass):
                 if halo_response.success:
                     if halo_response.request:
                         if halo_response.request.context:
-                            logger.info('process_service_operation : ' + halo_response.request.method_id,
+                            logger.info('process_service_operation : ' + halo_response.request.usecase_id,
                                         extra=log_json(halo_response.request.context, {"return": "success"}))
                             return halo_response
                 else:

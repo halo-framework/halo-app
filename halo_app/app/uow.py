@@ -9,7 +9,7 @@ from halo_app.domain.repository import AbsRepository
 class AbsUnitOfWorkManager(abc.ABC):
 
     @abc.abstractmethod
-    def start(self,method_id=None) -> AbsUnitOfWork:
+    def start(self,usecase_id=None) -> AbsUnitOfWork:
         pass
 
 #update one aggregate per aggregate
