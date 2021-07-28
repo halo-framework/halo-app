@@ -195,7 +195,7 @@ class Util(AbsBaseClass):
         return False
 
     @staticmethod
-    def json_error_response(halo_context, clazz,err:Error):  # code, msg, requestId):
+    def json_error_response(halo_context,usecase_id, clazz,err:Error):  # code, msg, requestId):
         """
 
         :param req_context:
@@ -228,10 +228,10 @@ class Util(AbsBaseClass):
         stack = None
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
             stack = e.stack
-        return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack)
+        return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack,usecase_id)
 
     @staticmethod
-    def create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url=None,stack=None):
+    def create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url=None,stack=None,usecase_id=None):
         #@todo check when to use data
         error_data = {}
         payload = {"error":
@@ -251,10 +251,12 @@ class Util(AbsBaseClass):
         if stack:
             payload["stack"] = json.dumps(stack)
             payload["context"] = json.dumps(halo_context.table)
+            if usecase_id:
+                payload["usecase_id"] = usecase_id
         return payload
 
     @staticmethod
-    def json_exception_response(halo_context, clazz, e):  # code, msg, requestId):
+    def json_exception_response(halo_context,usecase_id, clazz, e):  # code, msg, requestId):
         """
 
         :param req_context:
@@ -286,7 +288,7 @@ class Util(AbsBaseClass):
         stack = None
         if Util.isDebugEnabled(halo_context) and hasattr(e, 'stack'):
             stack = e.stack
-        return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack)
+        return Util.create_json_response(halo_context,error_code,error_message,error_detail,error_type,help_url,stack,usecase_id)
 
     @staticmethod
     def json_notification_response(halo_context, errors:[ValidError]):  # code, msg, requestId):

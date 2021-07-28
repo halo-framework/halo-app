@@ -172,7 +172,7 @@ class SysUtil(AbsBaseClass):
                                 halo_response.error["path"] = halo_response.request.context.get(HaloContext.path)
                             else:
                                 if isinstance(halo_response.error, Error):
-                                    halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
+                                    halo_response.error = Util.json_error_response(halo_response.request.context,halo_response.request.usecase_id,settings.ERR_MSG_CLASS, halo_response.error)
                                     halo_response.error["status_code"] = halo_response.code
                         return halo_response
             if halo_response.request.context.get(HaloContext.client_type) == ClientType.cli:
@@ -189,7 +189,7 @@ class SysUtil(AbsBaseClass):
                             halo_response.error = Util.json_notification_response(halo_response.request.context,halo_response.error)
                         else:
                             if isinstance(halo_response.error, Error):
-                                halo_response.error = Util.json_error_response(halo_response.request.context,settings.ERR_MSG_CLASS, halo_response.error)
+                                halo_response.error = Util.json_error_response(halo_response.request.context,halo_response.request.usecase_id,settings.ERR_MSG_CLASS, halo_response.error)
                     return halo_response
         raise FailException(halo_response)
 
