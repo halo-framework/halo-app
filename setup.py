@@ -1,5 +1,4 @@
 from io import open
-
 from setuptools import setup
 
 # python setup.py sdist bdist_wheel
@@ -7,15 +6,18 @@ from setuptools import setup
 
 with open("README.md", "r") as h:
     long_description = h.read()
+with open('requirements/prod.txt') as f:
+    required = f.read().splitlines()
 
 setup(
     name='halo-app',
-    version='0.10.86',
+    version='0.10.87',
     packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.infra.providers', 'halo_app.infra.providers.cloud',
               'halo_app.infra.providers.cloud.aws', 'halo_app.infra.providers.onprem', 'halo_app.infra.providers.ssm',
               'halo_app.infra','halo_app.infra.impl','halo_app.domain','halo_app.entrypoints',],
     data_files=[('schema', ['halo_app/schema/saga_schema.json'])],
     package_data={'schema': ['halo_app/schema/saga_schema.json']},
+    install_requires=required,
     url='https://github.com/halo-framework/halo-app',
     license='MIT License',
     author='halo-framework',
