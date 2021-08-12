@@ -11,13 +11,13 @@ with open('requirements/prod.txt') as f:
 
 setup(
     name='halo-app',
-    version='0.10.89',
+    version='0.10.90',
     packages=['halo_app', 'halo_app.app', 'halo_app.schema','halo_app.infra.providers', 'halo_app.infra.providers.cloud',
               'halo_app.infra.providers.cloud.aws', 'halo_app.infra.providers.onprem', 'halo_app.infra.providers.ssm',
               'halo_app.infra','halo_app.infra.impl','halo_app.domain','halo_app.entrypoints',],
-    data_files=[('schema', ['halo_app/schema/saga_schema.json'])],
+    data_files=[('schema', ['halo_app/schema/saga_schema.json']),('requirements', ['requirements/prod.txt'])],
     package_data={'schema': ['halo_app/schema/saga_schema.json'],
-                  'requirements': ['*.txt']},
+                  'requirements': ['requirements/prod.txt']},
     install_requires=required,
     url='https://github.com/halo-framework/halo-app',
     license='MIT License',
