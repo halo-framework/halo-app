@@ -19,6 +19,9 @@ environs==9.3.0
 # filter
 flask-filter
 
+# Caching
+Flask-Caching>=1.0.0
+
 # halo
 requests==2.20.1
 python-json-logger==0.1.9
